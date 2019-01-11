@@ -133,17 +133,38 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Clock applet</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Show the current time in the bottom left corner of the screen.</span>
 
-<span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>)]</span>
+<span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>, <span class="ident">const_let</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
 
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
 
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libuser</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
@@ -265,9 +286,28 @@
     }
 }
 
-<span class="doccomment">/// Array of IO port this process is allowed to access.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">test</span>), <span class="ident">link_section</span> <span class="op">=</span> <span class="string">&quot;.kernel_ioports&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">used</span>]</span>
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">IOPORTS_PERMS</span>: [<span class="ident">u16</span>; <span class="number">2</span>] <span class="op">=</span> [<span class="number">0x70</span>, <span class="number">0x71</span>];
+<span class="macro">capabilities</span><span class="macro">!</span>(<span class="ident">CAPABILITIES</span> <span class="op">=</span> <span class="ident">Capabilities</span> {
+    <span class="ident">svcs</span>: [
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">SleepThread</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">ExitProcess</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">CloseHandle</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">WaitSynchronization</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">OutputDebugString</span>,
+
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">ConnectToNamedPort</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">CreateInterruptEvent</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">SetHeapSize</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">SendSyncRequestWithUserBuffer</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">QueryMemory</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">CreateSharedMemory</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">MapSharedMemory</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">UnmapSharedMemory</span>,
+    ],
+    <span class="ident">raw_caps</span>: [
+        <span class="ident">kfs_libuser</span>::<span class="ident">caps</span>::<span class="ident">irq_pair</span>(<span class="number">0x08</span>, <span class="number">0x3FF</span>),
+        <span class="ident">kfs_libuser</span>::<span class="ident">caps</span>::<span class="ident">ioport</span>(<span class="number">0x70</span>),
+        <span class="ident">kfs_libuser</span>::<span class="ident">caps</span>::<span class="ident">ioport</span>(<span class="number">0x71</span>),
+    ]
+});
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../";window.currentCrate = "kfs_clock";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

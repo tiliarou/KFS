@@ -434,6 +434,42 @@
 <span id="434">434</span>
 <span id="435">435</span>
 <span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Syscall implementations</span>
 
@@ -454,12 +490,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">check_thread_killed</span>;
 <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">UserspaceError</span>;
 <span class="kw">use</span> <span class="ident">kfs_libkern</span>::{<span class="ident">nr</span>, <span class="ident">SYSCALL_NAMES</span>, <span class="ident">MemoryInfo</span>, <span class="ident">MemoryAttributes</span>, <span class="ident">MemoryPermissions</span>};
-
-<span class="kw">fn</span> <span class="ident">ignore_syscall</span>(<span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
-    <span class="comment">// TODO: Trigger &quot;unknown syscall&quot; signal, for userspace signal handling.</span>
-    <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Unknown syscall {}&quot;</span>, <span class="ident">nr</span>);
-    <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">NotImplemented</span>)
-}
+<span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitArray</span>;
 
 <span class="doccomment">/// Resize the heap of a process, just like a brk.</span>
 <span class="doccomment">/// It can both expand, and shrink the heap.</span>
@@ -508,8 +539,23 @@
 }
 
 <span class="kw">fn</span> <span class="ident">create_interrupt_event</span>(<span class="ident">irq_num</span>: <span class="ident">usize</span>, <span class="ident">_flag</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
-    <span class="comment">// TODO: Flags?</span>
+    <span class="comment">// TODO: Properly handle flags in create_interrupt_event.</span>
+    <span class="comment">// BODY: The flags in create_interrupt_event configure the triggering of the</span>
+    <span class="comment">// BODY: event. If it is false, the IRQ is active HIGH level sensitive. If it</span>
+    <span class="comment">// BODY: is true, it is rising-edge sensitive.</span>
+    <span class="comment">// TODO: Fully correct error handling in create_interrupt_event.</span>
+    <span class="comment">// BODY: https://switchbrew.org/w/index.php?title=SVC#svcCreateInterruptEvent</span>
+    <span class="comment">// BODY: contains complete error code information. Notably, we&#39;re missing the</span>
+    <span class="comment">// BODY: IRQ already registered error, since our implementation allows</span>
+    <span class="comment">// BODY: multiple InterruptEvent on the same IRQ.</span>
     <span class="kw">let</span> <span class="ident">curproc</span> <span class="op">=</span> <span class="ident">scheduler</span>::<span class="ident">get_current_process</span>();
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">curproc</span>.<span class="ident">capabilities</span>.<span class="ident">irq_access_mask</span>.<span class="ident">get_bit</span>(<span class="ident">irq_num</span>) {
+        <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;no-security-check&quot;</span>) {
+            <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Process {} attempted to create unauthorized IRQEvent for irq {}&quot;</span>, <span class="ident">curproc</span>.<span class="ident">name</span>, <span class="ident">irq_num</span>);
+        } <span class="kw">else</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">NoSuchEntry</span>);
+        }
+    }
     <span class="kw">let</span> <span class="ident">hnd</span> <span class="op">=</span> <span class="ident">curproc</span>.<span class="ident">phandles</span>.<span class="ident">lock</span>().<span class="ident">add_handle</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Handle</span>::<span class="ident">ReadableEvent</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">event</span>::<span class="ident">wait_event</span>(<span class="ident">irq_num</span>)))));
     <span class="prelude-val">Ok</span>(<span class="ident">hnd</span> <span class="kw">as</span> <span class="kw">_</span>)
 }
@@ -829,42 +875,68 @@
 <span class="kw">pub</span> <span class="kw">extern</span> <span class="kw">fn</span> <span class="ident">syscall_handler_inner</span>(<span class="ident">registers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Registers</span>) {
 
     <span class="kw">let</span> (<span class="ident">syscall_nr</span>, <span class="ident">x0</span>, <span class="ident">x1</span>, <span class="ident">x2</span>, <span class="ident">x3</span>, <span class="ident">x4</span>, <span class="ident">x5</span>) <span class="op">=</span> (<span class="ident">registers</span>.<span class="ident">eax</span>, <span class="ident">registers</span>.<span class="ident">ebx</span>, <span class="ident">registers</span>.<span class="ident">ecx</span>, <span class="ident">registers</span>.<span class="ident">edx</span>, <span class="ident">registers</span>.<span class="ident">esi</span>, <span class="ident">registers</span>.<span class="ident">edi</span>, <span class="ident">registers</span>.<span class="ident">ebp</span>);
+    <span class="kw">let</span> <span class="ident">syscall_name</span> <span class="op">=</span> <span class="ident">SYSCALL_NAMES</span>.<span class="ident">get</span>(<span class="ident">syscall_nr</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="string">&quot;Unknown&quot;</span>);
 
     <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Handling syscall {} - x0: {}, x1: {}, x2: {}, x3: {}, x4: {}, x5: {}&quot;</span>,
-          <span class="ident">SYSCALL_NAMES</span>[<span class="ident">syscall_nr</span>], <span class="ident">x0</span>, <span class="ident">x1</span>, <span class="ident">x2</span>, <span class="ident">x3</span>, <span class="ident">x4</span>, <span class="ident">x5</span>);
+          <span class="ident">syscall_name</span>, <span class="ident">x0</span>, <span class="ident">x1</span>, <span class="ident">x2</span>, <span class="ident">x3</span>, <span class="ident">x4</span>, <span class="ident">x5</span>);
 
-    <span class="kw">match</span> <span class="ident">syscall_nr</span> {
+    <span class="kw">let</span> <span class="ident">allowed</span> <span class="op">=</span> <span class="ident">get_current_process</span>().<span class="ident">capabilities</span>.<span class="ident">syscall_mask</span>.<span class="ident">get_bit</span>(<span class="ident">syscall_nr</span>);
+
+    <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;no-security-check&quot;</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">allowed</span> {
+        <span class="kw">let</span> <span class="ident">curproc</span> <span class="op">=</span> <span class="ident">get_current_process</span>();
+        <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Process {} attempted to use unauthorized syscall {} ({:#04x})&quot;</span>,
+               <span class="ident">curproc</span>.<span class="ident">name</span>, <span class="ident">syscall_name</span>, <span class="ident">syscall_nr</span>);
+    }
+
+    <span class="kw">let</span> <span class="ident">allowed</span> <span class="op">=</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;no-security-check&quot;</span>) <span class="op">||</span> <span class="ident">allowed</span>;
+
+    <span class="kw">match</span> (<span class="ident">allowed</span>, <span class="ident">syscall_nr</span>) {
         <span class="comment">// Horizon-inspired syscalls!</span>
-        <span class="ident">nr</span>::<span class="ident">SetHeapSize</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">set_heap_size</span>(<span class="ident">x0</span>)),
-        <span class="ident">nr</span>::<span class="ident">QueryMemory</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">query_memory</span>(<span class="ident">UserSpacePtrMut</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>), <span class="ident">x1</span>, <span class="ident">x2</span>)),
-        <span class="ident">nr</span>::<span class="ident">ExitProcess</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">exit_process</span>()),
-        <span class="ident">nr</span>::<span class="ident">CreateThread</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_thread</span>(<span class="ident">x0</span>, <span class="ident">x1</span>, <span class="ident">x2</span>, <span class="ident">x3</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x4</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">StartThread</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">start_thread</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">ExitThread</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">exit_thread</span>()),
-        <span class="ident">nr</span>::<span class="ident">SleepThread</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">sleep_thread</span>(<span class="ident">x0</span>)),
-        <span class="ident">nr</span>::<span class="ident">MapSharedMemory</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">map_shared_memory</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x3</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">UnmapSharedMemory</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">unmap_shared_memory</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">CloseHandle</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">close_handle</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">WaitSynchronization</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">wait_synchronization</span>(<span class="ident">UserSpacePtr</span>::<span class="ident">from_raw_parts</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>), <span class="ident">x2</span>)),
-        <span class="ident">nr</span>::<span class="ident">ConnectToNamedPort</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">connect_to_named_port</span>(<span class="ident">UserSpacePtr</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>))),
-        <span class="ident">nr</span>::<span class="ident">SendSyncRequestWithUserBuffer</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">send_sync_request_with_user_buffer</span>(<span class="ident">UserSpacePtrMut</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>), <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">OutputDebugString</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">output_debug_string</span>(<span class="ident">UserSpacePtr</span>::<span class="ident">from_raw_parts</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>))),
-        <span class="ident">nr</span>::<span class="ident">CreateSession</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply2</span>(<span class="ident">create_session</span>(<span class="ident">x0</span> <span class="op">!=</span> <span class="number">0</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">AcceptSession</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">accept_session</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">SetHeapSize</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">set_heap_size</span>(<span class="ident">x0</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">QueryMemory</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">query_memory</span>(<span class="ident">UserSpacePtrMut</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>), <span class="ident">x1</span>, <span class="ident">x2</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ExitProcess</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">exit_process</span>()),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreateThread</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_thread</span>(<span class="ident">x0</span>, <span class="ident">x1</span>, <span class="ident">x2</span>, <span class="ident">x3</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x4</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">StartThread</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">start_thread</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ExitThread</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">exit_thread</span>()),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">SleepThread</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">sleep_thread</span>(<span class="ident">x0</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">MapSharedMemory</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">map_shared_memory</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x3</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">UnmapSharedMemory</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">unmap_shared_memory</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CloseHandle</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">close_handle</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">WaitSynchronization</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">wait_synchronization</span>(<span class="ident">UserSpacePtr</span>::<span class="ident">from_raw_parts</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>), <span class="ident">x2</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ConnectToNamedPort</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">connect_to_named_port</span>(<span class="ident">UserSpacePtr</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>))),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">SendSyncRequestWithUserBuffer</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">send_sync_request_with_user_buffer</span>(<span class="ident">UserSpacePtrMut</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>), <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">OutputDebugString</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">output_debug_string</span>(<span class="ident">UserSpacePtr</span>::<span class="ident">from_raw_parts</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>))),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreateSession</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply2</span>(<span class="ident">create_session</span>(<span class="ident">x0</span> <span class="op">!=</span> <span class="number">0</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">AcceptSession</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">accept_session</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
         <span class="comment">// TODO: We need one more register for the timeout. Sad panda.</span>
         <span class="comment">// The ARM64 spec allows x0-x7 as input arguments, so *ideally* we need 2</span>
         <span class="comment">// more registers.</span>
-        <span class="ident">nr</span>::<span class="ident">ReplyAndReceiveWithUserBuffer</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">reply_and_receive_with_user_buffer</span>(<span class="ident">UserSpacePtrMut</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>), <span class="ident">UserSpacePtr</span>::<span class="ident">from_raw_parts</span>(<span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x3</span>), <span class="ident">x4</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x5</span>)),
-        <span class="ident">nr</span>::<span class="ident">CreateSharedMemory</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_shared_memory</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">CreateInterruptEvent</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_interrupt_event</span>(<span class="ident">x0</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="ident">u32</span>)),
-        <span class="ident">nr</span>::<span class="ident">CreatePort</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply2</span>(<span class="ident">create_port</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="op">!=</span> <span class="number">0</span>, <span class="ident">UserSpacePtr</span>(<span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>))),
-        <span class="ident">nr</span>::<span class="ident">ManageNamedPort</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">manage_named_port</span>(<span class="ident">UserSpacePtr</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>), <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>)),
-        <span class="ident">nr</span>::<span class="ident">ConnectToPort</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">connect_to_port</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ReplyAndReceiveWithUserBuffer</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">reply_and_receive_with_user_buffer</span>(<span class="ident">UserSpacePtrMut</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>), <span class="ident">UserSpacePtr</span>::<span class="ident">from_raw_parts</span>(<span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x3</span>), <span class="ident">x4</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x5</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreateSharedMemory</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_shared_memory</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreateInterruptEvent</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_interrupt_event</span>(<span class="ident">x0</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="ident">u32</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreatePort</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply2</span>(<span class="ident">create_port</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="op">!=</span> <span class="number">0</span>, <span class="ident">UserSpacePtr</span>(<span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>))),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ManageNamedPort</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">manage_named_port</span>(<span class="ident">UserSpacePtr</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>), <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ConnectToPort</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">connect_to_port</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
 
         <span class="comment">// KFS extensions</span>
-        <span class="ident">nr</span>::<span class="ident">MapFramebuffer</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply4</span>(<span class="ident">map_framebuffer</span>()),
-        <span class="comment">// Unknown syscall. Should probably crash.</span>
-        <span class="ident">u</span> <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">ignore_syscall</span>(<span class="ident">u</span>))
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">MapFramebuffer</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply4</span>(<span class="ident">map_framebuffer</span>()),
+
+        <span class="comment">// Unknown/unauthorized syscall.</span>
+        (<span class="bool-val">false</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> {
+            <span class="comment">// Attempted to call unauthorized SVC. Horizon invokes usermode</span>
+            <span class="comment">// exception handling in some cases. Let&#39;s just kill the process for</span>
+            <span class="comment">// now.</span>
+            <span class="kw">let</span> <span class="ident">curproc</span> <span class="op">=</span> <span class="ident">get_current_process</span>();
+            <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Process {} attempted to use unauthorized syscall {} ({:#04x}), killing&quot;</span>,
+                   <span class="ident">curproc</span>.<span class="ident">name</span>, <span class="ident">syscall_name</span>, <span class="ident">syscall_nr</span>);
+            <span class="ident">ProcessStruct</span>::<span class="ident">kill_process</span>(<span class="ident">curproc</span>);
+        },
+        <span class="kw">_</span> <span class="op">=&gt;</span> {
+            <span class="kw">let</span> <span class="ident">curproc</span> <span class="op">=</span> <span class="ident">get_current_process</span>();
+            <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Process {} attempted to use unknown syscall {} ({:#04x}), killing&quot;</span>,
+                   <span class="ident">curproc</span>.<span class="ident">name</span>, <span class="ident">syscall_name</span>, <span class="ident">syscall_nr</span>);
+            <span class="ident">ProcessStruct</span>::<span class="ident">kill_process</span>(<span class="ident">curproc</span>);
+        }
     }
 
     <span class="comment">// Effectively kill the thread at syscall boundary</span>

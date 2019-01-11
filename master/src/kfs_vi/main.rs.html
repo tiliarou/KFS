@@ -289,6 +289,31 @@
 <span id="289">289</span>
 <span id="290">290</span>
 <span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Visual Compositor</span>
 <span class="doccomment">//!</span>
@@ -296,7 +321,7 @@
 <span class="doccomment">//! In the future, it will also be capable of talking to the GPU to provide an</span>
 <span class="doccomment">//! OpenGL abstraction layer.</span>
 
-<span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>, <span class="ident">const_vec_new</span>)]</span>
+<span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>, <span class="ident">const_vec_new</span>, <span class="ident">const_let</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
 
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
@@ -521,6 +546,31 @@
 
     <span class="ident">man</span>.<span class="ident">run</span>();
 }
+<span class="macro">capabilities</span><span class="macro">!</span>(<span class="ident">CAPABILITIES</span> <span class="op">=</span> <span class="ident">Capabilities</span> {
+    <span class="ident">svcs</span>: [
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">SleepThread</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">ExitProcess</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">CloseHandle</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">WaitSynchronization</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">OutputDebugString</span>,
+
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">ReplyAndReceiveWithUserBuffer</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">AcceptSession</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">CreateSession</span>,
+
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">ConnectToNamedPort</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">SendSyncRequestWithUserBuffer</span>,
+
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">SetHeapSize</span>,
+
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">QueryMemory</span>,
+
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">MapSharedMemory</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">UnmapSharedMemory</span>,
+
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">MapFramebuffer</span>,
+    ],
+});
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {

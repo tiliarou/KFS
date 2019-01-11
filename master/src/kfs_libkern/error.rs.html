@@ -113,6 +113,7 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Kernel errors</span>
 
@@ -161,7 +162,7 @@
         <span class="ident">Timeout</span> <span class="op">=</span> <span class="number">117</span>,
         <span class="doccomment">/// The syscall was cancelled through cancel_synchronization.</span>
         <span class="ident">Canceled</span> <span class="op">=</span> <span class="number">118</span>,
-        <span class="doccomment">/// A size was given exceeding the maximum allowed value.</span>
+        <span class="doccomment">/// A size or address was given exceeding the maximum allowed value.</span>
         <span class="ident">ExceedingMaximum</span> <span class="op">=</span> <span class="number">119</span>,
         <span class="comment">// InvalidEnum = 120,</span>
         <span class="doccomment">/// The given entry does not exist.</span>
@@ -172,7 +173,8 @@
         <span class="comment">// UnhandledInterrupt = 124,</span>
         <span class="doccomment">/// Attempted to start a process that was already started.</span>
         <span class="ident">ProcessAlreadyStarted</span> <span class="op">=</span> <span class="number">125</span>,
-        <span class="comment">// ReservedValue = 126,</span>
+        <span class="doccomment">/// Attempted to use an unknown value, reserved for future use.</span>
+        <span class="ident">ReservedValue</span> <span class="op">=</span> <span class="number">126</span>,
         <span class="comment">// InvalidHardwareBreakpoint = 127,</span>
         <span class="comment">// FatalException = 128,</span>
         <span class="comment">// LastThreadNotYours = 129,</span>

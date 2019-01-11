@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["get_service_length",""],["get_service_str",""],["main",""]],"static":[["SERVICES",""]],"struct":[["SERVICES",""],["UserInterface",""]]});
+initSidebarItems({"fn":[["get_service_length",""],["get_service_str",""],["main",""]],"static":[["CAPABILITIES",""],["SERVICES",""]],"struct":[["SERVICES",""],["UserInterface",""]]});

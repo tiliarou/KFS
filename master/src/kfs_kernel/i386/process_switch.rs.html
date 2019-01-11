@@ -449,7 +449,7 @@
     <span class="comment">// Set IOPB back to &quot;nothing allowed&quot; state</span>
     <span class="comment">// todo do not change iopb if thread_b belongs to the same process.</span>
     <span class="kw">let</span> <span class="ident">iopb</span> <span class="op">=</span> <span class="ident">gdt</span>::<span class="ident">get_main_iopb</span>();
-    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">thread_current</span>.<span class="ident">process</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
+    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">thread_current</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
         <span class="kw">let</span> <span class="ident">ioport</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ioport</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="ident">iopb</span>[<span class="ident">ioport</span> <span class="op">/</span> <span class="number">8</span>] <span class="op">=</span> <span class="number">0xFF</span>;
     }
@@ -504,7 +504,7 @@
     (<span class="kw-2">*</span><span class="ident">tss</span>).<span class="ident">esp0</span> <span class="op">=</span> <span class="ident">me</span>.<span class="ident">kstack</span>.<span class="ident">get_stack_start</span>() <span class="kw">as</span> <span class="ident">u32</span>;
 
     <span class="comment">// Set IOPB</span>
-    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">me</span>.<span class="ident">process</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
+    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">me</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
         <span class="kw">let</span> <span class="ident">ioport</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ioport</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="ident">iopb</span>[<span class="ident">ioport</span> <span class="op">/</span> <span class="number">8</span>] <span class="op">&amp;=</span> <span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;&lt;</span> (<span class="ident">ioport</span> <span class="op">%</span> <span class="number">8</span>));
     }
@@ -607,7 +607,7 @@
         <span class="kw">let</span> <span class="ident">iopb</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">gdt</span>::<span class="ident">get_main_iopb</span>()
         };
-        <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">current</span>.<span class="ident">process</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
+        <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">current</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">ioport</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ioport</span> <span class="kw">as</span> <span class="ident">usize</span>;
             <span class="ident">iopb</span>[<span class="ident">ioport</span> <span class="op">/</span> <span class="number">8</span>] <span class="op">&amp;=</span> <span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;&lt;</span> (<span class="ident">ioport</span> <span class="op">%</span> <span class="number">8</span>));
         }
