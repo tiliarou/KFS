@@ -1,4 +1,5 @@
 var ALIASES = {};
+ALIASES["kfs_ahci"] = {};
 ALIASES["kfs_bootstrap"] = {};
 ALIASES["kfs_clock"] = {};
 ALIASES["kfs_kernel"] = {};
