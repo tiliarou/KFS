@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["main",""],["show_gif",""],["test_divide_by_zero",""],["test_page_fault",""]],"mod":[["ps2",""]],"static":[["CAPABILITIES",""],["LOUIS3",""],["LOUIS4",""]]});
+initSidebarItems({"fn":[["main",""],["show_gif",""],["test_divide_by_zero",""],["test_page_fault",""],["test_threads",""]],"mod":[["ps2",""]],"static":[["CAPABILITIES",""],["LOUIS3",""],["LOUIS4",""]]});

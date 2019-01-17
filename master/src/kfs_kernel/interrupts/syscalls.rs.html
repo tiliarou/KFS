@@ -633,7 +633,7 @@
 <span class="doccomment">/// # Params</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// * `ip` the entry point of the thread,</span>
-<span class="doccomment">/// * `context` ignored,</span>
+<span class="doccomment">/// * `arg` the initial argument of the thread (passed in eax),</span>
 <span class="doccomment">/// * `sp` the top of the stack,</span>
 <span class="doccomment">/// * `priority` ignored,</span>
 <span class="doccomment">/// * `processor_id` ignored,</span>
@@ -641,9 +641,9 @@
 <span class="doccomment">/// # Returns</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// A thread_handle to the created thread.</span>
-<span class="kw">fn</span> <span class="ident">create_thread</span>(<span class="ident">ip</span>: <span class="ident">usize</span>, <span class="ident">_context</span>: <span class="ident">usize</span>, <span class="ident">sp</span>: <span class="ident">usize</span>, <span class="ident">_priority</span>: <span class="ident">u32</span>, <span class="ident">_processor_id</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">create_thread</span>(<span class="ident">ip</span>: <span class="ident">usize</span>, <span class="ident">arg</span>: <span class="ident">usize</span>, <span class="ident">sp</span>: <span class="ident">usize</span>, <span class="ident">_priority</span>: <span class="ident">u32</span>, <span class="ident">_processor_id</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">cur_proc</span> <span class="op">=</span> <span class="ident">get_current_process</span>();
-    <span class="kw">let</span> <span class="ident">thread</span> <span class="op">=</span> <span class="ident">ThreadStruct</span>::<span class="ident">new</span>( <span class="kw-2">&amp;</span><span class="ident">cur_proc</span>, <span class="ident">VirtualAddress</span>(<span class="ident">ip</span>), <span class="ident">VirtualAddress</span>(<span class="ident">sp</span>))<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">thread</span> <span class="op">=</span> <span class="ident">ThreadStruct</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">cur_proc</span>, <span class="ident">VirtualAddress</span>(<span class="ident">ip</span>), <span class="ident">VirtualAddress</span>(<span class="ident">sp</span>), <span class="ident">arg</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">Handle</span>::<span class="ident">Thread</span>(<span class="ident">thread</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handles_table</span> <span class="op">=</span> <span class="ident">cur_proc</span>.<span class="ident">phandles</span>.<span class="ident">lock</span>();
     <span class="prelude-val">Ok</span>(<span class="ident">handles_table</span>.<span class="ident">add_handle</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">handle</span>)) <span class="kw">as</span> <span class="ident">usize</span>)

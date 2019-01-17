@@ -421,7 +421,7 @@
 
                 (<span class="ident">VirtualAddress</span>(<span class="ident">ep</span>), <span class="ident">stack</span> <span class="op">+</span> <span class="number">5</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>)
         };
-        <span class="kw">let</span> <span class="ident">thread</span> <span class="op">=</span> <span class="ident">ThreadStruct</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">proc</span>, <span class="ident">ep</span>, <span class="ident">sp</span>)
+        <span class="kw">let</span> <span class="ident">thread</span> <span class="op">=</span> <span class="ident">ThreadStruct</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">proc</span>, <span class="ident">ep</span>, <span class="ident">sp</span>, <span class="number">0</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;failed creating thread for service&quot;</span>);
         <span class="ident">ThreadStruct</span>::<span class="ident">start</span>(<span class="ident">thread</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;failed starting thread for service&quot;</span>);
