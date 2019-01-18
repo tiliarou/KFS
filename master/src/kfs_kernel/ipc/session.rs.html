@@ -469,18 +469,18 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [switchbrew]: https://switchbrew.org/w/index.php?title=IPC_Marshalling</span>
 
-<span class="kw">use</span> <span class="ident">scheduler</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
-<span class="kw">use</span> <span class="ident">sync</span>::<span class="ident">SpinLock</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">UserspaceError</span>;
-<span class="kw">use</span> <span class="ident">event</span>::<span class="ident">Waitable</span>;
-<span class="kw">use</span> <span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">SpinLock</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">UserspaceError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">Waitable</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">slice</span>;
 <span class="kw">use</span> <span class="ident">byteorder</span>::{<span class="ident">LE</span>, <span class="ident">ByteOrder</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">MappingFlags</span>, <span class="ident">mapping</span>::<span class="ident">MappingType</span>, <span class="ident">process_memory</span>::<span class="ident">ProcessMemory</span>};
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">UserSpacePtr</span>, <span class="ident">UserSpacePtrMut</span>, <span class="ident">VirtualAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">MappingFlags</span>, <span class="ident">mapping</span>::<span class="ident">MappingType</span>, <span class="ident">process_memory</span>::<span class="ident">ProcessMemory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">UserSpacePtr</span>, <span class="ident">UserSpacePtrMut</span>, <span class="ident">VirtualAddress</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitField</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>

@@ -52,8 +52,8 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Errors specific to memory management</span>
 
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">UserspaceError</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">UserspaceError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
 <span class="doccomment">/// An error related to Memory Management</span>

@@ -276,8 +276,8 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">lands</span>::{<span class="ident">KernelLand</span>, <span class="ident">UserLand</span>, <span class="ident">VirtualSpaceLand</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">MappingFlags</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
 
 <span class="doccomment">/// When paging is on, accessing this address loops back to the directory itself thanks to</span>
 <span class="doccomment">/// recursive mapping on directory&#39;s last entry</span>

@@ -166,17 +166,17 @@
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libuser</span> <span class="kw">as</span> <span class="ident">libuser</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spin</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">hashmap_core</span>;
+
+
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">lazy_static</span>;
 
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">syscalls</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">ipc</span>::<span class="ident">server</span>::{<span class="ident">WaitableManager</span>, <span class="ident">PortHandler</span>, <span class="ident">IWaitable</span>};
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">SmError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">syscalls</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">ipc</span>::<span class="ident">server</span>::{<span class="ident">WaitableManager</span>, <span class="ident">PortHandler</span>, <span class="ident">IWaitable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">SmError</span>;
 <span class="kw">use</span> <span class="ident">hashmap_core</span>::<span class="ident">map</span>::{<span class="ident">HashMap</span>, <span class="ident">Entry</span>};
 <span class="kw">use</span> <span class="ident">spin</span>::<span class="ident">Mutex</span>;
 
@@ -246,7 +246,7 @@
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="kw">let</span> <span class="ident">man</span> <span class="op">=</span> <span class="ident">WaitableManager</span>::<span class="ident">new</span>();
     <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">PortHandler</span>::<span class="op">&lt;</span><span class="ident">UserInterface</span><span class="op">&gt;</span>::<span class="ident">new_managed</span>(<span class="string">&quot;sm:\0&quot;</span>).<span class="ident">unwrap</span>());
-    <span class="ident">man</span>.<span class="ident">add_waitable</span>(<span class="ident">handler</span> <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
+    <span class="ident">man</span>.<span class="ident">add_waitable</span>(<span class="ident">handler</span> <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
 
     <span class="ident">man</span>.<span class="ident">run</span>();
 }

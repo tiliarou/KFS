@@ -329,11 +329,11 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This modules describe low-level functions and structures needed to perform a process switch</span>
 
-<span class="kw">use</span> <span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">gdt</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">gdt</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>;
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">TssStruct</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">TssStruct</span>;
 
 <span class="doccomment">/// The hardware context of a paused thread. It contains just enough registers to get the thread</span>
 <span class="doccomment">/// running again.</span>
@@ -615,7 +615,7 @@
 
         <span class="comment">// call the scheduler to finish the high-level process switch mechanics</span>
         <span class="kw">let</span> <span class="ident">arg</span> <span class="op">=</span> <span class="ident">current</span>.<span class="ident">arg</span>;
-        ::<span class="ident">scheduler</span>::<span class="ident">scheduler_first_schedule</span>(<span class="ident">current</span>, <span class="op">||</span> <span class="ident">jump_to_entrypoint</span>(<span class="ident">entrypoint</span>, <span class="ident">userspace_stack</span>, <span class="ident">arg</span>));
+        <span class="kw">crate</span>::<span class="ident">scheduler</span>::<span class="ident">scheduler_first_schedule</span>(<span class="ident">current</span>, <span class="op">||</span> <span class="ident">jump_to_entrypoint</span>(<span class="ident">entrypoint</span>, <span class="ident">userspace_stack</span>, <span class="ident">arg</span>));
 
         <span class="macro">unreachable</span><span class="macro">!</span>()
     }

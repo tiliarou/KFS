@@ -456,14 +456,14 @@
 <span class="doccomment">//! A [PhysicalMemRegion] is a span of consecutive physical frames.</span>
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTraitPrivate</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
-<span class="kw">use</span> <span class="ident">utils</span>::{<span class="ident">align_down</span>, <span class="ident">div_ceil</span>, <span class="ident">check_aligned</span>, <span class="ident">Splittable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">align_down</span>, <span class="ident">div_ceil</span>, <span class="ident">check_aligned</span>, <span class="ident">Splittable</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Range</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">iter</span>::<span class="ident">StepBy</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="ident">Formatter</span>, <span class="ident">Error</span>, <span class="ident">Debug</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
 
 <span class="doccomment">/// A span of adjacent physical frames. A frame is [PAGE_SIZE].</span>
@@ -600,7 +600,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">PhysicalMemRegion</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;P region {:#010x} - {:#010x}, {} frames&quot;</span>, <span class="self">self</span>.<span class="ident">start_addr</span>,
                <span class="self">self</span>.<span class="ident">start_addr</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">frames</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span> <span class="op">-</span> <span class="number">1</span>, <span class="self">self</span>.<span class="ident">frames</span>)
     }
@@ -664,23 +664,23 @@
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
     <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">PhysicalMemRegionIter</span>};
-    <span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">Splittable</span>;
-    <span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
-    <span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">Splittable</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="attribute">#[<span class="ident">should_panic</span>]</span>
     <span class="kw">fn</span> <span class="ident">on_fixed_mmio_checks_reserved</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0x00000000</span>), <span class="ident">PAGE_SIZE</span>) };
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">on_fixed_mmio_rounds_unaligned</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// reserve them so we don&#39;t panic</span>
-        ::<span class="ident">frame_allocator</span>::<span class="ident">mark_frame_bootstrap_allocated</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0</span>));
-        ::<span class="ident">frame_allocator</span>::<span class="ident">mark_frame_bootstrap_allocated</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">PAGE_SIZE</span>));
+        <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">mark_frame_bootstrap_allocated</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0</span>));
+        <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">mark_frame_bootstrap_allocated</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">PAGE_SIZE</span>));
 
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0x00000007</span>), <span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">1</span>) };
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">region</span>.<span class="ident">start_addr</span>, <span class="number">0</span>);
@@ -690,20 +690,20 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="attribute">#[<span class="ident">should_panic</span>]</span>
     <span class="kw">fn</span> <span class="ident">reconstruct_checks_was_allocated</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0</span>), <span class="number">4</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>) };
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="attribute">#[<span class="ident">should_panic</span>]</span>
     <span class="kw">fn</span> <span class="ident">reconstruct_too_long</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct</span>(<span class="ident">PhysicalAddress</span>(<span class="number">4</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="number">64</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>) };
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">reconstruct_no_dealloc_doesnt_dealloc</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">region</span>.<span class="ident">address</span>();
         ::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">forget</span>(<span class="ident">region</span>);

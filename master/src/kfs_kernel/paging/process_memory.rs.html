@@ -521,12 +521,12 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">cross_process</span>::<span class="ident">CrossProcessMapping</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingFlags</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>, <span class="ident">PhysicalMemRegion</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">arch</span>::<span class="ident">Entry</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
-<span class="kw">use</span> <span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>};
-<span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">Splittable</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>, <span class="ident">PhysicalMemRegion</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">arch</span>::<span class="ident">Entry</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">Splittable</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::{<span class="ident">vec</span>::<span class="ident">Vec</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
@@ -547,7 +547,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The location of each process&#39;s heap should be random, to implement ASLR.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [set_heap_size]: ::interrupts::syscalls::set_heap_size</span>
+    <span class="doccomment">/// [set_heap_size]: crate::interrupts::syscalls::set_heap_size</span>
     <span class="ident">heap_base_address</span>: <span class="ident">VirtualAddress</span>,
 }
 
@@ -660,7 +660,7 @@
     }
 
     <span class="doccomment">/// If these tables are the one currently in use, we return them as an ActiveHierarchy instead.</span>
-    <span class="kw">fn</span> <span class="ident">get_hierarchy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">DynamicHierarchy</span> {
+    <span class="kw">fn</span> <span class="ident">get_hierarchy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">DynamicHierarchy</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">table_hierarchy</span>.<span class="ident">is_currently_active</span>() {
             <span class="kw">unsafe</span> {
                 <span class="comment">// safe because the lock in the ProcessStuct is held, and there is no other safe way</span>
@@ -797,7 +797,7 @@
     <span class="doccomment">/// # Error</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns a KernelError if address does not fall in UserLand.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_memory</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">QueryMemory</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_memory</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">QueryMemory</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">UserLand</span>::<span class="ident">check_contains_address</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">mapping_at</span>(<span class="ident">address</span>))
     }
@@ -939,7 +939,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns an Error if the mapping is Available/Guarded/SystemReserved, as there would be</span>
     <span class="doccomment">/// no point to remap it, and dereferencing the pointer would cause the kernel to page-fault.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mirror_mapping</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CrossProcessMapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mirror_mapping</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CrossProcessMapping</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">UserLand</span>::<span class="ident">check_contains_address</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">occupied_mapping_at</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">address</span> <span class="op">-</span> <span class="ident">mapping</span>.<span class="ident">address</span>();

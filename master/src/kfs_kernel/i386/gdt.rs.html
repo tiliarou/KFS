@@ -451,24 +451,24 @@
 
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 
-<span class="kw">use</span> <span class="ident">sync</span>::{<span class="ident">SpinLock</span>, <span class="ident">Once</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">SpinLock</span>, <span class="ident">Once</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitField</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::{<span class="self">self</span>, <span class="ident">size_of</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">slice</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>;
 
-<span class="kw">use</span> <span class="ident">i386</span>::{<span class="ident">PrivilegeLevel</span>, <span class="ident">TssStruct</span>};
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">structures</span>::<span class="ident">gdt</span>::<span class="ident">SegmentSelector</span>;
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">tables</span>::{<span class="ident">lgdt</span>, <span class="ident">sgdt</span>, <span class="ident">DescriptorTablePointer</span>};
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">segmentation</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::{<span class="ident">PrivilegeLevel</span>, <span class="ident">TssStruct</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">structures</span>::<span class="ident">gdt</span>::<span class="ident">SegmentSelector</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">tables</span>::{<span class="ident">lgdt</span>, <span class="ident">sgdt</span>, <span class="ident">DescriptorTablePointer</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">segmentation</span>::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">MappingFlags</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">MappingFlags</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
-<span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">align_up</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">align_up</span>;
 
 <span class="kw">static</span> <span class="ident">GDT</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">GdtManager</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="ident">Once</span>::<span class="ident">new</span>();
 
@@ -484,7 +484,7 @@
 <span class="doccomment">/// This function should only be called once. Further calls will be silently</span>
 <span class="doccomment">/// ignored.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_gdt</span>() {
-    <span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">tables</span>::{<span class="ident">lldt</span>, <span class="ident">ltr</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">tables</span>::{<span class="ident">lldt</span>, <span class="ident">ltr</span>};
 
     <span class="kw">let</span> <span class="ident">ldt</span> <span class="op">=</span> <span class="ident">GLOBAL_LDT</span>.<span class="ident">call_once</span>(<span class="op">||</span> <span class="ident">DescriptorTable</span>::<span class="ident">new</span>());
 
@@ -607,7 +607,7 @@
 <span class="doccomment">/// Push a task segment.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_task_segment</span>(<span class="ident">task</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TssStruct</span>) <span class="op">-&gt;</span> <span class="ident">u16</span> {
     <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Pushing TSS: {:#?}&quot;</span>, <span class="ident">task</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gdt</span> <span class="op">=</span> <span class="ident">GDT</span>.<span class="ident">try</span>().<span class="ident">unwrap</span>().<span class="ident">lock</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gdt</span> <span class="op">=</span> <span class="ident">GDT</span>.<span class="ident">r#try</span>().<span class="ident">unwrap</span>().<span class="ident">lock</span>();
     <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">gdt</span>.<span class="ident">push</span>(<span class="ident">DescriptorTableEntry</span>::<span class="ident">new_tss</span>(<span class="ident">task</span>, <span class="ident">PrivilegeLevel</span>::<span class="ident">Ring0</span>, <span class="number">0</span>));
     <span class="ident">gdt</span>.<span class="ident">commit</span>(<span class="number">0x8</span>, <span class="number">0x10</span>, <span class="number">0x18</span>);
     <span class="ident">idx</span>
@@ -736,7 +736,7 @@
 <span class="kw">struct</span> <span class="ident">DescriptorTableEntry</span>(<span class="ident">u64</span>);
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">DescriptorTableEntry</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">fmt</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">fmt</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="comment">//ES =0010 00000000 ffffffff 00c09300 DPL=0 DS   [-WA]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;DescriptorTableEntry(NULLDESC)&quot;</span>)

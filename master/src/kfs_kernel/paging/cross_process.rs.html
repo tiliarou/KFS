@@ -141,14 +141,14 @@
 <span class="doccomment">//!   and it is currently (constly) borrowed by the CrossProcessMapping.</span>
 <span class="doccomment">//!</span>
 
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingFlags</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mapping</span>::{<span class="ident">Mapping</span>, <span class="ident">MappingType</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
-<span class="kw">use</span> <span class="ident">utils</span>::{<span class="ident">check_nonzero_length</span>, <span class="ident">add_or_error</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_nonzero_length</span>, <span class="ident">add_or_error</span>};
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 
 <span class="doccomment">/// A struct representing a UserLand mapping temporarily mirrored in KernelSpace.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CrossProcessMapping</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -170,7 +170,7 @@
     <span class="doccomment">/// Returns an Error if `offset` + `len` would overflow.</span>
     <span class="comment">// todo: should be offset + (len - 1), but need to check that it wouldn&#39;t overflow in our function</span>
     <span class="doccomment">/// Returns an Error if `len` is 0.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mirror_mapping</span>(<span class="ident">mapping</span>: <span class="kw-2">&amp;</span><span class="ident">Mapping</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CrossProcessMapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mirror_mapping</span>(<span class="ident">mapping</span>: <span class="kw-2">&amp;</span><span class="ident">Mapping</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CrossProcessMapping</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">check_nonzero_length</span>(<span class="ident">len</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">add_or_error</span>(<span class="ident">offset</span>, <span class="ident">len</span>)<span class="question-mark">?</span> <span class="op">&gt;</span> <span class="ident">mapping</span>.<span class="ident">length</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">InvalidMapping</span> { <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }))

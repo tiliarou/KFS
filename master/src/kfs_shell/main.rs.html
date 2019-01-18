@@ -217,7 +217,7 @@
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">gif</span>;
+<span class="kw">use</span> <span class="ident">gif</span>;
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">log</span>;
@@ -225,14 +225,14 @@
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">lazy_static</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libuser</span> <span class="kw">as</span> <span class="ident">libuser</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">byteorder</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spin</span>;
+
+
 
 <span class="kw">mod</span> <span class="ident">ps2</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">io</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">sm</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">window</span>::{<span class="ident">Window</span>, <span class="ident">Color</span>};
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">terminal</span>::{<span class="ident">Terminal</span>, <span class="ident">WindowSize</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">io</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">sm</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">window</span>::{<span class="ident">Window</span>, <span class="ident">Color</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">terminal</span>::{<span class="ident">Terminal</span>, <span class="ident">WindowSize</span>};
 
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
@@ -305,9 +305,9 @@
         };
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">lock</span>) <span class="op">=</span> <span class="ident">terminal</span>.<span class="ident">try_lock</span>() {
-                <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">lock</span>, <span class="string">&quot;A&quot;</span>);
+                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">lock</span>, <span class="string">&quot;A&quot;</span>);
             }
-            <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">sleep_thread</span>(<span class="number">0</span>);
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">sleep_thread</span>(<span class="number">0</span>);
         }
     }
 
@@ -319,9 +319,9 @@
             };
             <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">lock</span>) <span class="op">=</span> <span class="ident">terminal</span>.<span class="ident">try_lock</span>() {
-                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">lock</span>, <span class="string">&quot;B&quot;</span>);
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">lock</span>, <span class="string">&quot;B&quot;</span>);
                 }
-                <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">sleep_thread</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">sleep_thread</span>(<span class="number">0</span>);
             }
         }
         <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">exit_thread</span>()
@@ -367,7 +367,7 @@
             <span class="prelude-val">Ok</span>(<span class="ident">terminal</span>) <span class="op">=&gt;</span> <span class="kw">break</span> <span class="ident">terminal</span>.<span class="ident">into_inner</span>(),
             <span class="prelude-val">Err</span>(<span class="ident">x</span>) <span class="op">=&gt;</span> <span class="ident">terminal</span> <span class="op">=</span> <span class="ident">x</span>
         }
-        <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">sleep_thread</span>(<span class="number">0</span>);
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">sleep_thread</span>(<span class="number">0</span>);
     }
 }
 

@@ -369,15 +369,15 @@
 <span class="doccomment">//!  in order to be able to find its bottom from any page.</span>
 
 <span class="kw">use</span> ::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">lands</span>::{<span class="ident">VirtualSpaceLand</span>, <span class="ident">UserLand</span>, <span class="ident">KernelLand</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">process_memory</span>::<span class="ident">QueryMemory</span>, <span class="ident">MappingFlags</span>, <span class="ident">PageState</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">lands</span>::{<span class="ident">VirtualSpaceLand</span>, <span class="ident">UserLand</span>, <span class="ident">KernelLand</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">process_memory</span>::<span class="ident">QueryMemory</span>, <span class="ident">MappingFlags</span>, <span class="ident">PageState</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">xmas_elf</span>::<span class="ident">ElfFile</span>;
 <span class="kw">use</span> <span class="ident">xmas_elf</span>::<span class="ident">symbol_table</span>::{<span class="ident">Entry32</span>, <span class="ident">Entry</span>};
 <span class="kw">use</span> <span class="ident">rustc_demangle</span>::<span class="ident">demangle</span> <span class="kw">as</span> <span class="ident">rustc_demangle</span>;
-<span class="kw">use</span> <span class="ident">scheduler</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
 
 <span class="doccomment">/// The size of a kernel stack in pages, not accounting for the page guard.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STACK_SIZE</span>: <span class="ident">usize</span>            <span class="op">=</span> <span class="number">4</span>;
@@ -545,7 +545,7 @@
 <span class="doccomment">/// is stopped and will remain unscheduled at least until this function returns.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dump_stack</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="ident">StackDumpSource</span>, <span class="ident">elf_symbols</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">ElfFile</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Entry32</span>])<span class="op">&gt;</span>) {
-    <span class="kw">use</span> <span class="ident">devices</span>::<span class="ident">rs232</span>::<span class="ident">SerialLogger</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">devices</span>::<span class="ident">rs232</span>::<span class="ident">SerialLogger</span>;
     <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
 
     <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">SerialLogger</span>, <span class="string">&quot;---------- Dumping stack ---------&quot;</span>);
@@ -633,9 +633,9 @@
 <span class="doccomment">/// The data of every stack frame will be hexdumped.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
 <span class="kw">fn</span> <span class="ident">dump_stack_from_slice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">stack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">orig_address</span>: <span class="ident">usize</span>, <span class="kw-2">mut</span> <span class="ident">esp</span>: <span class="ident">usize</span>, <span class="kw-2">mut</span> <span class="ident">ebp</span>: <span class="ident">usize</span>, <span class="kw-2">mut</span> <span class="ident">eip</span>: <span class="ident">usize</span>, <span class="ident">elf</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">ElfFile</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Entry32</span>])<span class="op">&gt;</span>) {
-    <span class="kw">use</span> <span class="ident">devices</span>::<span class="ident">rs232</span>::<span class="ident">SerialLogger</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">devices</span>::<span class="ident">rs232</span>::<span class="ident">SerialLogger</span>;
     <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
-    <span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">print_hexdump_as_if_at_addr</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">print_hexdump_as_if_at_addr</span>;
 
     <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">SerialLogger</span>, <span class="string">&quot;# Stack start: {:#010x}, Stack end: {:#010x}&quot;</span>, <span class="ident">orig_address</span>, <span class="ident">orig_address</span> <span class="op">+</span> <span class="ident">stack</span>.<span class="ident">len</span>());
 

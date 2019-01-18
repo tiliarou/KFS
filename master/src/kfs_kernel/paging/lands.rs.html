@@ -123,10 +123,10 @@
 <span class="doccomment">//! Module describing the split between the UserSpace and KernelSpace,</span>
 <span class="doccomment">//! and a few functions to work with it.</span>
 
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">PAGE_SIZE</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">arch</span>::<span class="ident">ENTRY_COUNT</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
 <span class="doccomment">/// A trait describing the splitting of virtual memory between Kernel and User.</span>

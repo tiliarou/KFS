@@ -197,8 +197,8 @@
 <span class="kw">mod</span> <span class="ident">table</span>;
 
 <span class="kw">use</span> <span class="ident">multiboot2</span>::{<span class="ident">BootInformation</span>, <span class="ident">ElfSectionFlags</span>};
-<span class="kw">use</span> ::<span class="ident">address</span>::{<span class="ident">PhysicalAddress</span>, <span class="ident">VirtualAddress</span>};
-<span class="kw">use</span> ::<span class="ident">frame_alloc</span>::{<span class="ident">Frame</span>, <span class="ident">round_to_page</span>, <span class="ident">round_to_page_upper</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::{<span class="ident">PhysicalAddress</span>, <span class="ident">VirtualAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_alloc</span>::{<span class="ident">Frame</span>, <span class="ident">round_to_page</span>, <span class="ident">round_to_page_upper</span>};
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">table</span>::{<span class="ident">ActivePageTables</span>, <span class="ident">InactivePageTables</span>, <span class="ident">PagingOffPageSet</span>, <span class="ident">MappingType</span>, <span class="ident">EntryFlags</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">table</span>::<span class="ident">PageTablesSet</span>;
@@ -209,7 +209,7 @@
 <span class="kw">use</span> ::<span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
 <span class="kw">use</span> ::<span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">core</span>;
-<span class="kw">use</span> <span class="ident">bootstrap_logging</span>::<span class="ident">Serial</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bootstrap_logging</span>::<span class="ident">Serial</span>;
 
 <span class="doccomment">/// The size of a single page.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PAGE_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4096</span>;

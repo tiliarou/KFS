@@ -50,6 +50,7 @@
 <span id="50">50</span>
 <span id="51">51</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! TODO: Write some AHCI documentation</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>, <span class="ident">const_let</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
 
@@ -66,10 +67,9 @@
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libuser</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libutils</span>;
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spin</span>;
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libuser</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">log</span>;
 

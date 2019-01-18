@@ -56,8 +56,8 @@
 <span class="doccomment">//! This module can only allocate and free whole frames.</span>
 
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">physical_mem_region</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">physical_mem_region</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">PhysicalMemRegionIter</span>};
@@ -85,7 +85,7 @@
 
 <span class="kw">mod</span> <span class="ident">private</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">PhysicalMemRegion</span>;
-    <span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
 
     <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FrameAllocatorTraitPrivate</span> {
         <span class="doccomment">/// Marks a region as deallocated.</span>

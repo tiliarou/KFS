@@ -701,17 +701,17 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocatorTrait</span>, <span class="ident">FrameAllocatorTraitPrivate</span>};
 
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
 <span class="kw">use</span> <span class="ident">multiboot2</span>::<span class="ident">BootInformation</span>;
-<span class="kw">use</span> <span class="ident">sync</span>::<span class="ident">SpinLock</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">SpinLock</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
-<span class="kw">use</span> <span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitArray</span>;
-<span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">BitArrayExt</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">round_to_page</span>, <span class="ident">round_to_page_upper</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">BitArrayExt</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">round_to_page</span>, <span class="ident">round_to_page_upper</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
 <span class="kw">const</span> <span class="ident">FRAME_OFFSET_MASK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0xFFF</span>;              <span class="comment">// The offset part in a frame</span>
@@ -772,7 +772,7 @@
 
 <span class="doccomment">/// The physical memory manager.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Serves physical memory in atomic blocks of size [PAGE_SIZE](::paging::PAGE_SIZE), called frames.</span>
+<span class="doccomment">/// Serves physical memory in atomic blocks of size [PAGE_SIZE](crate::paging::PAGE_SIZE), called frames.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// An allocation request returns a [PhysicalMemRegion], which represents a list of</span>
 <span class="doccomment">/// physically adjacent frames. When this returned `PhysicalMemRegion` is eventually dropped</span>
@@ -998,7 +998,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">bitmap</span>) <span class="kw">in</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">8</span> {
-                <span class="kw">let</span> <span class="ident">curaddr</span> <span class="op">=</span> (<span class="ident">i</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">j</span>) <span class="op">*</span> ::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+                <span class="kw">let</span> <span class="ident">curaddr</span> <span class="op">=</span> (<span class="ident">i</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">j</span>) <span class="op">*</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
                 <span class="kw">if</span> <span class="ident">bitmap</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">j</span>) <span class="op">!=</span> <span class="number">0</span> {
                     <span class="comment">// Area is available</span>
                     <span class="kw">match</span> <span class="ident">cur</span> {
@@ -1124,7 +1124,7 @@
     <span class="doccomment">/// The way you usually use it.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">ok</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
 
         <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
@@ -1138,7 +1138,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">fragmented</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all available</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_free</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1160,7 +1160,7 @@
     <span class="doccomment">/// You can&#39;t give it a size of 0.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">zero</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">0</span>).<span class="ident">unwrap_err</span>();
         <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">0</span>).<span class="ident">unwrap_err</span>();
     }
@@ -1172,7 +1172,7 @@
     <span class="doccomment">/// Allocation fails if Out Of Memory.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">physical_oom_frame</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all reserved</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_reserved</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1186,7 +1186,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">physical_oom_frame_threshold</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all reserved</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_reserved</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1199,7 +1199,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">physical_oom_region</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all reserved</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_reserved</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1217,7 +1217,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">physical_oom_region_threshold</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all reserved</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_reserved</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1232,7 +1232,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">physical_oom_fragmented</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all available</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_free</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1246,7 +1246,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">physical_oom_threshold_fragmented</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all available</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_free</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1257,7 +1257,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">allocate_last_frame</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all available</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_free</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1289,7 +1289,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">oom_hard</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all reserved</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_reserved</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);
@@ -1333,7 +1333,7 @@
     <span class="doccomment">/// and some frames will have been marked allocated.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">physical_oom_doesnt_leak</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="comment">// make it all available</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="ident">mark_area_free</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>, <span class="number">0</span>, <span class="ident">ALL_MEMORY</span>);

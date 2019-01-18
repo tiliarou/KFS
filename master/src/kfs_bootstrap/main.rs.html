@@ -296,12 +296,6 @@
 <span id="296">296</span>
 <span id="297">297</span>
 <span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Bootstrap stage</span>
 <span class="doccomment">//!</span>
@@ -328,29 +322,23 @@
 <span class="doccomment">//!</span>
 
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">lang_items</span>, <span class="ident">start</span>, <span class="ident">asm</span>, <span class="ident">global_asm</span>, <span class="ident">compiler_builtins_lib</span>, <span class="ident">naked_functions</span>, <span class="ident">core_intrinsics</span>, <span class="ident">const_fn</span>, <span class="ident">abi_x86_interrupt</span>)]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>, <span class="ident">no_std</span>)]</span>
+<span class="attribute">#![<span class="ident">no_std</span>]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>, <span class="ident">no_main</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">std</span> <span class="kw">as</span> <span class="ident">core</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">test</span>)))]</span>
 <span class="macro">compile_error</span><span class="macro">!</span>(<span class="string">&quot;WTF&quot;</span>);
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">arrayvec</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">bit_field</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>))]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">std</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">lazy_static</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spin</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">multiboot2</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">bitflags</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">static_assertions</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">xmas_elf</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libutils</span>;
 
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
 <span class="kw">use</span> <span class="ident">spin</span>::<span class="ident">Once</span>;
@@ -363,11 +351,11 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">elf_loader</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bootstrap_stack</span>;
 
-<span class="kw">use</span> <span class="ident">bootstrap_logging</span>::<span class="ident">Serial</span>;
-<span class="kw">use</span> <span class="ident">frame_alloc</span>::<span class="ident">FrameAllocator</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">PageTablesSet</span>, <span class="ident">KernelLand</span>, <span class="ident">EntryFlags</span>, <span class="ident">ACTIVE_PAGE_TABLES</span>};
-<span class="kw">use</span> <span class="ident">bootstrap_stack</span>::<span class="ident">BootstrapStack</span>;
-<span class="kw">use</span> <span class="ident">address</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bootstrap_logging</span>::<span class="ident">Serial</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_alloc</span>::<span class="ident">FrameAllocator</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PageTablesSet</span>, <span class="ident">KernelLand</span>, <span class="ident">EntryFlags</span>, <span class="ident">ACTIVE_PAGE_TABLES</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bootstrap_stack</span>::<span class="ident">BootstrapStack</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::<span class="ident">VirtualAddress</span>;
 
 <span class="doccomment">/// 4 pages, PAGE_SIZE aligned.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">align</span>(<span class="number">4096</span>))]</span>
@@ -384,8 +372,8 @@
     <span class="kw">unsafe</span> {
         <span class="kw">let</span> <span class="ident">sp</span>: <span class="ident">usize</span>;
         <span class="macro">asm</span><span class="macro">!</span>(<span class="string">&quot;mov $0, esp&quot;</span> : <span class="string">&quot;=r&quot;</span>(<span class="ident">sp</span>) : : : <span class="string">&quot;intel&quot;</span>);
-        <span class="kw">let</span> <span class="ident">sp_start</span> <span class="op">=</span> <span class="ident">sp</span> <span class="op">-</span> ::<span class="ident">STACK</span>.<span class="number">0</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="ident">kfs_libutils</span>::<span class="ident">print_hexdump</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Serial</span>, <span class="kw-2">&amp;</span>::<span class="ident">STACK</span>.<span class="number">0</span>[<span class="ident">sp_start</span>..]);
+        <span class="kw">let</span> <span class="ident">sp_start</span> <span class="op">=</span> <span class="ident">sp</span> <span class="op">-</span> <span class="kw">crate</span>::<span class="ident">STACK</span>.<span class="number">0</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="ident">kfs_libutils</span>::<span class="ident">print_hexdump</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Serial</span>, <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">STACK</span>.<span class="number">0</span>[<span class="ident">sp_start</span>..]);
     }
 }
 
@@ -506,7 +494,7 @@
 <span class="doccomment">/// Something went really wrong, just print a message on serial output, and spin indefinitely.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">panic_handler</span>]</span> <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">pub</span> <span class="kw">extern</span> <span class="kw">fn</span> <span class="ident">panic_fmt</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span>::<span class="ident">core</span>::<span class="ident">panic</span>::<span class="ident">PanicInfo</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
+<span class="kw">pub</span> <span class="kw">extern</span> <span class="kw">fn</span> <span class="ident">panic_fmt</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span>::<span class="ident">core</span>::<span class="ident">panic</span>::<span class="ident">PanicInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
 
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>,
                               <span class="string">&quot;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\

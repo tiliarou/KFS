@@ -506,15 +506,16 @@
 <span id="506">506</span>
 <span id="507">507</span>
 <span id="508">508</span>
+<span id="509">509</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Mapping</span>
 
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingFlags</span>, <span class="ident">error</span>::<span class="ident">MmError</span>};
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::<span class="ident">PhysicalMemRegion</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingFlags</span>, <span class="ident">error</span>::<span class="ident">MmError</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">PhysicalMemRegion</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::{<span class="ident">vec</span>::<span class="ident">Vec</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
-<span class="kw">use</span> <span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>, <span class="ident">Splittable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>, <span class="ident">Splittable</span>};
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 <span class="kw">use</span> <span class="ident">kfs_libkern</span>;
 
@@ -720,13 +721,14 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Mapping</span>;
     <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingFlags</span>;
     <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingType</span>;
-    <span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
-    <span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
-    <span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
-    <span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">Splittable</span>;
-    <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
-    <span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
+    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">Splittable</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
 
     <span class="doccomment">/// Applies the same tests to guard, available and system_reserved.</span>
     <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">test_empty_mapping</span> {
@@ -782,7 +784,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_ok</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000000</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap</span>();
@@ -790,7 +792,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_shared_ok</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000000</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap</span>();
@@ -798,7 +800,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_empty_vec</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping_err</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000000</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap_err</span>();
@@ -806,7 +808,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_shared_empty_vec</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>());
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping_err</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000000</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap_err</span>();
@@ -814,7 +816,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_zero_sized_region</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct_no_dealloc</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">PAGE_SIZE</span>), <span class="number">0</span>) };
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">region</span>];
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
@@ -823,7 +825,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_zero_sized_regions</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">region1</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct_no_dealloc</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">PAGE_SIZE</span>), <span class="number">0</span>) };
         <span class="kw">let</span> <span class="ident">region2</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct_no_dealloc</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">PAGE_SIZE</span>), <span class="number">0</span>) };
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">region1</span>, <span class="ident">region2</span>];
@@ -833,7 +835,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_unaligned_addr</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping_err</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000007</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap_err</span>();
@@ -841,7 +843,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_shared_unaligned_addr</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping_err</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000007</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap_err</span>();
@@ -851,7 +853,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="attribute">#[<span class="ident">should_panic</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_unaligned_len</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">7</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000000</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap</span>();
@@ -860,7 +862,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="attribute">#[<span class="ident">should_panic</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_shared_unaligned_len</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">7</span>).<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="number">0x40000000</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap</span>();
@@ -868,7 +870,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_threshold</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="ident">usize</span>::<span class="ident">max_value</span>() <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">1</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap</span>();
@@ -876,7 +878,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_shared_threshold</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="ident">usize</span>::<span class="ident">max_value</span>() <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">1</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap</span>();
@@ -884,7 +886,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_regular_overflow</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping_err</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="ident">usize</span>::<span class="ident">max_value</span>() <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap_err</span>();
@@ -892,7 +894,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">mapping_shared_overflow</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>();
         <span class="kw">let</span> <span class="ident">_mapping_err</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="ident">usize</span>::<span class="ident">max_value</span>() <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">flags</span>).<span class="ident">unwrap_err</span>();
@@ -901,7 +903,7 @@
     <span class="doccomment">/// Splitting a mapping should only be valid for a PAGE_SIZE aligned offset.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">splittable_unaligned</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>()];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_r</span>()).<span class="ident">unwrap</span>();
         <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">split_at</span>(<span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">unwrap_err</span>() {
@@ -921,7 +923,7 @@
     <span class="doccomment">/// Splitting a shared mapping should unconditionally fail.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">splittable_shared</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>()]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_r</span>()).<span class="ident">unwrap</span>();
         <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">split_at</span>(<span class="number">0</span>).<span class="ident">unwrap_err</span>() {
@@ -958,7 +960,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">splittable_split_at_zero</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>()];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_r</span>()).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">split_at</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
@@ -975,7 +977,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">splittable_split_at_too_big</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>()];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_r</span>()).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">split_at</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
@@ -992,7 +994,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">splittable_split_at</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> ::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
+        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>()];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">5</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_r</span>()).<span class="ident">unwrap</span>();
         <span class="comment">// 3 -&gt; 2 + 1</span>

@@ -380,11 +380,11 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">arch</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">ActiveHierarchy</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">hierarchical_table</span>::{<span class="ident">TableHierarchy</span>, <span class="ident">PageState</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingFlags</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>,
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>,
                       <span class="ident">mark_frame_bootstrap_allocated</span>};
-<span class="kw">use</span> <span class="ident">sync</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
 <span class="doccomment">/// A struct that acts on KernelLand and RecursiveTablesLand.</span>
@@ -567,7 +567,7 @@
     <span class="doccomment">/// If `address` is not in KernelLand.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mapping_state</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">VirtualAddress</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">PhysicalAddress</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span><span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="ident">addr_aligned</span> <span class="op">=</span> <span class="ident">VirtualAddress</span>(::<span class="ident">utils</span>::<span class="ident">align_down</span>(<span class="ident">addr</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>));
+        <span class="kw">let</span> <span class="ident">addr_aligned</span> <span class="op">=</span> <span class="ident">VirtualAddress</span>(<span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">align_down</span>(<span class="ident">addr</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>));
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">contains_address</span>(<span class="ident">addr</span>));
         <span class="comment">// use for_every_entry with length of just one page</span>
         <span class="self">self</span>.<span class="ident">tables</span>.<span class="ident">for_every_entry</span>(<span class="ident">addr_aligned</span>, <span class="ident">PAGE_SIZE</span>,

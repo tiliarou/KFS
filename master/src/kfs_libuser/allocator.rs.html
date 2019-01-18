@@ -69,8 +69,8 @@
 <span class="kw">use</span> <span class="ident">spin</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">NonNull</span>;
 <span class="kw">use</span> <span class="ident">linked_list_allocator</span>::{<span class="ident">Heap</span>, <span class="ident">align_up</span>};
-<span class="kw">use</span> <span class="ident">syscalls</span>::<span class="ident">set_heap_size</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">syscalls</span>::<span class="ident">set_heap_size</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 
 <span class="doccomment">/// The libuser heap allocator.</span>
 <span class="doccomment">///</span>
@@ -80,7 +80,7 @@
 
 <span class="kw">impl</span> <span class="ident">Allocator</span> {
     <span class="doccomment">/// Safely expands the heap if possible.</span>
-    <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">heap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="ident">Heap</span><span class="op">&gt;</span>, <span class="ident">by</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">heap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Heap</span><span class="op">&gt;</span>, <span class="ident">by</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">total</span> <span class="op">=</span> <span class="ident">heap</span>.<span class="ident">size</span>() <span class="op">+</span> <span class="ident">align_up</span>(<span class="ident">by</span>, <span class="number">0x200_000</span>); <span class="comment">// set_heap_size requires this alignment.</span>
 
         <span class="kw">let</span> <span class="ident">heap_bottom</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">set_heap_size</span>(<span class="ident">total</span>)<span class="question-mark">?</span> };

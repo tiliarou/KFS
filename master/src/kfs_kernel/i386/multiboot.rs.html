@@ -35,7 +35,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Multiboot Information</span>
 
-<span class="kw">use</span> <span class="ident">sync</span>::<span class="ident">Once</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">Once</span>;
 <span class="kw">use</span> <span class="ident">multiboot2</span>::<span class="ident">BootInformation</span>;
 
 <span class="kw">static</span> <span class="ident">BOOT_INFO</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">BootInformation</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once</span>::<span class="ident">new</span>();
@@ -47,7 +47,7 @@
 <span class="doccomment">/// Panics if the BootInformation hasn&#39;t been inited yet. This normally happens</span>
 <span class="doccomment">/// right after paging is enabled.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_boot_information</span>() <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">BootInformation</span> {
-    <span class="ident">BOOT_INFO</span>.<span class="ident">try</span>().<span class="ident">expect</span>(<span class="string">&quot;BootInformation is not init&#39;d&quot;</span>)
+    <span class="ident">BOOT_INFO</span>.<span class="ident">r#try</span>().<span class="ident">expect</span>(<span class="string">&quot;BootInformation is not init&#39;d&quot;</span>)
 }
 
 <span class="doccomment">/// Tries to get a pointer to the multiboot information structure.</span>
@@ -55,7 +55,7 @@
 <span class="doccomment">/// Returns `None` if the BootInformation hasn&#39;t been inited yet. This normally happens</span>
 <span class="doccomment">/// right after paging is enabled.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_get_boot_information</span>() <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">BootInformation</span><span class="op">&gt;</span> {
-    <span class="ident">BOOT_INFO</span>.<span class="ident">try</span>()
+    <span class="ident">BOOT_INFO</span>.<span class="ident">r#try</span>()
 }
 
 <span class="doccomment">/// Initializes the boot information module, allowing the `get_boot_information`</span>

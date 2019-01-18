@@ -1013,8 +1013,8 @@
 
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">entry</span>::{<span class="ident">EntryFlags</span> <span class="kw">as</span> <span class="ident">I386EntryFlags</span>, <span class="ident">PageState</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> ::<span class="ident">frame_alloc</span>::{<span class="ident">Frame</span>, <span class="ident">FrameAllocator</span>, <span class="ident">MEMORY_FRAME_SIZE</span>};
-<span class="kw">use</span> ::<span class="ident">address</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_alloc</span>::{<span class="ident">Frame</span>, <span class="ident">FrameAllocator</span>, <span class="ident">MEMORY_FRAME_SIZE</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">DerefMut</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;

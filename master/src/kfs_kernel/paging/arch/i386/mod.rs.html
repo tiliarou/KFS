@@ -97,7 +97,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">entry</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">table</span>;
 
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
 
 <span class="doccomment">/// The page size. Dictated by the MMU.</span>
 <span class="doccomment">/// In simple, elegant, sane i386 paging, a page is 4kB.</span>

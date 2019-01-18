@@ -146,8 +146,8 @@
 <span class="doccomment">//! VESA Bios Extensions Framebuffer</span>
 
 <span class="kw">use</span> <span class="ident">spin</span>::<span class="ident">Mutex</span>;
-<span class="kw">use</span> <span class="ident">syscalls</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">syscalls</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">slice</span>;
 
 <span class="doccomment">/// A rgb color</span>

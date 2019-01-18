@@ -144,11 +144,11 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! APIs allowing the creation of a window, and drawing inside of it.</span>
 
-<span class="kw">use</span> <span class="ident">types</span>::{<span class="ident">SharedMemory</span>, <span class="ident">MappedSharedMemory</span>};
-<span class="kw">use</span> <span class="ident">vi</span>::{<span class="ident">ViInterface</span>, <span class="ident">IBuffer</span>};
-<span class="kw">use</span> <span class="ident">syscalls</span>::<span class="ident">MemoryPermissions</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">SharedMemory</span>, <span class="ident">MappedSharedMemory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vi</span>::{<span class="ident">ViInterface</span>, <span class="ident">IBuffer</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">syscalls</span>::<span class="ident">MemoryPermissions</span>;
 <span class="kw">use</span> <span class="ident">kfs_libutils</span>::<span class="ident">align_up</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">slice</span>;
 
 <span class="doccomment">/// A rgb color</span>
@@ -192,7 +192,7 @@
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">*</span> <span class="ident">width</span> <span class="op">*</span> <span class="ident">bpp</span> <span class="op">/</span> <span class="number">8</span>;
 
         <span class="kw">let</span> <span class="ident">sharedmem</span> <span class="op">=</span> <span class="ident">SharedMemory</span>::<span class="ident">new</span>(<span class="ident">align_up</span>(<span class="ident">size</span>, <span class="number">0x1000</span>) <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">MemoryPermissions</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MemoryPermissions</span>::<span class="ident">WRITABLE</span>, <span class="ident">MemoryPermissions</span>::<span class="ident">READABLE</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> ::<span class="ident">find_free_address</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="number">0x1000</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">find_free_address</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="number">0x1000</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">sharedmem</span>.<span class="ident">map</span>(<span class="ident">addr</span>, <span class="ident">align_up</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="number">0x1000</span>), <span class="ident">MemoryPermissions</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MemoryPermissions</span>::<span class="ident">WRITABLE</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">vi</span>.<span class="ident">create_buffer</span>(<span class="ident">buf</span>.<span class="ident">as_shared_mem</span>(), <span class="ident">top</span>, <span class="ident">left</span>, <span class="ident">width</span>, <span class="ident">height</span>)<span class="question-mark">?</span>;
 

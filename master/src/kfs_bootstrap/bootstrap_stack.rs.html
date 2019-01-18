@@ -118,8 +118,8 @@
 <span class="doccomment">//! Must be consistent with KernelStack, as kernel considers it&#39;s already running on a KernelStack.</span>
 
 <span class="kw">use</span> ::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">address</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::<span class="ident">VirtualAddress</span>;
 
 <span class="doccomment">/// The size of a kernel stack, not accounting for the page guard</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STACK_SIZE</span>: <span class="ident">usize</span>            <span class="op">=</span> <span class="number">4</span>;

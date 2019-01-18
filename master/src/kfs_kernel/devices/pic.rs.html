@@ -153,9 +153,9 @@
 <span class="doccomment">//! Only handles the usual case of two PICs in a cascading setup, where the</span>
 <span class="doccomment">//! SLAVE is setup to cascade to the line 2 of the MASTER.</span>
 
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">pio</span>::<span class="ident">Pio</span>;
-<span class="kw">use</span> <span class="ident">io</span>::<span class="ident">Io</span>;
-<span class="kw">use</span> <span class="ident">sync</span>::{<span class="ident">Once</span>, <span class="ident">SpinLockIRQ</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">pio</span>::<span class="ident">Pio</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">io</span>::<span class="ident">Io</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">Once</span>, <span class="ident">SpinLockIRQ</span>};
 
 <span class="macro">bitflags</span><span class="macro">!</span> {
     <span class="doccomment">/// The first control word sent to the PIC.</span>

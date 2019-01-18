@@ -339,9 +339,9 @@
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitArray</span>;
 <span class="kw">use</span> <span class="ident">kfs_libutils</span>::<span class="ident">BitArrayExt</span>;
 <span class="kw">use</span> <span class="ident">kfs_libutils</span>::{<span class="ident">bit_array_first_one</span>, <span class="ident">bit_array_first_count_one</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
-<span class="kw">use</span> <span class="ident">address</span>::<span class="ident">PhysicalAddress</span>;
-<span class="kw">use</span> <span class="ident">bootstrap_logging</span>::<span class="ident">Serial</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::<span class="ident">PhysicalAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bootstrap_logging</span>::<span class="ident">Serial</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
 
 <span class="doccomment">/// A memory frame is the same size as a page</span>

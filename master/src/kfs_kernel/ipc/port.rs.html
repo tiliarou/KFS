@@ -222,15 +222,15 @@
 <span class="doccomment">//! let server_sess = server.accept();</span>
 <span class="doccomment">//! ```</span>
 
-<span class="kw">use</span> <span class="ident">scheduler</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
-<span class="kw">use</span> <span class="ident">sync</span>::<span class="ident">SpinLock</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">UserspaceError</span>;
-<span class="kw">use</span> <span class="ident">event</span>::{<span class="self">self</span>, <span class="ident">Waitable</span>};
-<span class="kw">use</span> <span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">SpinLock</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">UserspaceError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">event</span>::{<span class="self">self</span>, <span class="ident">Waitable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
-<span class="kw">use</span> <span class="ident">ipc</span>::<span class="ident">session</span>::{<span class="self">self</span>, <span class="ident">ClientSession</span>, <span class="ident">ServerSession</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ipc</span>::<span class="ident">session</span>::{<span class="self">self</span>, <span class="ident">ClientSession</span>, <span class="ident">ServerSession</span>};
 
 <span class="doccomment">/// An endpoint which can be connected to.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -334,7 +334,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">accept</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServerSession</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
         <span class="kw">loop</span> {
             <span class="comment">// Wait for incoming_connections to contain a connection.</span>
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">event</span>::<span class="ident">wait</span>(<span class="prelude-val">Some</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">Waitable</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">event</span>::<span class="ident">wait</span>(<span class="prelude-val">Some</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Waitable</span>))<span class="question-mark">?</span>;
 
             <span class="comment">// Acquire the connection.</span>
             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">incoming</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">incoming_connections</span>.<span class="ident">lock</span>().<span class="ident">pop</span>() {

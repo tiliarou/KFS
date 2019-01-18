@@ -232,7 +232,7 @@
     <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tables</span> {
         <span class="doccomment">//! Instructions for loading descriptor tables (GDT, IDT, etc.).</span>
 
-        <span class="kw">use</span> <span class="ident">gdt</span>::<span class="ident">segment_selector</span>::<span class="ident">SegmentSelector</span>;
+        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">gdt</span>::<span class="ident">segment_selector</span>::<span class="ident">SegmentSelector</span>;
 
         <span class="doccomment">/// A struct describing a pointer to a descriptor table (GDT / IDT).</span>
         <span class="doccomment">/// This is in a format suitable for giving to &#39;lgdt&#39; or &#39;lidt&#39;.</span>
@@ -269,7 +269,7 @@
     <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">segmentation</span> {
         <span class="doccomment">//! Provides functions to read and write segment registers.</span>
 
-        <span class="kw">use</span> <span class="ident">gdt</span>::<span class="ident">segment_selector</span>::<span class="ident">SegmentSelector</span>;
+        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">gdt</span>::<span class="ident">segment_selector</span>::<span class="ident">SegmentSelector</span>;
 
         <span class="doccomment">/// Reload code segment register.</span>
         <span class="doccomment">/// Note this is special since we can not directly move</span>
@@ -422,7 +422,7 @@
     <span class="ident">_reservedc</span>: <span class="ident">u16</span>,
 }
 
-<span class="kw">use</span> <span class="ident">gdt</span>::<span class="ident">segment_selector</span>::<span class="ident">SegmentSelector</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">gdt</span>::<span class="ident">segment_selector</span>::<span class="ident">SegmentSelector</span>;
 
 <span class="kw">impl</span> <span class="ident">TssStruct</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">cr3</span>: <span class="ident">u32</span>, <span class="ident">sp0</span>: (<span class="ident">SegmentSelector</span>, <span class="ident">usize</span>), <span class="ident">sp1</span>: (<span class="ident">SegmentSelector</span>, <span class="ident">usize</span>), <span class="ident">sp2</span>: (<span class="ident">SegmentSelector</span>, <span class="ident">usize</span>), <span class="ident">ldt</span>: <span class="ident">SegmentSelector</span>) <span class="op">-&gt;</span> <span class="ident">TssStruct</span> {

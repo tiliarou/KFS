@@ -842,10 +842,10 @@
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>;
 <span class="kw">use</span> <span class="ident">byteorder</span>::{<span class="ident">ByteOrder</span>, <span class="ident">LE</span>};
 <span class="kw">use</span> <span class="ident">arrayvec</span>::{<span class="ident">ArrayVec</span>, <span class="ident">Array</span>};
-<span class="kw">use</span> <span class="ident">utils</span>::{<span class="self">self</span>, <span class="ident">align_up</span>, <span class="ident">CursorWrite</span>, <span class="ident">CursorRead</span>};
-<span class="kw">use</span> <span class="ident">types</span>::{<span class="ident">Handle</span>, <span class="ident">HandleRef</span>, <span class="ident">Pid</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="self">self</span>, <span class="ident">align_up</span>, <span class="ident">CursorWrite</span>, <span class="ident">CursorRead</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Handle</span>, <span class="ident">HandleRef</span>, <span class="ident">Pid</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitField</span>;
-<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">LibuserError</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">LibuserError</span>};
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">macros</span>;
@@ -959,7 +959,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Creates an IPC buffer from a mutable reference and a type. The type</span>
     <span class="doccomment">/// should be of type B, W or C.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mut_ref</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mut_ref</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">IPCBuffer</span> {
             <span class="ident">addr</span>: <span class="ident">val</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span> <span class="kw">as</span> <span class="ident">usize</span>,
             <span class="ident">size</span>: <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(),
@@ -969,7 +969,7 @@
     }
     <span class="doccomment">/// Creates an IPC buffer from a reference and a type. The type should be of</span>
     <span class="doccomment">/// type A or X.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_ref</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>, <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_ref</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>, <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">IPCBuffer</span> {
             <span class="ident">addr</span>: <span class="ident">val</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">T</span> <span class="kw">as</span> <span class="ident">usize</span>,
             <span class="ident">size</span>: <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(),
@@ -979,7 +979,7 @@
     }
     <span class="doccomment">/// Creates an IPC buffer from a mutable slice and a type. The type should be</span>
     <span class="doccomment">/// of type B, W or C.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>], <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>], <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">IPCBuffer</span> {
             <span class="ident">addr</span>: <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">val</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span> },
             <span class="ident">size</span>: <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">*</span> <span class="ident">val</span>.<span class="ident">len</span>(),
@@ -989,7 +989,7 @@
     }
     <span class="doccomment">/// Creates an IPC buffer from a slice and a type. The type should be of</span>
     <span class="doccomment">/// type A or X.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mut_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">T</span>], <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mut_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">T</span>], <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">IPCBuffer</span> {
             <span class="ident">addr</span>: <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">val</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span> },
             <span class="ident">size</span>: <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">*</span> <span class="ident">val</span>.<span class="ident">len</span>(),
@@ -1216,7 +1216,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if attempting to push more handles than there is space for in this</span>
     <span class="doccomment">/// message.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_handle_copy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">HandleRef</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_handle_copy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">HandleRef</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">copy_handles</span>.<span class="ident">push</span>(<span class="ident">handle</span>.<span class="ident">inner</span>.<span class="ident">get</span>());
         <span class="self">self</span>
     }

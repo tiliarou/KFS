@@ -44,7 +44,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Checked maths functions returning useful errors.</span>
 
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
 <span class="doccomment">/// checks that a certain value meets the given alignment.</span>
@@ -69,7 +69,7 @@
     <span class="kw">match</span> <span class="ident">lhs</span>.<span class="ident">checked_add</span>(<span class="ident">rhs</span>) {
         <span class="prelude-val">Some</span>(<span class="ident">result</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">result</span>),
         <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">WouldOverflow</span> { <span class="ident">lhs</span>,
-                                                 <span class="ident">operation</span>: ::<span class="ident">error</span>::<span class="ident">ArithmeticOperation</span>::<span class="ident">Add</span>,
+                                                 <span class="ident">operation</span>: <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">ArithmeticOperation</span>::<span class="ident">Add</span>,
                                                  <span class="ident">rhs</span>,
                                                  <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
     }
@@ -80,7 +80,7 @@
     <span class="kw">match</span> <span class="ident">lhs</span>.<span class="ident">checked_add</span>(<span class="ident">rhs</span>) {
         <span class="prelude-val">Some</span>(<span class="ident">result</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">result</span>),
         <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">WouldOverflow</span> { <span class="ident">lhs</span>,
-                                                 <span class="ident">operation</span>: ::<span class="ident">error</span>::<span class="ident">ArithmeticOperation</span>::<span class="ident">Sub</span>,
+                                                 <span class="ident">operation</span>: <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">ArithmeticOperation</span>::<span class="ident">Sub</span>,
                                                  <span class="ident">rhs</span>,
                                                  <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
     }

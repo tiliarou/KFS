@@ -132,13 +132,13 @@
 <span class="doccomment">//! A simple wrapper around linked_list_allocator. We catch the OomError, and</span>
 <span class="doccomment">//! try to expand the heap with more pages in that case.</span>
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">alloc</span>::{<span class="ident">GlobalAlloc</span>, <span class="ident">Layout</span>, <span class="ident">AllocErr</span>};
-<span class="kw">use</span> <span class="ident">sync</span>::{<span class="ident">SpinLock</span>, <span class="ident">Once</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">SpinLock</span>, <span class="ident">Once</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">NonNull</span>;
 <span class="kw">use</span> <span class="ident">linked_list_allocator</span>::{<span class="ident">Heap</span>, <span class="ident">align_up</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingFlags</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingFlags</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 
 <span class="doccomment">/// Simple wrapper around linked_list_allocator, growing heap by allocating pages</span>
 <span class="doccomment">/// with the frame allocator as necessary.</span>

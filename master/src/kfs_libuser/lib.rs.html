@@ -164,22 +164,22 @@
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_unsafe</span>)]</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">global_asm</span>, <span class="ident">asm</span>, <span class="ident">start</span>, <span class="ident">lang_items</span>, <span class="ident">core_intrinsics</span>, <span class="ident">const_fn</span>, <span class="ident">alloc</span>)]</span>
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">linked_list_allocator</span>;
+
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">byteorder</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">arrayvec</span>;
+
+
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">bitfield</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">bit_field</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spin</span>;
+
+
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libutils</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libkern</span>;
+<span class="kw">use</span> <span class="ident">kfs_libkern</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">failure</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">font_rs</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">hashmap_core</span>;
+
+
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">log</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
@@ -200,7 +200,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">kfs_libutils</span>::<span class="ident">io</span>;
 
 <span class="kw">use</span> <span class="ident">kfs_libutils</span> <span class="kw">as</span> <span class="ident">utils</span>;
-<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">LibuserError</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">LibuserError</span>};
  
 <span class="comment">// TODO: report #[cfg(not(test))] and #[global_allocator]</span>
 <span class="comment">// BODY: `#[cfg(not(test))]` still compiles this item with cargo test,</span>
@@ -248,7 +248,7 @@
 <span class="doccomment">/// kernel debug logger, and exits the process.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">panic_handler</span>]</span> <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">pub</span> <span class="kw">extern</span> <span class="kw">fn</span> <span class="ident">panic_fmt</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">core</span>::<span class="ident">panic</span>::<span class="ident">PanicInfo</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
+<span class="kw">pub</span> <span class="kw">extern</span> <span class="kw">fn</span> <span class="ident">panic_fmt</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">core</span>::<span class="ident">panic</span>::<span class="ident">PanicInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">syscalls</span>::<span class="ident">output_debug_string</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">p</span>));
     <span class="ident">syscalls</span>::<span class="ident">exit_process</span>();
 }

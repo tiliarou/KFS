@@ -114,8 +114,8 @@
 <span class="doccomment">//! by &quot;sm:&quot; has an additional permission check done to ensure it isn&#39;t accessed</span>
 <span class="doccomment">//! by an unprivileged process.</span>
 
-<span class="kw">use</span> <span class="ident">types</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">KernelError</span>, <span class="ident">Error</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">KernelError</span>, <span class="ident">Error</span>};
 
 <span class="doccomment">/// Main interface of the service manager. Allows registering and retrieving</span>
 <span class="doccomment">/// handles to all the services.</span>
@@ -124,7 +124,7 @@
 <span class="kw">impl</span> <span class="ident">IUserInterface</span> {
     <span class="doccomment">/// Connects to the Service Manager.</span>
 	  <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">raw_new</span>() <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">IUserInterface</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-		    <span class="kw">use</span> <span class="ident">syscalls</span>;
+		    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">syscalls</span>;
 
         <span class="kw">loop</span> {
 		        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">syscalls</span>::<span class="ident">connect_to_named_port</span>(<span class="string">&quot;sm:\0&quot;</span>) {
@@ -137,7 +137,7 @@
 
     <span class="doccomment">/// Retrieves a service registered in the service manager.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_service</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="ident">u64</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientSession</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-		    <span class="kw">use</span> <span class="ident">ipc</span>::<span class="ident">Message</span>;
+		    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ipc</span>::<span class="ident">Message</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">0x100</span>];
 
 		    <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span> <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
@@ -151,7 +151,7 @@
         <span class="ident">msg</span>.<span class="ident">pack</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>[..]);
 
 		    <span class="self">self</span>.<span class="number">0</span>.<span class="ident">send_sync_request_with_user_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>[..])<span class="question-mark">?</span>;
-		    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> : <span class="ident">Message</span><span class="op">&lt;</span>(), [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">1</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[..]);
+		    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> : <span class="ident">Message</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, (), [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">1</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[..]);
         <span class="ident">res</span>.<span class="ident">error</span>()<span class="question-mark">?</span>;
 		    <span class="prelude-val">Ok</span>(<span class="ident">ClientSession</span>(<span class="ident">res</span>.<span class="ident">pop_handle_move</span>()<span class="question-mark">?</span>))
     }
@@ -160,9 +160,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Look at the [create_port] syscall for more information on the parameters.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [create_port]: ::syscalls::create_port</span>
+    <span class="doccomment">/// [create_port]: crate::syscalls::create_port</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_service</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="ident">u64</span>, <span class="ident">is_light</span>: <span class="ident">bool</span>, <span class="ident">max_handles</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServerPort</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-		    <span class="kw">use</span> <span class="ident">ipc</span>::<span class="ident">Message</span>;
+		    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ipc</span>::<span class="ident">Message</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">0x100</span>];
 
 		    <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span> <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
@@ -180,7 +180,7 @@
         <span class="ident">msg</span>.<span class="ident">pack</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>[..]);
 
 		    <span class="self">self</span>.<span class="number">0</span>.<span class="ident">send_sync_request_with_user_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>[..])<span class="question-mark">?</span>;
-		    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> : <span class="ident">Message</span><span class="op">&lt;</span>(), [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">1</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[..]);
+		    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> : <span class="ident">Message</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, (), [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">0</span>], [<span class="kw">_</span>; <span class="number">1</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[..]);
         <span class="ident">res</span>.<span class="ident">error</span>()<span class="question-mark">?</span>;
 		    <span class="prelude-val">Ok</span>(<span class="ident">ServerPort</span>(<span class="ident">res</span>.<span class="ident">pop_handle_move</span>()<span class="question-mark">?</span>))
     }

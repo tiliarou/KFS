@@ -321,11 +321,11 @@
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>;
 
-<span class="kw">use</span> <span class="ident">process</span>::{<span class="ident">ProcessStruct</span>, <span class="ident">ThreadStruct</span>, <span class="ident">ThreadState</span>};
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">process_switch</span>::<span class="ident">process_switch</span>;
-<span class="kw">use</span> <span class="ident">sync</span>::{<span class="ident">Lock</span>, <span class="ident">SpinLockIRQ</span>, <span class="ident">SpinLockIRQGuard</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">process</span>::{<span class="ident">ProcessStruct</span>, <span class="ident">ThreadStruct</span>, <span class="ident">ThreadState</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">process_switch</span>::<span class="ident">process_switch</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">Lock</span>, <span class="ident">SpinLockIRQ</span>, <span class="ident">SpinLockIRQGuard</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::<span class="ident">Ordering</span>;
-<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">UserspaceError</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">UserspaceError</span>};
 
 <span class="doccomment">/// An Arc to the currently running thread.</span>
 <span class="doccomment">///</span>
@@ -423,7 +423,7 @@
 }
 
 <span class="doccomment">/// Checks if a thread is already either in the schedule queue or currently running.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_in_schedule_queue</span>(<span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>,
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_in_schedule_queue</span>(<span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>,
                             <span class="ident">thread</span>: <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
     <span class="kw">unsafe</span> { <span class="ident">CURRENT_THREAD</span>.<span class="ident">iter</span>() }.<span class="ident">filter</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> {
         <span class="ident">v</span>.<span class="ident">state</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) <span class="op">!=</span> <span class="ident">ThreadState</span>::<span class="ident">Stopped</span>
@@ -560,7 +560,7 @@
                 <span class="comment">// Temporarily revive interrupts for hlt.</span>
                 <span class="ident">drop</span>(<span class="ident">interrupt_lock</span>);
                 <span class="kw">unsafe</span> {
-                    ::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">interrupts</span>::<span class="ident">hlt</span>();
+                    <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">interrupts</span>::<span class="ident">hlt</span>();
                 }
 
                 <span class="comment">// Kill interrupts again.</span>
@@ -626,7 +626,7 @@
 
     <span class="kw">unsafe</span> {
         <span class="comment">// this is a new process, no SpinLockIRQ is held</span>
-        ::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">interrupts</span>::<span class="ident">sti</span>();
+        <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">interrupts</span>::<span class="ident">sti</span>();
     }
 
     <span class="ident">jump_to_entrypoint</span>()

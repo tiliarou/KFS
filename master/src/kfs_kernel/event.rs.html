@@ -222,11 +222,11 @@
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
-<span class="kw">use</span> <span class="ident">sync</span>::<span class="ident">SpinLockIRQ</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">SpinLockIRQ</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">UserspaceError</span>;
-<span class="kw">use</span> <span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
-<span class="kw">use</span> <span class="ident">scheduler</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">UserspaceError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
 
 <span class="comment">// TODO: maybe we should use the libcore&#39;s task:: stuff...</span>
 
@@ -303,9 +303,9 @@
 }
 
 <span class="doccomment">/// Waits for an event to occur on one of the given Waitable objects.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait</span><span class="op">&lt;</span><span class="lifetime">&#39;wait</span>, <span class="ident">INTOITER</span><span class="op">&gt;</span>(<span class="ident">waitable_intoiter</span>: <span class="ident">INTOITER</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;wait</span> <span class="ident">Waitable</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait</span><span class="op">&lt;</span><span class="lifetime">&#39;wait</span>, <span class="ident">INTOITER</span><span class="op">&gt;</span>(<span class="ident">waitable_intoiter</span>: <span class="ident">INTOITER</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;wait</span> <span class="kw">dyn</span> <span class="ident">Waitable</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">INTOITER</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;wait</span> <span class="ident">Waitable</span><span class="op">&gt;</span>,
+    <span class="ident">INTOITER</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;wait</span> <span class="kw">dyn</span> <span class="ident">Waitable</span><span class="op">&gt;</span>,
     <span class="op">&lt;</span><span class="ident">INTOITER</span> <span class="kw">as</span> <span class="ident">IntoIterator</span><span class="op">&gt;</span>::<span class="ident">IntoIter</span>: <span class="ident">Clone</span>
 {
     <span class="kw">let</span> <span class="ident">_thread</span> <span class="op">=</span> <span class="ident">scheduler</span>::<span class="ident">get_current_thread</span>();

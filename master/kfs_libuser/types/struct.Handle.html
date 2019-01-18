@@ -3,7 +3,7 @@
 representation is that of a u32. Furthermore, an Option<Handle> is also
 guaranteed to be represented on a u32, with None represented as 0. This
 allows handle to be used directly in the syscall functions.</p>
-<p>Handles are closed automatically when Dropped via <a href="::syscalls::close_handle.">close_handle</a>.</p>
+<p>Handles are closed automatically when Dropped via <a href="crate::syscalls::close_handle.">close_handle</a>.</p>
 </div><h2 id='methods' class='small-section-header'>Methods<a href='#methods' class='anchor'></a></h2><h3 id='impl' class='impl'><span class='in-band'><table class='table-display'><tbody><tr><td><code>impl <a class="struct" href="../../kfs_libuser/types/struct.Handle.html" title="struct kfs_libuser::types::Handle">Handle</a></code><a href='#impl' class='anchor'></a></td><td><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/kfs_libuser/types.rs.html#26-42' title='goto source code'>[src]</a></span></td></tr></tbody></table></span></h3><div class='impl-items'><h4 id='method.new' class="method"><table id='new.v' class='table-display'><tbody><tr><td><code>pub fn <a href='#method.new' class='fnname'>new</a>(handle: u32) -&gt; <a class="struct" href="../../kfs_libuser/types/struct.Handle.html" title="struct kfs_libuser::types::Handle">Handle</a></code></td><td><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/kfs_libuser/types.rs.html#30-32' title='goto source code'>[src]</a></span></td></tr></tbody></table></h4><div class='docblock'><p>Creates a new handle from the given number. This number should come from
 a raw syscall. Constructing a handle from an arbitrary number is not
 unsafe, but may lead to extremely confusing code.</p>

@@ -701,11 +701,11 @@
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitField</span>;
-<span class="kw">use</span> <span class="ident">i386</span>::{<span class="ident">AlignedTssStruct</span>, <span class="ident">TssStruct</span>, <span class="ident">PrivilegeLevel</span>};
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::{<span class="ident">AlignedTssStruct</span>, <span class="ident">TssStruct</span>, <span class="ident">PrivilegeLevel</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">boxed</span>::<span class="ident">Box</span>;
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">gdt</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">gdt</span>;
 
 <span class="doccomment">/// An Interrupt Descriptor Table with 256 entries.</span>
 <span class="doccomment">///</span>
@@ -1081,7 +1081,7 @@
 
     <span class="doccomment">/// Loads the IDT in the CPU using the `lidt` command.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="self">self</span>) {
-        <span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">tables</span>::{<span class="ident">lidt</span>, <span class="ident">DescriptorTablePointer</span>};
+        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">tables</span>::{<span class="ident">lidt</span>, <span class="ident">DescriptorTablePointer</span>};
         <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>;
 
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">DescriptorTablePointer</span> {
@@ -1110,9 +1110,9 @@
             <span class="number">18</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">machine_check</span>,
             <span class="number">19</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">simd_floating_point</span>,
             <span class="number">20</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">virtualization</span>,
-            <span class="ident">i</span> @ <span class="number">32</span>...<span class="number">255</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">interrupts</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">32</span>],
-            <span class="ident">i</span> @ <span class="number">15</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">31</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">21</span>...<span class="number">29</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;entry {} is reserved&quot;</span>, <span class="ident">i</span>),
-            <span class="ident">i</span> @ <span class="number">8</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">10</span>...<span class="number">14</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">17</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">30</span> <span class="op">=&gt;</span> {
+            <span class="ident">i</span> @ <span class="number">32</span>..=<span class="number">255</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">interrupts</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">32</span>],
+            <span class="ident">i</span> @ <span class="number">15</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">31</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">21</span>..=<span class="number">29</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;entry {} is reserved&quot;</span>, <span class="ident">i</span>),
+            <span class="ident">i</span> @ <span class="number">8</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">10</span>..=<span class="number">14</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">17</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">30</span> <span class="op">=&gt;</span> {
                 <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;entry {} is an exception with error code&quot;</span>, <span class="ident">i</span>)
             }
             <span class="ident">i</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;no entry with index {}&quot;</span>, <span class="ident">i</span>),
@@ -1136,9 +1136,9 @@
             <span class="number">18</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">machine_check</span>,
             <span class="number">19</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">simd_floating_point</span>,
             <span class="number">20</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">virtualization</span>,
-            <span class="ident">i</span> @ <span class="number">32</span>...<span class="number">255</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">interrupts</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">32</span>],
-            <span class="ident">i</span> @ <span class="number">15</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">31</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">21</span>...<span class="number">29</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;entry {} is reserved&quot;</span>, <span class="ident">i</span>),
-            <span class="ident">i</span> @ <span class="number">8</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">10</span>...<span class="number">14</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">17</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">30</span> <span class="op">=&gt;</span> {
+            <span class="ident">i</span> @ <span class="number">32</span>..=<span class="number">255</span> <span class="op">=&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">interrupts</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">32</span>],
+            <span class="ident">i</span> @ <span class="number">15</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">31</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">21</span>..=<span class="number">29</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;entry {} is reserved&quot;</span>, <span class="ident">i</span>),
+            <span class="ident">i</span> @ <span class="number">8</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">10</span>..=<span class="number">14</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">17</span> <span class="op">|</span> <span class="ident">i</span> @ <span class="number">30</span> <span class="op">=&gt;</span> {
                 <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;entry {} is an exception with error code&quot;</span>, <span class="ident">i</span>)
             }
             <span class="ident">i</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;no entry with index {}&quot;</span>, <span class="ident">i</span>),
@@ -1194,7 +1194,7 @@
     <span class="doccomment">/// The function returns a mutable reference to the entry&#39;s options that allows</span>
     <span class="doccomment">/// further customization.</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_interrupt_gate_addr</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">EntryOptions</span> {
-        <span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">segmentation</span>;
+        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">segmentation</span>;
 
         <span class="self">self</span>.<span class="ident">pointer_low</span> <span class="op">=</span> <span class="ident">addr</span> <span class="kw">as</span> <span class="ident">u16</span>;
         <span class="self">self</span>.<span class="ident">pointer_high</span> <span class="op">=</span> (<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">16</span>) <span class="kw">as</span> <span class="ident">u16</span>;
@@ -1327,10 +1327,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">ExceptionStackFrame</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">struct</span> <span class="ident">Hex</span>(<span class="ident">u32</span>);
         <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Hex</span> {
-            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
                 <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{:#x}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
             }
         }

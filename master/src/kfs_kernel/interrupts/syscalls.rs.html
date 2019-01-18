@@ -473,22 +473,22 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Syscall implementations</span>
 
-<span class="kw">use</span> <span class="ident">i386</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">UserSpacePtr</span>, <span class="ident">UserSpacePtrMut</span>};
-<span class="kw">use</span> <span class="ident">paging</span>::{<span class="ident">MappingFlags</span>, <span class="ident">mapping</span>::<span class="ident">MappingType</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
-<span class="kw">use</span> <span class="ident">process</span>::{<span class="ident">Handle</span>, <span class="ident">ThreadStruct</span>, <span class="ident">ProcessStruct</span>};
-<span class="kw">use</span> <span class="ident">event</span>::{<span class="self">self</span>, <span class="ident">Waitable</span>};
-<span class="kw">use</span> <span class="ident">scheduler</span>::{<span class="self">self</span>, <span class="ident">get_current_thread</span>, <span class="ident">get_current_process</span>};
-<span class="kw">use</span> <span class="ident">devices</span>::<span class="ident">pit</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">UserSpacePtr</span>, <span class="ident">UserSpacePtrMut</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">MappingFlags</span>, <span class="ident">mapping</span>::<span class="ident">MappingType</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">process</span>::{<span class="ident">Handle</span>, <span class="ident">ThreadStruct</span>, <span class="ident">ProcessStruct</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">event</span>::{<span class="self">self</span>, <span class="ident">Waitable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>::{<span class="self">self</span>, <span class="ident">get_current_thread</span>, <span class="ident">get_current_process</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">devices</span>::<span class="ident">pit</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">boxed</span>::<span class="ident">Box</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">string</span>::<span class="ident">String</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
-<span class="kw">use</span> <span class="ident">ipc</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ipc</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">check_thread_killed</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">UserspaceError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">UserspaceError</span>;
 <span class="kw">use</span> <span class="ident">kfs_libkern</span>::{<span class="ident">nr</span>, <span class="ident">SYSCALL_NAMES</span>, <span class="ident">MemoryInfo</span>, <span class="ident">MemoryAttributes</span>, <span class="ident">MemoryPermissions</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitArray</span>;
 
@@ -505,7 +505,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// * `new_size` must be [PAGE_SIZE] aligned.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [PAGE_SIZE]: ::paging::PAGE_SIZE</span>
+<span class="doccomment">/// [PAGE_SIZE]: crate::paging::PAGE_SIZE</span>
 <span class="kw">fn</span> <span class="ident">set_heap_size</span>(<span class="ident">new_size</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">get_current_process</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pmemory</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">pmemory</span>.<span class="ident">lock</span>();
@@ -584,7 +584,7 @@
     <span class="comment">// Turn the handle array and the waitable timeout into an iterator of Waitables...</span>
     <span class="kw">let</span> <span class="ident">waitables</span> <span class="op">=</span> <span class="ident">handle_arr</span>.<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">as_waitable</span>().<span class="ident">unwrap</span>())
-        .<span class="ident">chain</span>(<span class="ident">timeout_waitable</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">Waitable</span>));
+        .<span class="ident">chain</span>(<span class="ident">timeout_waitable</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Waitable</span>));
 
     <span class="comment">// And now, wait!</span>
     <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">event</span>::<span class="ident">wait</span>(<span class="ident">waitables</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
@@ -722,7 +722,7 @@
         <span class="ident">scheduler</span>::<span class="ident">schedule</span>();
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else</span> {
-        <span class="ident">event</span>::<span class="ident">wait</span>(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">pit</span>::<span class="ident">wait_ms</span>(<span class="ident">nanos</span> <span class="op">/</span> <span class="number">1_000_000</span>) <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">Waitable</span>)).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
+        <span class="ident">event</span>::<span class="ident">wait</span>(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">pit</span>::<span class="ident">wait_ms</span>(<span class="ident">nanos</span> <span class="op">/</span> <span class="number">1_000_000</span>) <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Waitable</span>)).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
     }
 }
 

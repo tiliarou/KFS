@@ -670,24 +670,24 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Process</span>
 
-<span class="kw">use</span> <span class="ident">stack</span>::<span class="ident">KernelStack</span>;
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">process_switch</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">process_memory</span>::<span class="ident">ProcessMemory</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">stack</span>::<span class="ident">KernelStack</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">process_switch</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">process_memory</span>::<span class="ident">ProcessMemory</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">boxed</span>::<span class="ident">Box</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">collections</span>::<span class="ident">BTreeMap</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">string</span>::<span class="ident">String</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
-<span class="kw">use</span> <span class="ident">event</span>::<span class="ident">Waitable</span>;
-<span class="kw">use</span> <span class="ident">sync</span>::{<span class="ident">SpinLockIRQ</span>, <span class="ident">SpinLock</span>, <span class="ident">Mutex</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">Waitable</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">SpinLockIRQ</span>, <span class="ident">SpinLock</span>, <span class="ident">Mutex</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>};
-<span class="kw">use</span> <span class="ident">scheduler</span>;
-<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">KernelError</span>, <span class="ident">UserspaceError</span>};
-<span class="kw">use</span> <span class="ident">ipc</span>::{<span class="ident">ServerPort</span>, <span class="ident">ClientPort</span>, <span class="ident">ServerSession</span>, <span class="ident">ClientSession</span>};
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">KernelError</span>, <span class="ident">UserspaceError</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ipc</span>::{<span class="ident">ServerPort</span>, <span class="ident">ClientPort</span>, <span class="ident">ServerSession</span>, <span class="ident">ClientSession</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::<span class="ident">PhysicalMemRegion</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">PhysicalMemRegion</span>;
 
 <span class="kw">mod</span> <span class="ident">capabilities</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">capabilities</span>::<span class="ident">ProcessCapabilities</span>;
@@ -801,21 +801,21 @@
 <span class="doccomment">/// IPC. This can be used, for instance, to share a handle to a memory region,</span>
 <span class="doccomment">/// allowing for the mapping of Shared Memory.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Most handles can be waited on via [::interrupts::syscalls::wait_synchronization], which</span>
+<span class="doccomment">/// Most handles can be waited on via [crate::interrupts::syscalls::wait_synchronization], which</span>
 <span class="doccomment">/// will have relevant behavior for all the different kind of handles.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Handle</span> {
     <span class="doccomment">/// An event on which we can wait. Could be an IRQ, or a user-generated</span>
     <span class="doccomment">/// event.</span>
-    <span class="ident">ReadableEvent</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Waitable</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// The server side of an IPC port. See [::ipc::port] for more information.</span>
+    <span class="ident">ReadableEvent</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Waitable</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// The server side of an IPC port. See [crate::ipc::port] for more information.</span>
     <span class="ident">ServerPort</span>(<span class="ident">ServerPort</span>),
-    <span class="doccomment">/// The client side of an IPC port. See [::ipc::port] for more information.</span>
+    <span class="doccomment">/// The client side of an IPC port. See [crate::ipc::port] for more information.</span>
     <span class="ident">ClientPort</span>(<span class="ident">ClientPort</span>),
-    <span class="doccomment">/// The server side of an IPC session. See [::ipc::session] for more</span>
+    <span class="doccomment">/// The server side of an IPC session. See [crate::ipc::session] for more</span>
     <span class="doccomment">/// information.</span>
     <span class="ident">ServerSession</span>(<span class="ident">ServerSession</span>),
-    <span class="doccomment">/// The client side of an IPC session. See [::ipc::session] for more</span>
+    <span class="doccomment">/// The client side of an IPC session. See [crate::ipc::session] for more</span>
     <span class="doccomment">/// information.</span>
     <span class="ident">ClientSession</span>(<span class="ident">ClientSession</span>),
     <span class="doccomment">/// A thread.</span>
@@ -828,7 +828,7 @@
 
 <span class="kw">impl</span> <span class="ident">Handle</span> {
     <span class="doccomment">/// Gets the handle as a [Waitable], or return a `UserspaceError` if the handle cannot be waited on.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_waitable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Waitable</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_waitable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Waitable</span>, <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="kw-2">&amp;</span><span class="ident">Handle</span>::<span class="ident">ReadableEvent</span>(<span class="kw-2">ref</span> <span class="ident">waitable</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">waitable</span>),
             <span class="kw-2">&amp;</span><span class="ident">Handle</span>::<span class="ident">ServerPort</span>(<span class="kw-2">ref</span> <span class="ident">serverport</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">serverport</span>),
@@ -999,7 +999,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ThreadStateAtomic</span>(<span class="ident">AtomicUsize</span>);
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">ThreadStateAtomic</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="ident">Debug</span>::<span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>), <span class="ident">f</span>)
     }
 }

@@ -58,11 +58,11 @@
 <span class="kw">mod</span> <span class="ident">filter</span>;
 
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="self">self</span>, <span class="ident">Log</span>, <span class="ident">Metadata</span>, <span class="ident">Record</span>, <span class="ident">LevelFilter</span>};
-<span class="kw">use</span> <span class="ident">devices</span>::<span class="ident">rs232</span>::<span class="ident">SerialLogger</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">devices</span>::<span class="ident">rs232</span>::<span class="ident">SerialLogger</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
-<span class="kw">use</span> <span class="ident">i386</span>::<span class="ident">multiboot</span>::<span class="ident">get_boot_information</span>;
-<span class="kw">use</span> <span class="ident">sync</span>::{<span class="ident">RwLock</span>, <span class="ident">Once</span>};
-<span class="kw">use</span> <span class="ident">scheduler</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">multiboot</span>::<span class="ident">get_boot_information</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">RwLock</span>, <span class="ident">Once</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
 
 <span class="kw">struct</span> <span class="ident">Logger</span> {
     <span class="ident">filter</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">filter</span>::<span class="ident">Filter</span><span class="op">&gt;</span>
@@ -70,11 +70,11 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Log</span> <span class="kw">for</span> <span class="ident">Logger</span> {
-    <span class="kw">fn</span> <span class="ident">enabled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">Metadata</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">enabled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">Metadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">filter</span>.<span class="ident">read</span>().<span class="ident">enabled</span>(<span class="ident">metadata</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">record</span>: <span class="kw-2">&amp;</span><span class="ident">Record</span>) {
+    <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">record</span>: <span class="kw-2">&amp;</span><span class="ident">Record</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">filter</span>.<span class="ident">read</span>().<span class="ident">matches</span>(<span class="ident">record</span>) {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">thread</span>) <span class="op">=</span> <span class="ident">scheduler</span>::<span class="ident">try_get_current_thread</span>() {
                 <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">SerialLogger</span>, <span class="string">&quot;[{}] - {} - {} - {}&quot;</span>, <span class="ident">record</span>.<span class="ident">level</span>(), <span class="ident">record</span>.<span class="ident">target</span>(), <span class="ident">thread</span>.<span class="ident">process</span>.<span class="ident">name</span>, <span class="ident">record</span>.<span class="ident">args</span>());
@@ -102,7 +102,7 @@
 
 <span class="doccomment">/// Reinitializes the logger using the cmdline. This requires the heap.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="kw">let</span> <span class="ident">logger</span> <span class="op">=</span> <span class="ident">LOGGER</span>.<span class="ident">try</span>().<span class="ident">expect</span>(<span class="string">&quot;early_init to be called before init&quot;</span>);
+    <span class="kw">let</span> <span class="ident">logger</span> <span class="op">=</span> <span class="ident">LOGGER</span>.<span class="ident">r#try</span>().<span class="ident">expect</span>(<span class="string">&quot;early_init to be called before init&quot;</span>);
     <span class="kw">let</span> <span class="ident">cmdline</span> <span class="op">=</span> <span class="ident">get_boot_information</span>().<span class="ident">command_line_tag</span>().<span class="ident">unwrap</span>().<span class="ident">command_line</span>();
     <span class="kw">let</span> <span class="ident">newfilter</span> <span class="op">=</span> <span class="ident">filter</span>::<span class="ident">Builder</span>::<span class="ident">new</span>().<span class="ident">parse</span>(<span class="ident">cmdline</span>).<span class="ident">build</span>();
     <span class="kw-2">*</span><span class="ident">logger</span>.<span class="ident">filter</span>.<span class="ident">write</span>() <span class="op">=</span> <span class="ident">newfilter</span>;

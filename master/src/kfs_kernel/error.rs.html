@@ -136,8 +136,8 @@
 <span class="doccomment">//! UserspaceError and KernelError</span>
 
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
-<span class="kw">use</span> <span class="ident">paging</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
-<span class="kw">use</span> <span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>};
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">kfs_libkern</span>::<span class="ident">error</span>::<span class="ident">KernelError</span> <span class="kw">as</span> <span class="ident">UserspaceError</span>;
@@ -147,7 +147,7 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ArithmeticOperation</span> { <span class="ident">Add</span>, <span class="ident">Sub</span>, <span class="ident">Mul</span>, <span class="ident">Div</span>, <span class="ident">Mod</span>, <span class="ident">Pow</span> }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ArithmeticOperation</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="ident">ArithmeticOperation</span>::<span class="ident">Add</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;+&quot;</span>),
             <span class="ident">ArithmeticOperation</span>::<span class="ident">Sub</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;-&quot;</span>),

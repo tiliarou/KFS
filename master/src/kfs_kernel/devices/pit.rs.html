@@ -291,11 +291,11 @@
 <span class="doccomment">//! * [this very good ppt](https://www.cs.usfca.edu/~cruse/cs630f08/lesson15.ppt)</span>
 <span class="doccomment">//!</span>
 
-<span class="kw">use</span> <span class="ident">sync</span>::<span class="ident">SpinLock</span>;
-<span class="kw">use</span> <span class="ident">io</span>::<span class="ident">Io</span>;
-<span class="kw">use</span> ::<span class="ident">i386</span>::<span class="ident">pio</span>::<span class="ident">Pio</span>;
-<span class="kw">use</span> <span class="ident">event</span>::{<span class="self">self</span>, <span class="ident">IRQEvent</span>, <span class="ident">Waitable</span>};
-<span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">div_ceil</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">SpinLock</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">io</span>::<span class="ident">Io</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">pio</span>::<span class="ident">Pio</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">event</span>::{<span class="self">self</span>, <span class="ident">IRQEvent</span>, <span class="ident">Waitable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">div_ceil</span>;
 
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
 
@@ -371,7 +371,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;ports</span><span class="op">&gt;</span> <span class="ident">PITChannel2</span><span class="op">&lt;</span><span class="lifetime">&#39;ports</span><span class="op">&gt;</span> {
 
     <span class="doccomment">/// Sets mode #0 for channel 2</span>
-    <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">ports</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PITPorts</span>) <span class="op">-&gt;</span> <span class="ident">PITChannel2</span> {
+    <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">ports</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PITPorts</span>) <span class="op">-&gt;</span> <span class="ident">PITChannel2</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">ports</span>.<span class="ident">port_cmd</span>.<span class="ident">write</span>(
             <span class="number">0b10110000</span> <span class="comment">// channel 2, lobyte/hibyte, interrupt on terminal count</span>
         );

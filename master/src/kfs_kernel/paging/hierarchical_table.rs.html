@@ -644,9 +644,9 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">lands</span>::{<span class="ident">RecursiveTablesLand</span>, <span class="ident">VirtualSpaceLand</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingFlags</span>;
 
-<span class="kw">use</span> <span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
-<span class="kw">use</span> <span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>};
-<span class="kw">use</span> <span class="ident">utils</span>::<span class="ident">align_up_checked</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">align_up_checked</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">iter</span>::{<span class="ident">Iterator</span>, <span class="ident">Peekable</span>};
@@ -846,7 +846,7 @@
 
 <span class="doccomment">/// This is just a wrapper for a pointer to a table.</span>
 <span class="doccomment">/// It enables us to do handle when it is dropped</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">HierarchicalTable</span> <span class="op">+</span> <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>(<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">HierarchicalTable</span><span class="op">&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
@@ -918,7 +918,7 @@
 
         <span class="doccomment">/// Delay work to child tables, and map it ourselves when we have no more children.</span>
         <span class="doccomment">/// Panics if any entry was already in use</span>
-        <span class="kw">fn</span> <span class="ident">rec_map_to</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="kw">fn</span> <span class="ident">rec_map_to</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span>,
                             <span class="ident">frames_iterator</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Peekable</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
                             <span class="ident">start_address</span>: <span class="ident">usize</span>,
                             <span class="ident">flags</span>: <span class="ident">MappingFlags</span>)
@@ -972,7 +972,7 @@
 
         <span class="doccomment">/// Delay work to child tables, and guard it ourselves when we have no more children.</span>
         <span class="doccomment">/// Panics if any entry was already in use</span>
-        <span class="kw">fn</span> <span class="ident">rec_guard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">table</span> : <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="kw">fn</span> <span class="ident">rec_guard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">table</span> : <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span>,
                         <span class="ident">start_address</span>: <span class="ident">usize</span>,
                         <span class="ident">length</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">usize</span>)
         <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">HierarchicalTable</span>
@@ -1035,7 +1035,7 @@
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">length</span>         <span class="op">%</span> <span class="ident">PAGE_SIZE</span>, <span class="number">0</span>, <span class="string">&quot;Length is not page aligned&quot;</span>);
 
         <span class="doccomment">/// Delay work to child tables, and unmap it ourselves when we have no more children.</span>
-        <span class="kw">fn</span> <span class="ident">rec_unmap</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">C</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="kw">fn</span> <span class="ident">rec_unmap</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">C</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span>,
                         <span class="ident">start_address</span>: <span class="ident">usize</span>,
                         <span class="ident">length</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">usize</span>,
                         <span class="ident">callback</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">C</span>)
@@ -1097,7 +1097,7 @@
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">length</span>         <span class="op">%</span> <span class="ident">PAGE_SIZE</span>, <span class="number">0</span>, <span class="string">&quot;Length is not page aligned&quot;</span>);
 
         <span class="doccomment">/// Delay work to child tables, and iter it ourselves when we have no more children.</span>
-        <span class="kw">fn</span> <span class="ident">rec_iter</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">C</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="kw">fn</span> <span class="ident">rec_iter</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">C</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span>,
                         <span class="ident">start_address</span>: <span class="ident">usize</span>,
                         <span class="ident">length</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">usize</span>,
                         <span class="ident">callback</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">C</span>)
@@ -1167,7 +1167,7 @@
         }
 
         <span class="doccomment">/// Delay work to child tables.</span>
-        <span class="kw">fn</span> <span class="ident">rec_find</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="kw">fn</span> <span class="ident">rec_find</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span>,
                        <span class="ident">table_addr</span>: <span class="ident">usize</span>,
                        <span class="ident">hole</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Hole</span>,
                        <span class="ident">desired_length</span>: <span class="ident">usize</span>,

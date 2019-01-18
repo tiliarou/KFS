@@ -38,10 +38,10 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Generic useful functions</span>
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libutils</span>;
+<span class="kw">use</span> <span class="ident">kfs_libutils</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">kfs_libutils</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">checks</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">checks</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 
 <span class="doccomment">/// A trait for things that can be splitted in two parts</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Splittable</span> <span class="kw">where</span> <span class="self">Self</span>: <span class="ident">Sized</span> {

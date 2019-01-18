@@ -330,11 +330,11 @@
 <span class="doccomment">//! modules are newtypes around Handle.</span>
 
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">use</span> <span class="ident">syscalls</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">syscalls</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">num</span>::<span class="ident">NonZeroU32</span>;
 <span class="kw">use</span> <span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>;
-<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">KernelError</span>};
-<span class="kw">use</span> <span class="ident">ipc</span>::{<span class="ident">Message</span>, <span class="ident">MessageTy</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">KernelError</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ipc</span>::{<span class="ident">Message</span>, <span class="ident">MessageTy</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>;
 
 <span class="doccomment">/// A Handle is a sort of reference to a Kernel Object. Its underlying</span>
@@ -344,7 +344,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Handles are closed automatically when Dropped via [close_handle].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [close_handle]: ::syscalls::close_handle.</span>
+<span class="doccomment">/// [close_handle]: crate::syscalls::close_handle.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Handle</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">NonZeroU32</span>);
@@ -359,7 +359,7 @@
 
     <span class="doccomment">/// Creates a new reference to this handle. See the documentation of</span>
     <span class="doccomment">/// [HandleRef] for more information.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">HandleRef</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">HandleRef</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">HandleRef</span> {
             <span class="ident">inner</span>: <span class="self">self</span>.<span class="number">0</span>,
             <span class="ident">lifetime</span>: <span class="ident">PhantomData</span>
@@ -396,8 +396,8 @@
 <span class="doccomment">/// However, an anonymous session pair might be created through the</span>
 <span class="doccomment">/// [create_session] syscall, or by calling [connect_to_named_port].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [create_session]: ::syscalls::create_session</span>
-<span class="doccomment">/// [connect_to_named_port]: ::syscalls::connect_to_named_port</span>
+<span class="doccomment">/// [create_session]: crate::syscalls::create_session</span>
+<span class="doccomment">/// [connect_to_named_port]: crate::syscalls::connect_to_named_port</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientSession</span>(<span class="kw">pub</span> <span class="ident">Handle</span>);
@@ -411,7 +411,7 @@
     <span class="doccomment">/// library. Look at the [ipc module] for more information on the IPC</span>
     <span class="doccomment">/// message format.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [ipc module]: ::ipc</span>
+    <span class="doccomment">/// [ipc module]: crate::ipc</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_sync_request_with_user_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="ident">syscalls</span>::<span class="ident">send_sync_request_with_user_buffer</span>(<span class="ident">buf</span>, <span class="self">self</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">into</span>())
@@ -444,7 +444,7 @@
 <span class="doccomment">/// the [create_session] syscall, providing a server/client session pair.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [accept]: ServerPort::accept</span>
-<span class="doccomment">/// [create_session]: ::syscalls::create_session</span>
+<span class="doccomment">/// [create_session]: crate::syscalls::create_session</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ServerSession</span>(<span class="kw">pub</span> <span class="ident">Handle</span>);
@@ -461,7 +461,7 @@
     <span class="doccomment">/// library. Look at the [ipc module] for more information on the IPC</span>
     <span class="doccomment">/// message format.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [ipc module]: ::ipc</span>
+    <span class="doccomment">/// [ipc module]: crate::ipc</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">receive</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>], <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="ident">syscalls</span>::<span class="ident">reply_and_receive_with_user_buffer</span>(<span class="ident">buf</span>, <span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>()], <span class="prelude-val">None</span>, <span class="ident">timeout</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">into</span>())
@@ -474,7 +474,7 @@
     <span class="doccomment">/// library. Look at the [ipc module] for more information on the IPC</span>
     <span class="doccomment">/// message format.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [ipc module]: ::ipc</span>
+    <span class="doccomment">/// [ipc module]: crate::ipc</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reply</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="ident">syscalls</span>::<span class="ident">reply_and_receive_with_user_buffer</span>(<span class="ident">buf</span>, <span class="kw-2">&amp;</span>[], <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>()), <span class="prelude-val">Some</span>(<span class="number">0</span>))
             .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
@@ -492,7 +492,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Obtained by creating an anonymous port pair with the [create_port] syscall.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [create_port]: ::syscalls::create_port</span>
+<span class="doccomment">/// [create_port]: crate::syscalls::create_port</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientPort</span>(<span class="kw">pub</span> <span class="ident">Handle</span>);
@@ -511,7 +511,7 @@
 <span class="doccomment">/// Usually obtained by registering a service through the sm: service manager, or</span>
 <span class="doccomment">/// by calling [manage_named_port] to obtained a kernel-managed port.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [manage_named_port]: ::syscalls::manage_named_port</span>
+<span class="doccomment">/// [manage_named_port]: crate::syscalls::manage_named_port</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ServerPort</span>(<span class="kw">pub</span> <span class="ident">Handle</span>);
@@ -527,7 +527,7 @@
 
 <span class="doccomment">/// A Thread. Created with the [create_thread syscall].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [create_thread syscall]: ::syscalls::create_thread.</span>
+<span class="doccomment">/// [create_thread syscall]: crate::syscalls::create_thread.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Thread</span>(<span class="kw">pub</span> <span class="ident">Handle</span>);

@@ -24,7 +24,7 @@ will call the dispatch function of its underlying object.</p>
 <span class="kw">fn</span> <span class="ident">main</span>() {
      <span class="kw">let</span> <span class="ident">man</span> <span class="op">=</span> <span class="ident">WaitableManager</span>::<span class="ident">new</span>();
      <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">PortHandler</span>::<span class="op">&lt;</span><span class="ident">IExample</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="string">&quot;hello\0&quot;</span>).<span class="ident">unwrap</span>());
-     <span class="ident">man</span>.<span class="ident">add_waitable</span>(<span class="ident">handler</span> <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
+     <span class="ident">man</span>.<span class="ident">add_waitable</span>(<span class="ident">handler</span> <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
      <span class="ident">man</span>.<span class="ident">run</span>()
 }</pre></div>
 </div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>

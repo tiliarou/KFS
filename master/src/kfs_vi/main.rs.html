@@ -329,26 +329,26 @@
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libuser</span> <span class="kw">as</span> <span class="ident">libuser</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">kfs_libutils</span>;
+
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spin</span>;
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">hashmap_core</span>;
+
+
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">lazy_static</span>;
 
 <span class="kw">mod</span> <span class="ident">vbe</span>;
 
-<span class="kw">use</span> <span class="ident">vbe</span>::{<span class="ident">VBEColor</span>, <span class="ident">FRAMEBUFFER</span>, <span class="ident">Framebuffer</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vbe</span>::{<span class="ident">VBEColor</span>, <span class="ident">FRAMEBUFFER</span>, <span class="ident">Framebuffer</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">cmp</span>::{<span class="ident">min</span>, <span class="ident">max</span>};
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">syscalls</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">ipc</span>::<span class="ident">server</span>::{<span class="ident">WaitableManager</span>, <span class="ident">PortHandler</span>, <span class="ident">IWaitable</span>, <span class="ident">SessionWrapper</span>};
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">syscalls</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">ipc</span>::<span class="ident">server</span>::{<span class="ident">WaitableManager</span>, <span class="ident">PortHandler</span>, <span class="ident">IWaitable</span>, <span class="ident">SessionWrapper</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">spin</span>::<span class="ident">Mutex</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
-<span class="kw">use</span> <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">MemoryPermissions</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">MemoryPermissions</span>;
 <span class="kw">use</span> <span class="ident">kfs_libutils</span>::<span class="ident">align_up</span>;
 
 <span class="doccomment">/// Entry point interface.</span>
@@ -382,7 +382,7 @@
             <span class="ident">BUFFERS</span>.<span class="ident">lock</span>().<span class="ident">push</span>(<span class="ident">Arc</span>::<span class="ident">downgrade</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>.<span class="ident">buffer</span>));
             <span class="kw">let</span> (<span class="ident">server</span>, <span class="ident">client</span>) <span class="op">=</span> <span class="ident">syscalls</span>::<span class="ident">create_session</span>(<span class="bool-val">false</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">wrapper</span> <span class="op">=</span> <span class="ident">SessionWrapper</span>::<span class="ident">new</span>(<span class="ident">server</span>, <span class="ident">buf</span>);
-            <span class="ident">manager</span>.<span class="ident">add_waitable</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">wrapper</span>) <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
+            <span class="ident">manager</span>.<span class="ident">add_waitable</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">wrapper</span>) <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
             <span class="prelude-val">Ok</span>((<span class="ident">client</span>.<span class="ident">into_handle</span>(),))
         }
 
@@ -421,7 +421,7 @@
 }
 
 <span class="doccomment">/// Draw a portion of a buffer onto the framebuffer.</span>
-<span class="kw">fn</span> <span class="ident">draw</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>, <span class="ident">framebuffer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Framebuffer</span>, <span class="ident">top</span>: <span class="ident">u32</span>, <span class="ident">left</span>: <span class="ident">u32</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
+<span class="kw">fn</span> <span class="ident">draw</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>, <span class="ident">framebuffer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Framebuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">top</span>: <span class="ident">u32</span>, <span class="ident">left</span>: <span class="ident">u32</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
     <span class="kw">unsafe</span> {
         <span class="comment">// TODO: Safety of the vi::draw IPC method</span>
         <span class="comment">// BODY: When calling vi::draw, vi reads from the shared memory. There is</span>
@@ -542,7 +542,7 @@
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="kw">let</span> <span class="ident">man</span> <span class="op">=</span> <span class="ident">WaitableManager</span>::<span class="ident">new</span>();
     <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">PortHandler</span>::<span class="op">&lt;</span><span class="ident">ViInterface</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="string">&quot;vi:\0&quot;</span>).<span class="ident">unwrap</span>());
-    <span class="ident">man</span>.<span class="ident">add_waitable</span>(<span class="ident">handler</span> <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
+    <span class="ident">man</span>.<span class="ident">add_waitable</span>(<span class="ident">handler</span> <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">IWaitable</span><span class="op">&gt;</span>);
 
     <span class="ident">man</span>.<span class="ident">run</span>();
 }
