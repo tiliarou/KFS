@@ -207,6 +207,17 @@
 <span id="207">207</span>
 <span id="208">208</span>
 <span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The core event handling primitives of KFS.</span>
 <span class="doccomment">//!</span>
@@ -227,8 +238,6 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">UserspaceError</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">process</span>::<span class="ident">ThreadStruct</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
-
-<span class="comment">// TODO: maybe we should use the libcore&#39;s task:: stuff...</span>
 
 <span class="doccomment">/// A waitable item.</span>
 <span class="doccomment">///</span>
@@ -345,24 +354,27 @@
 <span class="comment">// TODO: Allow configuring edge vs level triggering.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IRQEvent</span> {
+    <span class="doccomment">/// The global state of the IRQ this event is listening on.</span>
+    <span class="doccomment">/// Contains the IRQ trigger count.</span>
     <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">IRQState</span>,
+    <span class="doccomment">/// Acknowledgement counter for this IRQEvent instance. Each time we get</span>
+    <span class="doccomment">/// signaled, this counter is incremented until it matches the counter in</span>
+    <span class="doccomment">/// state.</span>
     <span class="ident">ack</span>: <span class="ident">AtomicUsize</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Waitable</span> <span class="kw">for</span> <span class="ident">IRQEvent</span> {
     <span class="kw">fn</span> <span class="ident">is_signaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ack</span>.<span class="ident">fetch_update</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
+        <span class="self">self</span>.<span class="ident">ack</span>.<span class="ident">fetch_update</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
             <span class="kw">if</span> <span class="ident">x</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">counter</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
                 <span class="comment">// TODO: If level-triggered, set this to the counter.</span>
                 <span class="prelude-val">Some</span>(<span class="ident">x</span> <span class="op">+</span> <span class="number">1</span>)
             } <span class="kw">else</span> {
                 <span class="prelude-val">None</span>
             }
-        }, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>).<span class="ident">is_ok</span>() {
-            <span class="bool-val">true</span>
-        } <span class="kw">else</span> {
-            <span class="bool-val">false</span>
-        }
+        }, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>)
+
+        .<span class="ident">is_ok</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">register</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
@@ -394,14 +406,23 @@
     }
 }
 
+<span class="doccomment">/// Global state of an IRQ.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Counts the number of times this IRQ was triggered from kernel boot.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">IRQState</span> {
+    <span class="doccomment">/// The irq number this state represents. Only used for debug logs.</span>
     <span class="ident">irqnum</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// The number of time this IRQ was triggered from kernel boot.</span>
     <span class="ident">counter</span>: <span class="ident">AtomicUsize</span>,
+    <span class="doccomment">/// List of processes waiting on this IRQ. When this IRQ is triggered, all</span>
+    <span class="doccomment">/// those processes will be rescheduled.</span>
     <span class="ident">waiting_processes</span>: <span class="ident">SpinLockIRQ</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>
 }
 
 <span class="kw">impl</span> <span class="ident">IRQState</span> {
+    <span class="doccomment">/// Create a new IRQState for the given IRQ number, with the counter set to</span>
+    <span class="doccomment">/// 0.</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">irqnum</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">IRQState</span> {
         <span class="ident">IRQState</span> {
             <span class="ident">irqnum</span>,
@@ -411,6 +432,7 @@
     }
 }
 
+<span class="doccomment">/// Global state for all the IRQ handled by the PIC.</span>
 <span class="kw">static</span> <span class="ident">IRQ_STATES</span>: [<span class="ident">IRQState</span>; <span class="number">16</span>] <span class="op">=</span> [
     <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">20</span>), <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">21</span>), <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">22</span>), <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">23</span>),
     <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">24</span>), <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">25</span>), <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">26</span>), <span class="ident">IRQState</span>::<span class="ident">new</span>(<span class="number">27</span>),

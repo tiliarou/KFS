@@ -139,6 +139,12 @@
 <span id="139">139</span>
 <span id="140">140</span>
 <span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Window creation and drawing APIs</span>
 <span class="doccomment">//!</span>
@@ -174,14 +180,20 @@
 }
 
 <span class="doccomment">/// A managed window.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Window</span> {
+    <span class="doccomment">/// The framebuffer memory shared with Vi. Drawing to this buffer will take</span>
+    <span class="doccomment">/// effect on the next call to [IBuffer::draw].</span>
     <span class="ident">buf</span>: <span class="ident">MappedSharedMemory</span>,
+    <span class="doccomment">/// Vi handle for this window.</span>
     <span class="ident">handle</span>: <span class="ident">IBuffer</span>,
+    <span class="doccomment">/// Width of the window.</span>
     <span class="ident">width</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// Height of the window.</span>
     <span class="ident">height</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// Bits per pixel for the framebuffer.</span>
     <span class="ident">bpp</span>: <span class="ident">usize</span>
 }
-
 
 <span class="kw">impl</span> <span class="ident">Window</span> {
     <span class="doccomment">/// Creates a window in the vi compositor.</span>
@@ -250,9 +262,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if offset is invalid</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_px</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">color</span>: <span class="kw-2">&amp;</span><span class="ident">Color</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_px</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">color</span>: <span class="ident">Color</span>) {
         <span class="kw">unsafe</span> {
-            <span class="self">self</span>.<span class="ident">get_buffer</span>()[<span class="ident">offset</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">color</span>;
+            <span class="self">self</span>.<span class="ident">get_buffer</span>()[<span class="ident">offset</span>] <span class="op">=</span> <span class="ident">color</span>;
         }
     }
 
@@ -263,7 +275,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if coords are invalid</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_px_at</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="ident">usize</span>, <span class="ident">color</span>: <span class="kw-2">&amp;</span><span class="ident">Color</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_px_at</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="ident">usize</span>, <span class="ident">color</span>: <span class="ident">Color</span>) {
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_px_offset</span>(<span class="ident">x</span>, <span class="ident">y</span>);
         <span class="self">self</span>.<span class="ident">write_px</span>(<span class="ident">offset</span>, <span class="ident">color</span>);
     }

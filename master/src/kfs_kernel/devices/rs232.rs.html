@@ -166,24 +166,42 @@
 <span id="166">166</span>
 <span id="167">167</span>
 <span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! RS-232</span>
+<span class="doccomment">//! RS-232 serial port driver</span>
 
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="ident">Display</span>, <span class="ident">Write</span>, <span class="ident">Error</span>, <span class="ident">Formatter</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::{<span class="ident">Once</span>, <span class="ident">SpinLock</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">io</span>::<span class="ident">Io</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">pio</span>::<span class="ident">Pio</span>;
 
-<span class="doccomment">/// The port of a COM</span>
+<span class="doccomment">/// The base IO port of a COM</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComPort</span>(<span class="ident">u16</span>);
 
+<span class="doccomment">/// COM1: I/O port 0x3F8, IRQ 4</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;x86&quot;</span>, <span class="ident">not</span>(<span class="ident">test</span>)))]</span>
 <span class="kw">const</span> <span class="ident">COM1</span>: <span class="ident">ComPort</span> <span class="op">=</span> <span class="ident">ComPort</span>(<span class="number">0x3F8</span>);
+<span class="doccomment">/// COM2: I/O port 0x2F8, IRQ 3</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;x86&quot;</span>, <span class="ident">not</span>(<span class="ident">test</span>)))]</span>
 <span class="kw">const</span> <span class="ident">COM2</span>: <span class="ident">ComPort</span> <span class="op">=</span> <span class="ident">ComPort</span>(<span class="number">0x2F8</span>);
+<span class="doccomment">/// COM3: I/O port 0x3E8, IRQ 4</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;x86&quot;</span>, <span class="ident">not</span>(<span class="ident">test</span>)))]</span>
 <span class="kw">const</span> <span class="ident">COM3</span>: <span class="ident">ComPort</span> <span class="op">=</span> <span class="ident">ComPort</span>(<span class="number">0x3E8</span>);
+<span class="doccomment">/// COM4: I/O port 0x2E8, IRQ 3</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;x86&quot;</span>, <span class="ident">not</span>(<span class="ident">test</span>)))]</span>
 <span class="kw">const</span> <span class="ident">COM4</span>: <span class="ident">ComPort</span> <span class="op">=</span> <span class="ident">ComPort</span>(<span class="number">0x2E8</span>);
 
@@ -192,7 +210,7 @@
 <span class="kw">const</span> <span class="ident">COM1</span>: <span class="ident">ComPort</span> <span class="op">=</span> <span class="ident">ComPort</span>(<span class="number">0x7777</span>);
 
 <span class="doccomment">/// The possible colors for serial</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u8</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SerialColor</span> {
@@ -218,7 +236,9 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="doccomment">/// A foreground and a background combination</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SerialAttributes</span> {
+    <span class="doccomment">/// foreground color</span>
     <span class="ident">fg</span>: <span class="ident">SerialColor</span>,
+    <span class="doccomment">/// background color</span>
     <span class="ident">bg</span>: <span class="ident">SerialColor</span>,
 }
 
@@ -256,15 +276,23 @@
     }
 }
 
+<span class="doccomment">/// The serial logger.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Initialized on first use.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Log functions will access the [SerialInternal] it wraps, and send text to it.</span>
 <span class="kw">static</span> <span class="ident">G_SERIAL</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">SerialInternal</span><span class="op">&lt;</span><span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;&gt;</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="ident">Once</span>::<span class="ident">new</span>();
 
+<span class="doccomment">/// A COM output. Wraps the IO ports of this COM, and provides function for writing to it.</span>
 <span class="kw">struct</span> <span class="ident">SerialInternal</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The DATA IO port of this COM</span>
     <span class="ident">data_port</span>: <span class="ident">T</span>,
+    <span class="doccomment">/// The STATUS IO port of this COM</span>
     <span class="ident">status_port</span>: <span class="ident">T</span>
 }
 
-<span class="kw">impl</span> <span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">SerialInternal</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Creates the serial for i386</span>
+<span class="kw">impl</span> <span class="ident">SerialInternal</span><span class="op">&lt;</span><span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;&gt;</span> {
+    <span class="doccomment">/// Creates a COM port from it&#39;s base IO address.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;x86&quot;</span>, <span class="ident">not</span>(<span class="ident">test</span>)))]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">com_port</span>: <span class="ident">ComPort</span>) <span class="op">-&gt;</span> <span class="ident">SerialInternal</span><span class="op">&lt;</span><span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;&gt;</span> {
@@ -291,9 +319,8 @@
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">_com_port</span>: <span class="ident">ComPort</span>) <span class="op">-&gt;</span> <span class="ident">SerialInternal</span><span class="op">&lt;</span><span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;&gt;</span> { <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;mock implementation !&quot;</span>) }
-}
 
-<span class="kw">impl</span> <span class="ident">SerialInternal</span><span class="op">&lt;</span><span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;&gt;</span> {
+    <span class="doccomment">/// Outputs a string to this COM.</span>
     <span class="kw">fn</span> <span class="ident">send_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
         <span class="kw">for</span> <span class="ident">byte</span> <span class="kw">in</span> <span class="ident">string</span>.<span class="ident">bytes</span>() {
             <span class="comment">// Wait for the transmit buffer to be empty.</span>
@@ -314,6 +341,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// write!(SerialLogger, &quot;I got {} problems, but logging ain&#39;t one&quot;, 99);</span>
 <span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SerialLogger</span>;
 
 <span class="kw">impl</span> <span class="ident">SerialLogger</span> {

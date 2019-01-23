@@ -147,6 +147,15 @@
 <span id="147">147</span>
 <span id="148">148</span>
 <span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Driver for the 8259 Programmable Interrupt Controller.</span>
 <span class="doccomment">//!</span>
@@ -177,12 +186,15 @@
         <span class="kw">const</span> <span class="ident">INIT</span>      <span class="op">=</span> <span class="number">0x10</span>;
     }
 }
+
+<span class="doccomment">/// ICW4: 8086/88 (MCS-80/85) mode.</span>
 <span class="kw">const</span> <span class="ident">ICW4_8086</span>: <span class="ident">u8</span>     <span class="op">=</span> <span class="number">0x01</span>;       <span class="comment">/* 8086/88 (MCS-80/85) mode */</span>
 <span class="comment">//const icw4_auto         = 0x02;       /* Auto (normal) EOI */</span>
 <span class="comment">//const icw4_buf_slave    = 0x08;       /* Buffered mode/slave */</span>
 <span class="comment">//const icw4_buf_master   = 0x0C;       /* Buffered mode/master */</span>
 <span class="comment">//const icw4_sfnm         = 0x10;       /* Special fully nested (not) */</span>
 
+<span class="doccomment">/// The PIC manager.</span>
 <span class="kw">static</span> <span class="ident">PIC</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Pic</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once</span>::<span class="ident">new</span>();
 
 <span class="doccomment">/// Acquires a reference to the PIC, initializing it if it wasn&#39;t already setup.</span>
@@ -200,14 +212,20 @@
 }
 
 <span class="doccomment">/// A single PIC8259 device.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">InternalPic</span> {
+    <span class="doccomment">/// The PIC&#39;s COMMAND IO port.</span>
     <span class="ident">port_cmd</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The PIC&#39;s DATA IO port.</span>
     <span class="ident">port_data</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>
 }
 
 <span class="doccomment">/// A master/slave PIC setup, as commonly found on IBM PCs.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pic</span> {
+    <span class="doccomment">/// The master PIC.</span>
     <span class="ident">master</span>: <span class="ident">SpinLockIRQ</span><span class="op">&lt;</span><span class="ident">InternalPic</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The slave PIC, cascaded on line 2 of `.master`</span>
     <span class="ident">slave</span>: <span class="ident">SpinLockIRQ</span><span class="op">&lt;</span><span class="ident">InternalPic</span><span class="op">&gt;</span>,
 }
 

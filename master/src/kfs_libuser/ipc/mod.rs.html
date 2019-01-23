@@ -821,6 +821,50 @@
 <span id="821">821</span>
 <span id="822">822</span>
 <span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Core IPC Routines</span>
 <span class="doccomment">//!</span>
@@ -922,6 +966,26 @@
     },
 }
 
+<span class="kw">impl</span> <span class="ident">IPCBufferType</span> {
+    <span class="doccomment">/// Checks if this buffer is a Send Buffer.</span>
+    <span class="kw">fn</span> <span class="ident">is_type_a</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">IPCBufferType</span>::<span class="ident">A</span> { .. } <span class="op">=</span> <span class="self">self</span> {
+            <span class="bool-val">true</span>
+        } <span class="kw">else</span> {
+            <span class="bool-val">false</span>
+        }
+    }
+
+    <span class="doccomment">/// Checks if this buffer is a Receive Buffer.</span>
+    <span class="kw">fn</span> <span class="ident">is_type_b</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">IPCBufferType</span>::<span class="ident">B</span> { .. } <span class="op">=</span> <span class="self">self</span> {
+            <span class="bool-val">true</span>
+        } <span class="kw">else</span> {
+            <span class="bool-val">false</span>
+        }
+    }
+}
+
 <span class="doccomment">/// An IPC Buffer represents a section of memory to send to the other side of the</span>
 <span class="doccomment">/// pipe. It is usually used for sending big chunks of data that would not send</span>
 <span class="doccomment">/// in the comparatively small argument area (which is usually around 200 bytes).</span>
@@ -981,7 +1045,7 @@
     <span class="doccomment">/// of type B, W or C.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>], <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">IPCBuffer</span> {
-            <span class="ident">addr</span>: <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">val</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span> },
+            <span class="ident">addr</span>: <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">is_empty</span>() { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">val</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span> },
             <span class="ident">size</span>: <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">*</span> <span class="ident">val</span>.<span class="ident">len</span>(),
             <span class="ident">ty</span>,
             <span class="ident">phantom</span>: <span class="ident">PhantomData</span>
@@ -991,7 +1055,7 @@
     <span class="doccomment">/// type A or X.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mut_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">T</span>], <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>) <span class="op">-&gt;</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">IPCBuffer</span> {
-            <span class="ident">addr</span>: <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">val</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span> },
+            <span class="ident">addr</span>: <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">is_empty</span>() { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">val</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span> },
             <span class="ident">size</span>: <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">*</span> <span class="ident">val</span>.<span class="ident">len</span>(),
             <span class="ident">ty</span>,
             <span class="ident">phantom</span>: <span class="ident">PhantomData</span>
@@ -1031,12 +1095,16 @@
     }
 
     <span class="comment">// Based on http://switchbrew.org/index.php?title=IPC_Marshalling#Official_marshalling_code</span>
+    <span class="doccomment">/// Gets the [IPCBufferType] of this buffer. The buffer type determines how</span>
+    <span class="doccomment">/// the buffer is passed to the other process and if it&#39;s an argument or a</span>
+    <span class="doccomment">/// return value.</span>
     <span class="kw">fn</span> <span class="ident">buftype</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">IPCBufferType</span> {
         <span class="self">self</span>.<span class="ident">ty</span>
     }
 }
 
 <span class="doccomment">/// Type of an IPC message.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MessageTy</span> {
     <span class="doccomment">/// Requests the other end to close the handle and any resource associated</span>
     <span class="doccomment">/// with it. Normally called when dropping the ClientSession.</span>
@@ -1076,14 +1144,43 @@
     <span class="ident">MOVE</span>: <span class="ident">Array</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">RAW</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span>,
 {
+    <span class="doccomment">/// Type of the message. This is derived from [MessageTy] and</span>
+    <span class="doccomment">/// [Message::token].</span>
     <span class="ident">ty</span>: <span class="ident">u16</span>,
+    <span class="doccomment">/// Optional PID included in the message. For outgoing messages, the actual</span>
+    <span class="doccomment">/// value is not relevant, as the kernel will replace it with the sender&#39;s</span>
+    <span class="doccomment">/// pid.</span>
     <span class="ident">pid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Array of IPC Buffers included in the message.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The user may configure the size of this array in the type, allowing</span>
+    <span class="doccomment">/// precise control over the size of the Message type.</span>
     <span class="ident">buffers</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">BUFF</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Array of copy handles included in the message. Copy handles are copied</span>
+    <span class="doccomment">/// from the sender&#39;s process into the receiver&#39;s process. The sender and</span>
+    <span class="doccomment">/// receiver may both use their respective handles.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The user may configure the size of this array in the type, allowing</span>
+    <span class="doccomment">/// precise control over the size of the Message type.</span>
     <span class="ident">copy_handles</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">COPY</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Array of move handles included in the message. Move handles are moved</span>
+    <span class="doccomment">/// from the sender&#39;s process into the receiver&#39;s process. The sender loses</span>
+    <span class="doccomment">/// control over the handle, as if it had been closed.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The user may configure the size of this array in the type, allowing</span>
+    <span class="doccomment">/// precise control over the size of the Message type.</span>
     <span class="ident">move_handles</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">MOVE</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Whether this message contains an IPC request or an IPC response.</span>
     <span class="ident">is_request</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Contains either the cmdid (if this message is a request) or an error</span>
+    <span class="doccomment">/// number (if this message is a response).</span>
     <span class="ident">cmdid_error</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Optional tracking token. This is used to track the origin of each IPC</span>
+    <span class="doccomment">/// call. Generally, the creating application will chose a random token when</span>
+    <span class="doccomment">/// doing its request. Services will then use that token when they need to</span>
+    <span class="doccomment">/// make their own requests.</span>
     <span class="ident">token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The raw arguments included in this message.</span>
     <span class="ident">raw</span>: <span class="ident">RAW</span>
 }
 
@@ -1235,7 +1332,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_handle_move</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Handle</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">move_handles</span>.<span class="ident">pop_at</span>(<span class="number">0</span>)
             .<span class="ident">map</span>(<span class="ident">Handle</span>::<span class="ident">new</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">LibuserError</span>::<span class="ident">InvalidMoveHandleCount</span>.<span class="ident">into</span>())
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">LibuserError</span>::<span class="ident">InvalidMoveHandleCount</span>.<span class="ident">into</span>())
     }
 
     <span class="doccomment">/// Retrieve a copied handle from this IPC message. Those are popped in the</span>
@@ -1248,7 +1345,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_handle_copy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Handle</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">copy_handles</span>.<span class="ident">pop_at</span>(<span class="number">0</span>)
             .<span class="ident">map</span>(<span class="ident">Handle</span>::<span class="ident">new</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">LibuserError</span>::<span class="ident">InvalidCopyHandleCount</span>.<span class="ident">into</span>())
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">LibuserError</span>::<span class="ident">InvalidCopyHandleCount</span>.<span class="ident">into</span>())
     }
 
     <span class="doccomment">/// Retrieve the PID of the remote process (if sent at all). This message</span>
@@ -1261,7 +1358,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_pid</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Pid</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">pid</span>.<span class="ident">take</span>()
             .<span class="ident">map</span>(<span class="ident">Pid</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">LibuserError</span>::<span class="ident">PidMissing</span>.<span class="ident">into</span>())
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">LibuserError</span>::<span class="ident">PidMissing</span>.<span class="ident">into</span>())
     }
 
     <span class="doccomment">/// Packs this IPC Message to an IPC buffer.</span>
@@ -1274,10 +1371,10 @@
 
         <span class="kw">for</span> <span class="ident">bufty</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">buftype</span>()) {
             <span class="kw">match</span> <span class="ident">bufty</span> {
-                <span class="ident">IPCBufferType</span>::<span class="ident">X</span> {<span class="ident">counter</span>: <span class="kw">_</span>} <span class="op">=&gt;</span> <span class="ident">descriptor_count_x</span> <span class="op">+=</span> <span class="number">1</span>,
-                <span class="ident">IPCBufferType</span>::<span class="ident">A</span> {<span class="ident">flags</span>: <span class="kw">_</span>} <span class="op">=&gt;</span> <span class="ident">descriptor_count_a</span> <span class="op">+=</span> <span class="number">1</span>,
-                <span class="ident">IPCBufferType</span>::<span class="ident">B</span> {<span class="ident">flags</span>: <span class="kw">_</span>} <span class="op">=&gt;</span> <span class="ident">descriptor_count_b</span> <span class="op">+=</span> <span class="number">1</span>,
-                <span class="ident">IPCBufferType</span>::<span class="ident">C</span> {<span class="ident">has_u16_size</span>: <span class="kw">_</span>} <span class="op">=&gt;</span> <span class="ident">descriptor_count_c</span> <span class="op">+=</span> <span class="number">1</span>,
+                <span class="ident">IPCBufferType</span>::<span class="ident">X</span> { .. } <span class="op">=&gt;</span> <span class="ident">descriptor_count_x</span> <span class="op">+=</span> <span class="number">1u8</span>,
+                <span class="ident">IPCBufferType</span>::<span class="ident">A</span> { .. } <span class="op">=&gt;</span> <span class="ident">descriptor_count_a</span> <span class="op">+=</span> <span class="number">1u8</span>,
+                <span class="ident">IPCBufferType</span>::<span class="ident">B</span> { .. } <span class="op">=&gt;</span> <span class="ident">descriptor_count_b</span> <span class="op">+=</span> <span class="number">1u8</span>,
+                <span class="ident">IPCBufferType</span>::<span class="ident">C</span> { .. } <span class="op">=&gt;</span> <span class="ident">descriptor_count_c</span> <span class="op">+=</span> <span class="number">1u8</span>,
             }
         }
 
@@ -1296,7 +1393,7 @@
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">descriptor_count_c</span> <span class="op">==</span> <span class="number">1</span> {
                 <span class="ident">hdr</span>.<span class="ident">set_c_descriptor_flags</span>(<span class="number">2</span>);
             } <span class="kw">else</span> {
-                <span class="ident">hdr</span>.<span class="ident">set_c_descriptor_flags</span>(<span class="number">2</span> <span class="op">+</span> <span class="ident">descriptor_count_c</span> <span class="kw">as</span> <span class="ident">u8</span>);
+                <span class="ident">hdr</span>.<span class="ident">set_c_descriptor_flags</span>(<span class="number">2</span> <span class="op">+</span> <span class="ident">descriptor_count_c</span>);
             }
 
             <span class="comment">// 0x10 = padding, 8 = sfci, 8 = cmdid, data = T</span>
@@ -1363,7 +1460,7 @@
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">39</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer address&quot;</span>);
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">size</span> <span class="op">&gt;&gt;</span> <span class="number">16</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer size&quot;</span>);
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">counter</span> <span class="op">&amp;</span> <span class="op">!</span><span class="number">0b1111</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid counter&quot;</span>);
-                <span class="kw">let</span> <span class="ident">num</span> <span class="op">=</span> <span class="kw-2">*</span>(<span class="ident">counter</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">4</span>) <span class="kw">as</span> <span class="ident">u32</span>)
+                <span class="kw">let</span> <span class="ident">num</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">counter</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">4</span>))
                     .<span class="ident">set_bits</span>(<span class="number">6</span>..<span class="number">9</span>, <span class="ident">addr</span>.<span class="ident">get_bits</span>(<span class="number">36</span>..<span class="number">39</span>) <span class="kw">as</span> <span class="ident">u32</span>)
                     .<span class="ident">set_bits</span>(<span class="number">12</span>..<span class="number">16</span>, <span class="ident">addr</span>.<span class="ident">get_bits</span>(<span class="number">32</span>..<span class="number">36</span>) <span class="kw">as</span> <span class="ident">u32</span>)
                     .<span class="ident">set_bits</span>(<span class="number">16</span>..<span class="number">32</span>, <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span>);
@@ -1372,44 +1469,35 @@
             }
         }
 
-        <span class="comment">// A descriptors</span>
-        <span class="kw">for</span> <span class="ident">buf</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">size</span>, <span class="ident">flags</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">buf</span>.<span class="ident">buftype</span>() {
-                <span class="ident">IPCBufferType</span>::<span class="ident">A</span> {<span class="ident">flags</span>} <span class="op">=&gt;</span> (<span class="ident">buf</span>.<span class="ident">addr</span>, <span class="ident">buf</span>.<span class="ident">size</span>, <span class="ident">flags</span>),
-                <span class="kw">_</span> <span class="op">=&gt;</span> <span class="kw">continue</span>
-            };
+        <span class="doccomment">/// Pack a list of A, B or W descriptor in the buffer at the position of</span>
+        <span class="doccomment">/// the cursor.</span>
+        <span class="kw">fn</span> <span class="ident">pack_abw_descriptors</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">IPCBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>(<span class="ident">cursor</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">CursorWrite</span>, <span class="ident">buffers</span>: <span class="ident">I</span>) {
+            <span class="kw">for</span> <span class="ident">buf</span> <span class="kw">in</span> <span class="ident">buffers</span> {
+                <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">size</span>, <span class="ident">flags</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">buf</span>.<span class="ident">buftype</span>() {
+                    <span class="ident">IPCBufferType</span>::<span class="ident">A</span> {<span class="ident">flags</span>} <span class="op">=&gt;</span> (<span class="ident">buf</span>.<span class="ident">addr</span>, <span class="ident">buf</span>.<span class="ident">size</span>, <span class="ident">flags</span>),
+                    <span class="ident">IPCBufferType</span>::<span class="ident">B</span> {<span class="ident">flags</span>} <span class="op">=&gt;</span> (<span class="ident">buf</span>.<span class="ident">addr</span>, <span class="ident">buf</span>.<span class="ident">size</span>, <span class="ident">flags</span>),
+                    <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>()
+                };
 
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">39</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer address&quot;</span>);
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">size</span> <span class="op">&gt;&gt;</span> <span class="number">35</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer size&quot;</span>);
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">39</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer address&quot;</span>);
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">size</span> <span class="op">&gt;&gt;</span> <span class="number">35</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer size&quot;</span>);
 
-            <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>((<span class="ident">size</span> <span class="op">&amp;</span> <span class="number">0xFFFFFFFF</span>) <span class="kw">as</span> <span class="ident">u32</span>);
-            <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>((<span class="ident">addr</span> <span class="op">&amp;</span> <span class="number">0xFFFFFFFF</span>) <span class="kw">as</span> <span class="ident">u32</span>);
+                <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>((<span class="ident">size</span> <span class="op">&amp;</span> <span class="number">0xFFFFFFFF</span>) <span class="kw">as</span> <span class="ident">u32</span>);
+                <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>((<span class="ident">addr</span> <span class="op">&amp;</span> <span class="number">0xFFFFFFFF</span>) <span class="kw">as</span> <span class="ident">u32</span>);
 
-            <span class="kw">let</span> <span class="ident">num</span> <span class="op">=</span> <span class="ident">flags</span> <span class="kw">as</span> <span class="ident">usize</span>
-                <span class="op">|</span> ((<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">36</span>) <span class="op">&amp;</span> <span class="number">0b111</span>) <span class="op">&lt;&lt;</span> <span class="number">2</span>
-                <span class="op">|</span> ((<span class="ident">size</span> <span class="op">&gt;&gt;</span> <span class="number">32</span>) <span class="op">&amp;</span> <span class="number">0b1111</span>) <span class="op">&lt;&lt;</span> <span class="number">24</span>
-                <span class="op">|</span> ((<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">32</span>) <span class="op">&amp;</span> <span class="number">0b1111</span>) <span class="op">&lt;&lt;</span> <span class="number">28</span>;
-            <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>(<span class="ident">num</span> <span class="kw">as</span> <span class="ident">u32</span>);
+                <span class="kw">let</span> <span class="ident">num</span> <span class="op">=</span> <span class="ident">flags</span> <span class="kw">as</span> <span class="ident">usize</span>
+                    <span class="op">|</span> ((<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">36</span>) <span class="op">&amp;</span> <span class="number">0b111</span>) <span class="op">&lt;&lt;</span> <span class="number">2</span>
+                    <span class="op">|</span> ((<span class="ident">size</span> <span class="op">&gt;&gt;</span> <span class="number">32</span>) <span class="op">&amp;</span> <span class="number">0b1111</span>) <span class="op">&lt;&lt;</span> <span class="number">24</span>
+                    <span class="op">|</span> ((<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">32</span>) <span class="op">&amp;</span> <span class="number">0b1111</span>) <span class="op">&lt;&lt;</span> <span class="number">28</span>;
+                <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>(<span class="ident">num</span> <span class="kw">as</span> <span class="ident">u32</span>);
+            }
         }
+
+        <span class="comment">// A descriptors</span>
+        <span class="ident">pack_abw_descriptors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cursor</span>, <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">buf</span><span class="op">|</span> <span class="ident">buf</span>.<span class="ident">buftype</span>().<span class="ident">is_type_a</span>()));
 
         <span class="comment">// B descriptors</span>
-        <span class="kw">for</span> <span class="ident">buf</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">size</span>, <span class="ident">flags</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">buf</span>.<span class="ident">buftype</span>() {
-                <span class="ident">IPCBufferType</span>::<span class="ident">B</span> {<span class="ident">flags</span>} <span class="op">=&gt;</span> (<span class="ident">buf</span>.<span class="ident">addr</span>, <span class="ident">buf</span>.<span class="ident">size</span>, <span class="ident">flags</span>),
-                <span class="kw">_</span> <span class="op">=&gt;</span> <span class="kw">continue</span>
-            };
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">39</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer address&quot;</span>);
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">size</span> <span class="op">&gt;&gt;</span> <span class="number">35</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;Invalid buffer size&quot;</span>);
-
-            <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>((<span class="ident">size</span> <span class="op">&amp;</span> <span class="number">0xFFFFFFFF</span>) <span class="kw">as</span> <span class="ident">u32</span>);
-            <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>((<span class="ident">addr</span> <span class="op">&amp;</span> <span class="number">0xFFFFFFFF</span>) <span class="kw">as</span> <span class="ident">u32</span>);
-
-            <span class="kw">let</span> <span class="ident">num</span> <span class="op">=</span> <span class="ident">flags</span> <span class="kw">as</span> <span class="ident">usize</span>
-                <span class="op">|</span> ((<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">36</span>) <span class="op">&amp;</span> <span class="number">0b111</span>) <span class="op">&lt;&lt;</span> <span class="number">2</span>
-                <span class="op">|</span> ((<span class="ident">size</span> <span class="op">&gt;&gt;</span> <span class="number">32</span>) <span class="op">&amp;</span> <span class="number">0b1111</span>) <span class="op">&lt;&lt;</span> <span class="number">24</span>
-                <span class="op">|</span> ((<span class="ident">addr</span> <span class="op">&gt;&gt;</span> <span class="number">32</span>) <span class="op">&amp;</span> <span class="number">0b1111</span>) <span class="op">&lt;&lt;</span> <span class="number">28</span>;
-            <span class="ident">cursor</span>.<span class="ident">write_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>(<span class="ident">num</span> <span class="kw">as</span> <span class="ident">u32</span>);
-        }
+        <span class="ident">pack_abw_descriptors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cursor</span>, <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">buf</span><span class="op">|</span> <span class="ident">buf</span>.<span class="ident">buftype</span>().<span class="ident">is_type_b</span>()));
 
         <span class="comment">// TODO: Implement W Descriptors</span>
         <span class="comment">// BODY: W Descriptors are read-write descriptors. Technically speaking,</span>
@@ -1478,7 +1566,7 @@
 
         <span class="kw">for</span> <span class="ident">buf</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">buf</span>.<span class="ident">buftype</span>() {
-                <span class="ident">IPCBufferType</span>::<span class="ident">C</span> { <span class="ident">has_u16_size</span>: <span class="kw">_</span> } <span class="op">=&gt;</span> <span class="ident">buf</span>,
+                <span class="ident">IPCBufferType</span>::<span class="ident">C</span> { .. } <span class="op">=&gt;</span> <span class="ident">buf</span>,
                 <span class="kw">_</span> <span class="op">=&gt;</span> <span class="kw">continue</span>
             };
 
@@ -1525,9 +1613,9 @@
             <span class="comment">// skip 2 words</span>
             <span class="kw">let</span> <span class="ident">stuffed</span> <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">read_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>();
             <span class="kw">let</span> <span class="ident">laddr</span> <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">read_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>();
-            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">*</span>(<span class="ident">laddr</span> <span class="kw">as</span> <span class="ident">u64</span>)
-                .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">stuffed</span>.<span class="ident">get_bits</span>(<span class="number">12</span>..<span class="number">16</span>) <span class="kw">as</span> <span class="ident">u64</span>)
-                .<span class="ident">set_bits</span>(<span class="number">36</span>..<span class="number">39</span>, <span class="ident">stuffed</span>.<span class="ident">get_bits</span>(<span class="number">6</span>..<span class="number">9</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">laddr</span>)
+                .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">stuffed</span>.<span class="ident">get_bits</span>(<span class="number">12</span>..<span class="number">16</span>)))
+                .<span class="ident">set_bits</span>(<span class="number">36</span>..<span class="number">39</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">stuffed</span>.<span class="ident">get_bits</span>(<span class="number">6</span>..<span class="number">9</span>))) <span class="kw">as</span> <span class="ident">usize</span>;
             <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">stuffed</span>.<span class="ident">get_bits</span>(<span class="number">16</span>..<span class="number">32</span>) <span class="kw">as</span> <span class="ident">usize</span>;
             <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="ident">stuffed</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">4</span>) <span class="kw">as</span> <span class="ident">u8</span>;
             <span class="ident">buffers</span>.<span class="ident">push</span>(<span class="ident">IPCBuffer</span> { <span class="ident">addr</span>, <span class="ident">size</span>, <span class="ident">ty</span>: <span class="ident">IPCBufferType</span>::<span class="ident">X</span> { <span class="ident">counter</span> }, <span class="ident">phantom</span>: <span class="ident">PhantomData</span> });
@@ -1537,11 +1625,11 @@
             <span class="kw">let</span> <span class="ident">lsize</span> <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">read_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>();
             <span class="kw">let</span> <span class="ident">laddr</span> <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">read_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>();
             <span class="kw">let</span> <span class="ident">stuff</span> <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">read_u32</span>::<span class="op">&lt;</span><span class="ident">LE</span><span class="op">&gt;</span>();
-            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">*</span>(<span class="ident">laddr</span> <span class="kw">as</span> <span class="ident">u64</span>)
-                .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">stuff</span>.<span class="ident">get_bits</span>(<span class="number">28</span>..<span class="number">32</span>) <span class="kw">as</span> <span class="ident">u64</span>)
-                .<span class="ident">set_bits</span>(<span class="number">36</span>..<span class="number">39</span>, <span class="ident">stuff</span>.<span class="ident">get_bits</span>(<span class="number">2</span>..<span class="number">5</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw-2">*</span>(<span class="ident">lsize</span> <span class="kw">as</span> <span class="ident">u64</span>)
-                .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">stuff</span>.<span class="ident">get_bits</span>(<span class="number">24</span>..<span class="number">28</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">laddr</span>)
+                .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">stuff</span>.<span class="ident">get_bits</span>(<span class="number">28</span>..<span class="number">32</span>)))
+                .<span class="ident">set_bits</span>(<span class="number">36</span>..<span class="number">39</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">stuff</span>.<span class="ident">get_bits</span>(<span class="number">2</span>..<span class="number">5</span>))) <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">lsize</span>)
+                .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">stuff</span>.<span class="ident">get_bits</span>(<span class="number">24</span>..<span class="number">28</span>))) <span class="kw">as</span> <span class="ident">usize</span>;
             <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">stuff</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">2</span>) <span class="kw">as</span> <span class="ident">u8</span>;
 
             <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">hdr</span>.<span class="ident">num_a_descriptors</span>() {

@@ -443,6 +443,59 @@
 <span id="443">443</span>
 <span id="444">444</span>
 <span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! GDT Handler</span>
 <span class="doccomment">//!</span>
@@ -464,12 +517,13 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">segmentation</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">MappingFlags</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">MappingAccessRights</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">align_up</span>;
 
+<span class="doccomment">/// The global GDT. Needs to be initialized with init_gdt().</span>
 <span class="kw">static</span> <span class="ident">GDT</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">GdtManager</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="ident">Once</span>::<span class="ident">new</span>();
 
 <span class="doccomment">/// The global LDT used by all the processes.</span>
@@ -486,7 +540,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_gdt</span>() {
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">tables</span>::{<span class="ident">lldt</span>, <span class="ident">ltr</span>};
 
-    <span class="kw">let</span> <span class="ident">ldt</span> <span class="op">=</span> <span class="ident">GLOBAL_LDT</span>.<span class="ident">call_once</span>(<span class="op">||</span> <span class="ident">DescriptorTable</span>::<span class="ident">new</span>());
+    <span class="kw">let</span> <span class="ident">ldt</span> <span class="op">=</span> <span class="ident">GLOBAL_LDT</span>.<span class="ident">call_once</span>(<span class="ident">DescriptorTable</span>::<span class="ident">new</span>);
 
     <span class="ident">GDT</span>.<span class="ident">call_once</span>(<span class="op">||</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gdt</span> <span class="op">=</span> <span class="ident">DescriptorTable</span>::<span class="ident">new</span>();
@@ -559,11 +613,25 @@
     });
 }
 
+<span class="doccomment">/// Safety wrapper that manages the lifetime of GDT tables.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Although Intel&#39;s guide doesn&#39;t really say much about it, modifying a GDT</span>
+<span class="doccomment">/// &quot;live&quot; is probably a terrible idea. To work around this, the GdtManager keeps</span>
+<span class="doccomment">/// two copies of the DescriptorTable, one being the currently active one (loaded</span>
+<span class="doccomment">/// in the GDTR), and the other being where the changes to the GDT go to until</span>
+<span class="doccomment">/// they are commited.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// When `commit` is called, the internal GDT and current GDTR are swapped.</span>
 <span class="kw">struct</span> <span class="ident">GdtManager</span> {
+    <span class="doccomment">/// Inactive descriptor table. Changes to the GDT are done on this table, but</span>
+    <span class="doccomment">/// will not be active until the table is commited.</span>
     <span class="ident">unloaded_table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DescriptorTable</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">GdtManager</span> {
+    <span class="doccomment">/// Create a GdtManager from a DescriptorTable and segment selectors. The</span>
+    <span class="doccomment">/// given DescriptorTable will be loaded into the GDTR, and the segment</span>
+    <span class="doccomment">/// selectors reloaded with the given value.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">cur_loaded</span>: <span class="ident">DescriptorTable</span>, <span class="ident">new_cs</span>: <span class="ident">u16</span>, <span class="ident">new_ds</span>: <span class="ident">u16</span>, <span class="ident">new_ss</span>: <span class="ident">u16</span>) <span class="op">-&gt;</span> <span class="ident">GdtManager</span> {
         <span class="kw">let</span> <span class="ident">clone</span> <span class="op">=</span> <span class="ident">cur_loaded</span>.<span class="ident">clone</span>();
         <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">cur_loaded</span>);
@@ -574,6 +642,7 @@
         }
     }
 
+    <span class="doccomment">/// Commit the changes in the currently unloaded table.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">new_cs</span>: <span class="ident">u16</span>, <span class="ident">new_ds</span>: <span class="ident">u16</span>, <span class="ident">new_ss</span>: <span class="ident">u16</span>) {
         <span class="kw">let</span> <span class="ident">old_table</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">unloaded_table</span>.<span class="ident">take</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Commit to not be called recursively&quot;</span>)
@@ -605,7 +674,7 @@
 }
 
 <span class="doccomment">/// Push a task segment.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_task_segment</span>(<span class="ident">task</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TssStruct</span>) <span class="op">-&gt;</span> <span class="ident">u16</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_task_segment</span>(<span class="ident">task</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TssStruct</span>) <span class="op">-&gt;</span> <span class="ident">SegmentSelector</span> {
     <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Pushing TSS: {:#?}&quot;</span>, <span class="ident">task</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gdt</span> <span class="op">=</span> <span class="ident">GDT</span>.<span class="ident">r#try</span>().<span class="ident">unwrap</span>().<span class="ident">lock</span>();
     <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">gdt</span>.<span class="ident">push</span>(<span class="ident">DescriptorTableEntry</span>::<span class="ident">new_tss</span>(<span class="ident">task</span>, <span class="ident">PrivilegeLevel</span>::<span class="ident">Ring0</span>, <span class="number">0</span>));
@@ -620,7 +689,7 @@
         <span class="comment">// We need TssStruct + 0x2001 bytes of IOPB.</span>
         <span class="kw">let</span> <span class="ident">pregion</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="ident">align_up</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TssStruct</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="number">0x2001</span>, <span class="ident">PAGE_SIZE</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;Failed to allocate physical region for tss MAIN_TASK&quot;</span>);
-        <span class="kw">let</span> <span class="ident">vaddr</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>().<span class="ident">map_phys_region</span>(<span class="ident">pregion</span>, <span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>);
+        <span class="kw">let</span> <span class="ident">vaddr</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>().<span class="ident">map_phys_region</span>(<span class="ident">pregion</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>);
         <span class="kw">let</span> <span class="ident">tss</span> <span class="op">=</span> <span class="ident">vaddr</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">TssStruct</span>;
         <span class="kw">unsafe</span> {
             <span class="kw-2">*</span><span class="ident">tss</span> <span class="op">=</span> <span class="ident">TssStruct</span>::<span class="ident">new</span>();
@@ -652,6 +721,7 @@
 <span class="doccomment">/// A structure containing our GDT.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">struct</span> <span class="ident">DescriptorTable</span> {
+    <span class="doccomment">/// The GDT table, a growable array of DescriptorTableEntry.</span>
     <span class="ident">table</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DescriptorTableEntry</span><span class="op">&gt;</span>,
 }
 
@@ -678,19 +748,21 @@
     }
 
     <span class="doccomment">/// Push a new entry to the table, returning a segment selector to it.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">entry</span>: <span class="ident">DescriptorTableEntry</span>) <span class="op">-&gt;</span> <span class="ident">u16</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">entry</span>: <span class="ident">DescriptorTableEntry</span>) <span class="op">-&gt;</span> <span class="ident">SegmentSelector</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">table</span>.<span class="ident">len</span>() <span class="op">&lt;&lt;</span> <span class="number">3</span>;
         <span class="self">self</span>.<span class="ident">table</span>.<span class="ident">push</span>(<span class="ident">entry</span>);
-        <span class="ident">ret</span> <span class="kw">as</span> <span class="ident">u16</span>
+        <span class="ident">SegmentSelector</span>(<span class="ident">ret</span> <span class="kw">as</span> <span class="ident">u16</span>)
     }
 
+    <span class="doccomment">/// Load this descriptor table into the GDTR, and set the segments to the</span>
+    <span class="doccomment">/// given values. Returns the old GDTR.</span>
     <span class="kw">fn</span> <span class="ident">load_global</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">new_cs</span>: <span class="ident">u16</span>, <span class="ident">new_ds</span>: <span class="ident">u16</span>, <span class="ident">new_ss</span>: <span class="ident">u16</span>) <span class="op">-&gt;</span> <span class="ident">DescriptorTablePointer</span> {
         <span class="self">self</span>.<span class="ident">table</span>.<span class="ident">shrink_to_fit</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">table</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">table</span>.<span class="ident">capacity</span>());
 
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">DescriptorTablePointer</span> {
             <span class="ident">base</span>: <span class="self">self</span>.<span class="ident">table</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">limit</span>: (<span class="self">self</span>.<span class="ident">table</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">DescriptorTableEntry</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u16</span>,
+            <span class="ident">limit</span>: (<span class="self">self</span>.<span class="ident">table</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">DescriptorTableEntry</span><span class="op">&gt;</span>()) <span class="kw">as</span> <span class="ident">u16</span>,
         };
 
         <span class="kw">let</span> <span class="ident">oldptr</span> <span class="op">=</span> <span class="ident">sgdt</span>();
@@ -698,7 +770,7 @@
         <span class="comment">// TODO: Figure out how to chose CS.</span>
         <span class="kw">unsafe</span> {
 
-            <span class="ident">lgdt</span>(<span class="kw-2">&amp;</span><span class="ident">ptr</span>);
+            <span class="ident">lgdt</span>(<span class="ident">ptr</span>);
 
             <span class="comment">// Reload segment selectors</span>
             <span class="ident">set_cs</span>(<span class="ident">SegmentSelector</span>(<span class="ident">new_cs</span>));
@@ -715,22 +787,27 @@
     }
 }
 
+<span class="doccomment">/// Lists the valid values of System Descriptor Types.</span>
+<span class="comment">// Trap/Task/Interrupt gates are voluntarily absent. This enum should only</span>
+<span class="comment">// contain descriptor types valid for GDT/LDT. IDT is kept separate.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">enum</span> <span class="ident">SystemDescriptorTypes</span> {
     <span class="ident">AvailableTss16</span> <span class="op">=</span> <span class="number">1</span>,
     <span class="ident">Ldt</span> <span class="op">=</span> <span class="number">2</span>,
     <span class="ident">BusyTss16</span> <span class="op">=</span> <span class="number">3</span>,
     <span class="ident">CallGate16</span> <span class="op">=</span> <span class="number">4</span>,
-    <span class="ident">TaskGate</span> <span class="op">=</span> <span class="number">5</span>,
-    <span class="ident">InterruptGate16</span> <span class="op">=</span> <span class="number">6</span>,
-    <span class="ident">TrapGate16</span> <span class="op">=</span> <span class="number">7</span>,
     <span class="ident">AvailableTss32</span> <span class="op">=</span> <span class="number">9</span>,
     <span class="ident">BusyTss32</span> <span class="op">=</span> <span class="number">11</span>,
     <span class="ident">CallGate32</span> <span class="op">=</span> <span class="number">12</span>,
-    <span class="ident">InterruptGate32</span> <span class="op">=</span> <span class="number">14</span>,
-    <span class="ident">TrapGate32</span> <span class="op">=</span> <span class="number">15</span>
 }
 
+<span class="doccomment">/// An entry in the GDT/LDT.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Those entries generally describe a segment. However, the DescriptorTable also</span>
+<span class="doccomment">/// contains special descriptors called &quot;System Descriptors&quot;. Those are used for</span>
+<span class="doccomment">/// specifying different kind of memory regions used by the CPU, such as TSS,</span>
+<span class="doccomment">/// LDT, or Call Gates.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">struct</span> <span class="ident">DescriptorTableEntry</span>(<span class="ident">u64</span>);
@@ -769,6 +846,9 @@
 }
 
 <span class="kw">impl</span> <span class="ident">DescriptorTableEntry</span> {
+    <span class="doccomment">/// Returns an empty descriptor. Using this descriptor is an error and will</span>
+    <span class="doccomment">/// raise a GPF. Should only be used to create a descriptor to place at index</span>
+    <span class="doccomment">/// 0 of the GDT.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">null_descriptor</span>() <span class="op">-&gt;</span> <span class="ident">DescriptorTableEntry</span> {
         <span class="ident">DescriptorTableEntry</span>(<span class="number">0</span>)
     }
@@ -796,7 +876,7 @@
         <span class="ident">gdt</span>
     }
 
-    <span class="doccomment">/// Creates an empty GDT descriptor, but with some flags set correctly</span>
+    <span class="doccomment">/// Creates an empty GDT system descriptor of the given type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_system</span>(<span class="ident">ty</span>: <span class="ident">SystemDescriptorTypes</span>, <span class="ident">base</span>: <span class="ident">u32</span>, <span class="ident">limit</span>: <span class="ident">u32</span>, <span class="ident">priv_level</span>: <span class="ident">PrivilegeLevel</span>) <span class="op">-&gt;</span> <span class="ident">DescriptorTableEntry</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gdt</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">null_descriptor</span>();
 
@@ -813,7 +893,7 @@
 
     <span class="doccomment">/// Creates a new LDT descriptor.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_ldt</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">DescriptorTable</span>, <span class="ident">priv_level</span>: <span class="ident">PrivilegeLevel</span>) <span class="op">-&gt;</span> <span class="ident">DescriptorTableEntry</span> {
-        <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">base</span>.<span class="ident">table</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">base</span>.<span class="ident">table</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">DescriptorTableEntry</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="number">1</span> };
+        <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">base</span>.<span class="ident">table</span>.<span class="ident">is_empty</span>() { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">base</span>.<span class="ident">table</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">DescriptorTableEntry</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="number">1</span> };
         <span class="self">Self</span>::<span class="ident">new_system</span>(<span class="ident">SystemDescriptorTypes</span>::<span class="ident">Ldt</span>, <span class="ident">base</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">limit</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">priv_level</span>)
     }
 
@@ -823,69 +903,95 @@
         <span class="self">Self</span>::<span class="ident">new_system</span>(<span class="ident">SystemDescriptorTypes</span>::<span class="ident">AvailableTss32</span>, <span class="ident">base</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">u32</span>, (<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TssStruct</span><span class="op">&gt;</span>() <span class="op">+</span> <span class="ident">iobp_size</span> <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">priv_level</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">get_limit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
+    <span class="doccomment">/// Gets the byte length of the entry, minus 1.</span>
+    <span class="kw">fn</span> <span class="ident">get_limit</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
         (<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">16</span>) <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">|</span> ((<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">48</span>..<span class="number">52</span>) <span class="op">&lt;&lt;</span> <span class="number">16</span>) <span class="kw">as</span> <span class="ident">u32</span>)
     }
 
+    <span class="doccomment">/// Sets the entry&#39;s byte length to the given number plus one. Note that if</span>
+    <span class="doccomment">/// the given length is higher than 65536, it should be properly</span>
+    <span class="doccomment">/// page-aligned.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Panics if the given limit is higher than 65536 and not page aligned.</span>
     <span class="kw">fn</span> <span class="ident">set_limit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">newlimit</span>: <span class="ident">u32</span>) {
         <span class="kw">if</span> <span class="ident">newlimit</span> <span class="op">&gt;</span> <span class="number">65536</span> <span class="op">&amp;&amp;</span> (<span class="ident">newlimit</span> <span class="op">&amp;</span> <span class="number">0xFFF</span>) <span class="op">!=</span> <span class="number">0xFFF</span> {
             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Limit {} is invalid&quot;</span>, <span class="ident">newlimit</span>);
         }
 
         <span class="kw">if</span> <span class="ident">newlimit</span> <span class="op">&gt;</span> <span class="number">65536</span> {
-            <span class="ident">newlimit</span> <span class="op">=</span> <span class="ident">newlimit</span> <span class="op">&gt;&gt;</span> <span class="number">12</span>;
+            <span class="ident">newlimit</span> <span class="op">&gt;&gt;=</span> <span class="number">12</span>;
             <span class="self">self</span>.<span class="ident">set_4k_granularity</span>(<span class="bool-val">true</span>);
         }
 
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>(<span class="number">0</span>..<span class="number">16</span>, <span class="ident">newlimit</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">16</span>) <span class="kw">as</span> <span class="ident">u64</span>);
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>(<span class="number">48</span>..<span class="number">52</span>, <span class="ident">newlimit</span>.<span class="ident">get_bits</span>(<span class="number">16</span>..<span class="number">20</span>) <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>( <span class="number">0</span>..<span class="number">16</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">newlimit</span>.<span class="ident">get_bits</span>( <span class="number">0</span>..<span class="number">16</span>)));
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>(<span class="number">48</span>..<span class="number">52</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">newlimit</span>.<span class="ident">get_bits</span>(<span class="number">16</span>..<span class="number">20</span>)));
     }
 
-    <span class="kw">fn</span> <span class="ident">get_base</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
+    <span class="doccomment">/// Gets the base address of the entry.</span>
+    <span class="kw">fn</span> <span class="ident">get_base</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
         (<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">16</span>..<span class="number">40</span>) <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">|</span> ((<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">56</span>..<span class="number">64</span>) <span class="op">&lt;&lt;</span> <span class="number">24</span>) <span class="kw">as</span> <span class="ident">u32</span>)
     }
 
+    <span class="doccomment">/// Sets the base address of the entry.</span>
     <span class="kw">fn</span> <span class="ident">set_base</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">newbase</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>(<span class="number">16</span>..<span class="number">40</span>, <span class="ident">newbase</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">24</span>) <span class="kw">as</span> <span class="ident">u64</span>);
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>(<span class="number">56</span>..<span class="number">64</span>, <span class="ident">newbase</span>.<span class="ident">get_bits</span>(<span class="number">24</span>..<span class="number">32</span>) <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>(<span class="number">16</span>..<span class="number">40</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">newbase</span>.<span class="ident">get_bits</span>( <span class="number">0</span>..<span class="number">24</span>)));
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bits</span>(<span class="number">56</span>..<span class="number">64</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">newbase</span>.<span class="ident">get_bits</span>(<span class="number">24</span>..<span class="number">32</span>)));
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_accessed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// CPU sets this bit to true when the segment is accessed.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_accessed</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">40</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_readwrite_allowed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// - Code Segments: Whether read access for this segment is allowed.</span>
+    <span class="doccomment">/// - Data Segments: Whether write access for this segment is allowed.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_readwrite_allowed</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">41</span>)
     }
 
-    <span class="comment">// TODO: also gets direction</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_comformant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// - Code Segments: if true, code in this segment can be executed from a</span>
+    <span class="doccomment">///   lower privilege level (example: ring3 can far jump into ring2 code).</span>
+    <span class="doccomment">///   If false, the code segment can only be executed from the right DPL.</span>
+    <span class="doccomment">/// - Data Segments: if true, the segment grows up. If false, the segment</span>
+    <span class="doccomment">///   grows down.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_comformant</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">42</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_executable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// Determines whether the segment is a code segment or a data segment. If</span>
+    <span class="doccomment">/// true, this is a code segment and can be executed. If false, this is a</span>
+    <span class="doccomment">/// data segment.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_executable</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">43</span>)
     }
 
     <span class="comment">// bit 44 is unused</span>
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_ring_level</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">PrivilegeLevel</span> {
-        <span class="ident">PrivilegeLevel</span>::<span class="ident">from_u16</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">45</span>..<span class="number">47</span>) <span class="kw">as</span> <span class="ident">u16</span>)
+    <span class="doccomment">/// The privilege level associated with this segment.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_ring_level</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">PrivilegeLevel</span> {
+        <span class="ident">PrivilegeLevel</span>::<span class="ident">from_u8</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">45</span>..<span class="number">47</span>) <span class="kw">as</span> <span class="ident">u8</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_present</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// A segment needs to be present to have an effect. Using a not-present</span>
+    <span class="doccomment">/// segment will cause an exception.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_present</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">47</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_4k_granularity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// If true, the limit is a count of 4k pages. If false, it is a byte count.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_4k_granularity</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">55</span>)
     }
 
+    <span class="doccomment">/// If true, the limit is a count of 4k pages. If false, it is a byte count.</span>
     <span class="kw">fn</span> <span class="ident">set_4k_granularity</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">is</span>: <span class="ident">bool</span>) {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_bit</span>(<span class="number">55</span>, <span class="ident">is</span>);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_32bit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// If true, this is a 32-bit segment. If false, it is a 16-bit selector.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_32bit</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">54</span>)
     }
 }

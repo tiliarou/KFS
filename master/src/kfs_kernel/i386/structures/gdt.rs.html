@@ -40,6 +40,15 @@
 <span id="40">40</span>
 <span id="41">41</span>
 <span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Types for the Global Descriptor Table and segment selectors.</span>
 
@@ -52,6 +61,8 @@
 <span class="doccomment">/// with some additional flags).</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// See Intel 3a, Section 3.4.2 &quot;Segment Selectors&quot;</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SegmentSelector</span>(<span class="kw">pub</span> <span class="ident">u16</span>);
 
 <span class="kw">impl</span> <span class="ident">SegmentSelector</span> {
@@ -65,13 +76,19 @@
     }
 
     <span class="doccomment">/// Returns the GDT index.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u16</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u16</span> {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">&gt;&gt;</span> <span class="number">3</span>
     }
 
     <span class="doccomment">/// Returns the requested privilege level.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rpl</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">PrivilegeLevel</span> {
-        <span class="ident">PrivilegeLevel</span>::<span class="ident">from_u16</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">2</span>))
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rpl</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">PrivilegeLevel</span> {
+        <span class="ident">PrivilegeLevel</span>::<span class="ident">from_u8</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">2</span>) <span class="kw">as</span> <span class="ident">u8</span>)
+    }
+
+    <span class="doccomment">/// If true, this descriptor is backed by the LDT. If false, it is backed by</span>
+    <span class="doccomment">/// the GDT.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ldt</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_bit</span>(<span class="number">2</span>)
     }
 }
 
@@ -80,6 +97,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;SegmentSelector&quot;</span>);
         <span class="ident">s</span>.<span class="ident">field</span>(<span class="string">&quot;index&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">index</span>());
         <span class="ident">s</span>.<span class="ident">field</span>(<span class="string">&quot;rpl&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rpl</span>());
+        <span class="ident">s</span>.<span class="ident">field</span>(<span class="string">&quot;is_ldt&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">is_ldt</span>());
         <span class="ident">s</span>.<span class="ident">finish</span>()
     }
 }

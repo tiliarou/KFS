@@ -146,7 +146,35 @@
 <span id="146">146</span>
 <span id="147">147</span>
 <span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! Simple cursor</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This module contains a very simple cursor, similar to std::io&#39;s, but without</span>
+<span class="doccomment">//! relying on the io module. It also offers additional convenience functions to</span>
+<span class="doccomment">//! make writing PODs easy.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! If std::io is ever ported to core::io, this module can disappear.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - https://github.com/rust-lang/rust/issues/48331</span>
+<span class="doccomment">//! - https://github.com/rust-lang-nursery/portability-wg/issues/12</span>
+
 <span class="kw">use</span> <span class="ident">byteorder</span>::<span class="ident">ByteOrder</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::{<span class="self">self</span>, <span class="ident">size_of</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">slice</span>;
@@ -159,8 +187,11 @@
 <span class="doccomment">/// A minimal Cursor for writing, for use in libcore.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// See https://doc.rust-lang.org/std/io/struct.Cursor.html</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CursorWrite</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Data backing this cursor.</span>
     <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u8</span>],
+    <span class="doccomment">/// Position of the cursor in the data.</span>
     <span class="ident">pos</span>: <span class="ident">usize</span>
 }
 
@@ -224,9 +255,12 @@
 <span class="doccomment">/// A minimal Cursor for writing, for use in libcore.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// See https://doc.rust-lang.org/std/io/struct.Cursor.html</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CursorRead</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Data backing this cursor.</span>
     <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>],
     <span class="comment">// Let&#39;s cheat</span>
+    <span class="doccomment">/// Position of the cursor in the data.</span>
     <span class="ident">pos</span>: ::<span class="ident">core</span>::<span class="ident">cell</span>::<span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>
 }
 

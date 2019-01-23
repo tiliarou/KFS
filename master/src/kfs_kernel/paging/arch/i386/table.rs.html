@@ -264,6 +264,70 @@
 <span id="264">264</span>
 <span id="265">265</span>
 <span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! i386 Page Tables hierarchy</span>
 
@@ -275,23 +339,48 @@
                                               <span class="ident">HierarchicalEntry</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">lands</span>::{<span class="ident">KernelLand</span>, <span class="ident">UserLand</span>, <span class="ident">VirtualSpaceLand</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">MappingFlags</span>;
+<span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">MappingAccessRights</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
+<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Formatter</span>, <span class="ident">Error</span>};
 
 <span class="doccomment">/// When paging is on, accessing this address loops back to the directory itself thanks to</span>
-<span class="doccomment">/// recursive mapping on directory&#39;s last entry</span>
+<span class="doccomment">/// recursive mapping on directory&#39;s last entry.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DIRECTORY_RECURSIVE_ADDRESS</span>: <span class="ident">VirtualAddress</span> <span class="op">=</span> <span class="ident">VirtualAddress</span>(<span class="number">0xffff_f000</span>);
 
-<span class="doccomment">/// A page table in memory</span>
+<span class="doccomment">/// A page table or directory in memory.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A page table/directory is just an array of 1024 [I386Entry].</span>
 <span class="kw">struct</span> <span class="ident">Table</span> {
+    <span class="doccomment">/// The array of entries making up this table.</span>
     <span class="ident">entries</span>: [<span class="ident">I386Entry</span>; <span class="ident">ENTRY_COUNT</span>]
 }
 
+<span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Table</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="ident">Debug</span>::<span class="ident">fmt</span>(<span class="op">&amp;&amp;</span><span class="self">self</span>.<span class="ident">entries</span>[..], <span class="ident">f</span>)
+    }
+}
+
+
 <span class="comment">/* ********************************************************************************************** */</span>
 
+<span class="doccomment">/// A currently active page table.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A [Table] with associated functions.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ActivePageTable</span>(<span class="ident">Table</span>);
+
+<span class="doccomment">/// A currently active page directory.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A [Table] with associated functions, which gets its children [ActivePageTable]</span>
+<span class="doccomment">/// through recursive mapping.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ActivePageDirectory</span>(<span class="ident">Table</span>);
+
+<span class="doccomment">/// The currently active hierarchy of directory and tables. Gets its [ActivePageDirectory]</span>
+<span class="doccomment">/// through recursive mapping.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ActiveHierarchy</span>;
 
 <span class="kw">impl</span> <span class="ident">HierarchicalTable</span> <span class="kw">for</span> <span class="ident">ActivePageTable</span> {
@@ -303,11 +392,13 @@
 
     <span class="kw">fn</span> <span class="ident">table_level</span>() <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="number">0</span> }
 
-    <span class="kw">fn</span> <span class="ident">get_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
+    <span class="doccomment">/// Panics, a page table has no children.</span>
+    <span class="kw">fn</span> <span class="ident">get_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;An active page table has no children&quot;</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">create_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Panics, a page table has no children.</span>
+    <span class="kw">fn</span> <span class="ident">create_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span> {
         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;An active page table has no children&quot;</span>);
     }
 }
@@ -335,13 +426,19 @@
 
     <span class="kw">fn</span> <span class="ident">table_level</span>() <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="number">1</span> }
 
-    <span class="kw">fn</span> <span class="ident">get_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">ActivePageTable</span><span class="op">&gt;&gt;</span> {
-        <span class="comment">// use recurive mapping to get the child table</span>
+    <span class="doccomment">/// Gets a child [ActivePageTable] through recursive mapping.</span>
+    <span class="kw">fn</span> <span class="ident">get_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">ActivePageTable</span><span class="op">&gt;&gt;</span> {
+        <span class="comment">// use recursive mapping to get the child table</span>
         <span class="self">self</span>.<span class="ident">get_table_address</span>(<span class="ident">index</span>)
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">SmartHierarchicalTable</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">*</span> (<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>) }))
     }
 
-    <span class="kw">fn</span> <span class="ident">create_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">ActivePageTable</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Creates a child [ActivePageTable], maps it at the given index, and returns it.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Panics if the entry was not available.</span>
+    <span class="kw">fn</span> <span class="ident">create_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">ActivePageTable</span><span class="op">&gt;</span> {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">entries</span>()[<span class="ident">index</span>].<span class="ident">is_unused</span>(), <span class="string">&quot;called create_child_table on a non available entry&quot;</span>);
         <span class="kw">let</span> <span class="ident">table_frame</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
 
@@ -366,7 +463,12 @@
 <span class="kw">impl</span> <span class="ident">TableHierarchy</span> <span class="kw">for</span> <span class="ident">ActiveHierarchy</span> {
     <span class="kw">type</span> <span class="ident">TopLevelTableType</span> <span class="op">=</span> <span class="ident">ActivePageDirectory</span>;
 
-    <span class="kw">fn</span> <span class="ident">get_top_level_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">ActivePageDirectory</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Gets the [ActivePageDirectory] through recursive mapping.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Panics if paging is not enabled.</span>
+    <span class="kw">fn</span> <span class="ident">get_top_level_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">ActivePageDirectory</span><span class="op">&gt;</span> {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="kw">super</span>::<span class="ident">is_paging_on</span>(), <span class="string">&quot;Paging is disabled&quot;</span>);
         <span class="ident">SmartHierarchicalTable</span>::<span class="ident">new</span>(<span class="ident">DIRECTORY_RECURSIVE_ADDRESS</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ActivePageDirectory</span>)
     }
@@ -374,11 +476,29 @@
 
 <span class="comment">/* ********************************************************************************************** */</span>
 
+<span class="doccomment">/// A currently inactive page table.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A [Table] with associated functions. Must be temporarily mapped to be read and modified.</span>
+<span class="doccomment">/// See [SmartHierarchicalTable].</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InactivePageTable</span>(<span class="ident">Table</span>);
+
+<span class="doccomment">/// A currently inactive page directory.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A [Table] with associated functions. Must be temporarily mapped to be read and modified.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Gets its children [InactivePageTable] by temporarily mapping them.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// See [SmartHierarchicalTable].</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InactivePageDirectory</span>(<span class="ident">Table</span>);
+
+<span class="doccomment">/// A currently inactive hierarchy of directory and tables.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Can be read and modified by temporarily mapping its [InactivePageDirectory].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InactiveHierarchy</span> {
-    <span class="comment">// The address we must put in cr3 to switch to these pages</span>
+    <span class="doccomment">/// The address we must put in cr3 to switch to these pages.</span>
     <span class="ident">directory_physical_address</span>: <span class="ident">PhysicalAddress</span>,
 }
 
@@ -391,11 +511,13 @@
 
     <span class="kw">fn</span> <span class="ident">table_level</span>() <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="number">0</span> }
 
-    <span class="kw">fn</span> <span class="ident">get_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
+    <span class="doccomment">/// Panics, a page table has no children.</span>
+    <span class="kw">fn</span> <span class="ident">get_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;An inactive page table has no children&quot;</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">create_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Panics, a page table has no children.</span>
+    <span class="kw">fn</span> <span class="ident">create_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span> {
         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;An inactive page table has no children&quot;</span>);
     }
 }
@@ -409,7 +531,8 @@
 
     <span class="kw">fn</span> <span class="ident">table_level</span>() <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="number">1</span> }
 
-    <span class="kw">fn</span> <span class="ident">get_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">InactivePageTable</span><span class="op">&gt;&gt;</span> {
+    <span class="doccomment">/// Gets the child [InactivePageTable] at the given index. Temporarily maps it if it is present.</span>
+    <span class="kw">fn</span> <span class="ident">get_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">InactivePageTable</span><span class="op">&gt;&gt;</span> {
         <span class="self">self</span>.<span class="ident">entries</span>()[<span class="ident">index</span>].<span class="ident">pointed_frame</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">active_pages</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>();
             <span class="kw">let</span> <span class="ident">phys_region</span> <span class="op">=</span> <span class="kw">unsafe</span> {
@@ -418,12 +541,17 @@
                 <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct_no_dealloc</span>(<span class="ident">frame</span>, <span class="ident">PAGE_SIZE</span>)
             };
             <span class="kw">let</span> <span class="ident">va</span> <span class="op">=</span> <span class="ident">active_pages</span>.<span class="ident">find_virtual_space</span>(<span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
-            <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">phys_region</span>, <span class="ident">va</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_w</span>());
+            <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">phys_region</span>, <span class="ident">va</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">k_w</span>());
             <span class="ident">SmartHierarchicalTable</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> {<span class="ident">va</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">InactivePageTable</span>})
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">create_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">InactivePageTable</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Creates a child [InactivePageTable] at the given index, temporarily maps it, and returns it.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Panics if the entry was not available.</span>
+    <span class="kw">fn</span> <span class="ident">create_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">InactivePageTable</span><span class="op">&gt;</span> {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">entries</span>()[<span class="ident">index</span>].<span class="ident">is_unused</span>());
         <span class="kw">let</span> <span class="ident">table_frame</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">active_pages</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>();
@@ -434,7 +562,7 @@
         };
         <span class="comment">// 1: Map it in our page tables</span>
         <span class="kw">let</span> <span class="ident">va</span> <span class="op">=</span> <span class="ident">active_pages</span>.<span class="ident">find_virtual_space</span>(<span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
-        <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">table_frame</span>, <span class="ident">va</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_w</span>());
+        <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">table_frame</span>, <span class="ident">va</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">k_w</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapped_table</span> <span class="op">=</span> <span class="ident">SmartHierarchicalTable</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> {<span class="ident">va</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">InactivePageTable</span>});
         <span class="ident">mapped_table</span>.<span class="ident">zero</span>();
 
@@ -453,15 +581,15 @@
     }
 }
 
-<span class="doccomment">/// When the temporary inactive directory is drop, we unmap it</span>
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">InactivePageDirectory</span> {
+    <span class="doccomment">/// When the temporary inactive directory is drop, we unmap it.</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="ident">get_kernel_memory</span>().<span class="ident">unmap_no_dealloc</span>(<span class="ident">VirtualAddress</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>), <span class="ident">PAGE_SIZE</span>);
     }
 }
 
-<span class="doccomment">/// When the temporary inactive table is drop, we unmap it</span>
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">InactivePageTable</span> {
+    <span class="doccomment">/// When the temporary inactive table is drop, we unmap it.</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="ident">get_kernel_memory</span>().<span class="ident">unmap_no_dealloc</span>(<span class="ident">VirtualAddress</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>), <span class="ident">PAGE_SIZE</span>);
     }
@@ -470,14 +598,15 @@
 <span class="kw">impl</span> <span class="ident">TableHierarchy</span> <span class="kw">for</span> <span class="ident">InactiveHierarchy</span> {
     <span class="kw">type</span> <span class="ident">TopLevelTableType</span> <span class="op">=</span> <span class="ident">InactivePageDirectory</span>;
 
-    <span class="kw">fn</span> <span class="ident">get_top_level_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">InactivePageDirectory</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Gets the [InactivePageDirectory] by temporarily mapping it.</span>
+    <span class="kw">fn</span> <span class="ident">get_top_level_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="ident">InactivePageDirectory</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="comment">// we&#39;re reconstructing a non-tracked RecursiveTableLand frame.</span>
             <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct_no_dealloc</span>(<span class="self">self</span>.<span class="ident">directory_physical_address</span>, <span class="ident">PAGE_SIZE</span>)
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">active_pages</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>();
         <span class="kw">let</span> <span class="ident">va</span> <span class="op">=</span> <span class="ident">active_pages</span>.<span class="ident">find_virtual_space</span>(<span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
-        <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">frame</span>, <span class="ident">va</span>, <span class="ident">MappingFlags</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>);
+        <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">frame</span>, <span class="ident">va</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>);
         <span class="ident">SmartHierarchicalTable</span>::<span class="ident">new</span>(<span class="ident">va</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">InactivePageDirectory</span>)
     }
 }
@@ -510,9 +639,8 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dir</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_top_level_table</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">active_dir</span> <span class="op">=</span> <span class="ident">memory</span>.<span class="ident">get_hierarchy</span>().<span class="ident">get_top_level_table</span>();
-        <span class="kw">for</span> <span class="ident">entry_index</span> <span class="kw">in</span> <span class="ident">KernelLand</span>::<span class="ident">start_table</span>()..=<span class="ident">KernelLand</span>::<span class="ident">end_table</span>() {
-            <span class="ident">dir</span>.<span class="ident">entries</span>()[<span class="ident">entry_index</span>] <span class="op">=</span> <span class="ident">active_dir</span>.<span class="ident">entries</span>()[<span class="ident">entry_index</span>];
-        }
+        <span class="ident">dir</span>.<span class="ident">entries</span>()[<span class="ident">KernelLand</span>::<span class="ident">start_table</span>()..=<span class="ident">KernelLand</span>::<span class="ident">end_table</span>()]
+            .<span class="ident">clone_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">active_dir</span>.<span class="ident">entries</span>()[<span class="ident">KernelLand</span>::<span class="ident">start_table</span>()..=<span class="ident">KernelLand</span>::<span class="ident">end_table</span>()]);
     }
 
     <span class="kw">fn</span> <span class="ident">is_currently_active</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
@@ -528,7 +656,7 @@
 
 <span class="comment">/* ********************************************************************************************** */</span>
 
-<span class="doccomment">/// When passing this struct the TLB will be flushed. Used by ActivePageTables</span>
+<span class="doccomment">/// When passing this struct the TLB will be flushed. Used by [ActivePageTable].</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TlbFlush</span>;
 <span class="kw">impl</span> <span class="ident">PagingCacheFlusher</span> <span class="kw">for</span> <span class="ident">TlbFlush</span> { <span class="kw">fn</span> <span class="ident">flush_whole_cache</span>() { <span class="kw">super</span>::<span class="ident">flush_tlb</span>(); } }
 </pre></div>

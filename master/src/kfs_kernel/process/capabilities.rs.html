@@ -296,6 +296,10 @@
 <span id="296">296</span>
 <span id="297">297</span>
 <span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Process Capability handling</span>
 <span class="doccomment">//!</span>
@@ -317,6 +321,7 @@
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitField</span>;
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitArray</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>;
+<span class="kw">use</span> <span class="ident">byteorder</span>::{<span class="ident">LE</span>, <span class="ident">ByteOrder</span>};
 
 <span class="doccomment">/// Capabilities of a process.</span>
 <span class="doccomment">///</span>
@@ -396,6 +401,7 @@
 <span class="doccomment">/// IOPorts the process is allowed to talk to</span>
 <span class="kw">const</span> <span class="ident">IO_PORTS_ALLOWED</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">10</span>;
 
+<span class="doccomment">/// The highest defined svc.</span>
 <span class="kw">const</span> <span class="ident">MAX_SVC</span>: <span class="ident">usize</span> <span class="op">=</span> ::<span class="ident">kfs_libkern</span>::<span class="ident">nr</span>::<span class="ident">MaxSvc</span>;
 
 <span class="doccomment">/// Mask of kernel capabilities that cannot appear twice in a KCAP array.</span>
@@ -445,20 +451,21 @@
     <span class="doccomment">/// - ApplicationType: bits set in the 31..17 range</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [switchbrew]: http://switchbrew.org/index.php?title=NPDM#Kernel_Access_Control</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_kcaps</span>(<span class="ident">kacs</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ProcessCapabilities</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_kcaps</span>(<span class="ident">kacs</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ProcessCapabilities</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">capabilities</span> <span class="op">=</span> <span class="ident">ProcessCapabilities</span> {
             <span class="ident">syscall_mask</span>: [<span class="number">0</span>; <span class="number">256</span> <span class="op">/</span> (<span class="number">8</span> <span class="op">*</span> <span class="number">4</span>)],
             <span class="ident">irq_access_mask</span>: [<span class="number">0</span>; <span class="number">128</span>],
             <span class="ident">ioports</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kac_iter</span> <span class="op">=</span> <span class="ident">kacs</span>.<span class="ident">iter</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kac_iter</span> <span class="op">=</span> <span class="ident">kacs</span>.<span class="ident">chunks</span>(<span class="number">4</span>);
 
         <span class="comment">// A bitmask of KACs already found.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">duplicate_kacs</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">duplicate_svc</span> <span class="op">=</span> <span class="number">0</span>;
 
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">kac</span>) <span class="op">=</span> <span class="ident">kac_iter</span>.<span class="ident">next</span>() {
+            <span class="kw">let</span> <span class="ident">kac</span> <span class="op">=</span> <span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="ident">kac</span>);
             <span class="kw">let</span> <span class="ident">kac_type</span> <span class="op">=</span> (<span class="op">!</span><span class="ident">kac</span>).<span class="ident">trailing_zeros</span>();
             <span class="kw">if</span> <span class="ident">duplicate_kacs</span>.<span class="ident">get_bit</span>(<span class="ident">kac_type</span> <span class="kw">as</span> <span class="kw">_</span>) <span class="op">&amp;&amp;</span> <span class="ident">KACS_NO_DUPLICATES</span>.<span class="ident">get_bit</span>(<span class="ident">kac_type</span> <span class="kw">as</span> <span class="kw">_</span>) {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidCombination</span> {
@@ -509,6 +516,7 @@
                     <span class="kw">let</span> <span class="ident">_start_page</span> <span class="op">=</span> <span class="ident">kac</span>.<span class="ident">get_bits</span>(<span class="number">7</span>..<span class="number">31</span>);
                     <span class="kw">let</span> <span class="ident">_is_ro</span> <span class="op">=</span> <span class="ident">kac</span>.<span class="ident">get_bit</span>(<span class="number">31</span>);
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">kac</span>) <span class="op">=</span> <span class="ident">kac_iter</span>.<span class="ident">next</span>() {
+                        <span class="kw">let</span> <span class="ident">kac</span> <span class="op">=</span> <span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="ident">kac</span>);
                         <span class="kw">if</span> (<span class="op">!</span><span class="ident">kac</span>).<span class="ident">trailing_zeros</span>() <span class="op">==</span> <span class="ident">MAP_IO_OR_NORMAL_RANGE</span> {
                             <span class="kw">let</span> <span class="ident">_num_pages</span> <span class="op">=</span> <span class="ident">kac</span>.<span class="ident">get_bits</span>(<span class="number">7</span>..<span class="number">31</span>);
                             <span class="kw">let</span> <span class="ident">_is_io</span> <span class="op">=</span> <span class="ident">kac</span>.<span class="ident">get_bit</span>(<span class="number">31</span>);
@@ -585,7 +593,7 @@
                 }
                 <span class="kw">_</span> <span class="op">=&gt;</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidKernelCaps</span> {
-                        <span class="ident">kcap</span>: <span class="kw-2">*</span><span class="ident">kac</span>,
+                        <span class="ident">kcap</span>: <span class="ident">kac</span>,
                         <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>(),
                     })
                 }

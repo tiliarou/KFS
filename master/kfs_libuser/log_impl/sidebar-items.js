@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["init",""]],"static":[["SVC_LOG_BUFFER",""]],"struct":[["Logger","Log implementation structure."],["SVC_LOG_BUFFER","Buffer where pending writes are stored. The buffer is only flushed when a \\n is written, or when it's full."]]});
+initSidebarItems({"fn":[["init","Initializes the global logger with the svc logger."]],"static":[["SVC_LOG_BUFFER",""]],"struct":[["Logger","Log implementation structure."],["SVC_LOG_BUFFER","Buffer where pending writes are stored. The buffer is only flushed when a \\n is written, or when it's full."]]});

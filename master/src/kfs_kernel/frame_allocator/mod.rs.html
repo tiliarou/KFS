@@ -50,6 +50,11 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Physical memory manager.</span>
 <span class="doccomment">//!</span>
@@ -84,9 +89,14 @@
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">private</span>::<span class="ident">FrameAllocatorTraitPrivate</span>;
 
 <span class="kw">mod</span> <span class="ident">private</span> {
+    <span class="doccomment">//! Private FrameAllocator API</span>
+
     <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">PhysicalMemRegion</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
 
+    <span class="doccomment">/// An arch-specifig FrameAllocator must expose the following functions.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// These only provide an internal API for [PhysicalMemRegion]s.</span>
     <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FrameAllocatorTraitPrivate</span> {
         <span class="doccomment">/// Marks a region as deallocated.</span>
         <span class="doccomment">/// Called when a PhysicalMemRegion is dropped.</span>

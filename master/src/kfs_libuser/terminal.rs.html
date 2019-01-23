@@ -279,6 +279,35 @@
 <span id="279">279</span>
 <span id="280">280</span>
 <span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Terminal rendering APIs</span>
 <span class="doccomment">//!</span>
@@ -294,6 +323,7 @@
 
 <span class="doccomment">/// Just an x and a y</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">struct</span> <span class="ident">Pos</span> {
     <span class="ident">x</span>: <span class="ident">usize</span>,
     <span class="ident">y</span>: <span class="ident">usize</span>,
@@ -301,18 +331,26 @@
 
 <span class="doccomment">/// A struct for logging text to the window.</span>
 <span class="doccomment">/// Renders characters from a .ttf font using the font-rs crate</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_debug_implementations</span>)]</span> <span class="comment">// Font does not implement Debug :/ Maybe I could do a PR</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Terminal</span> {
+    <span class="doccomment">/// Rendering target for this terminal.</span>
     <span class="ident">framebuffer</span>: <span class="ident">Window</span>,
-    <span class="ident">cursor_pos</span>: <span class="ident">Pos</span>,        <span class="comment">/* Cursor pos, in pixels. Does not account for bpp.
-                               Reprensents the pen position on the baseline. */</span>
+    <span class="doccomment">/// Cursor pos, in pixels. Does not account for bpp. Reprensents the pen</span>
+    <span class="doccomment">/// position on the baseline.</span>
+    <span class="ident">cursor_pos</span>: <span class="ident">Pos</span>,
+    <span class="doccomment">/// The font in use for this terminal.</span>
     <span class="ident">font</span>: <span class="ident">Font</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>,
-    <span class="ident">cached_glyphs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">char</span>, <span class="ident">GlyphBitmap</span><span class="op">&gt;</span>, <span class="comment">/* We cache ascii glyphs
-                                                  to avoid rendering them every time */</span>
-    <span class="ident">advance_width</span>:  <span class="ident">usize</span>, <span class="comment">/* Expected to be the same for every glyph since
-                              it should be a monospaced font */</span>
-    <span class="ident">linespace</span>: <span class="ident">usize</span>,      <span class="comment">/* The distance between two baselines */</span>
-    <span class="ident">ascent</span>: <span class="ident">usize</span>,         <span class="comment">/* The maximum ascent  in the font. */</span>
-    <span class="ident">descent</span>: <span class="ident">usize</span>,        <span class="comment">/* The maximum descent in the font. */</span>
+    <span class="doccomment">/// We cache ascii glyphs to avoid rendering them every time.</span>
+    <span class="ident">cached_glyphs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">char</span>, <span class="ident">GlyphBitmap</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Expected to be the same for every glyph since it should be a monospaced</span>
+    <span class="doccomment">/// font.</span>
+    <span class="ident">advance_width</span>:  <span class="ident">usize</span>,
+    <span class="doccomment">/// The distance between two baselines.</span>
+    <span class="ident">linespace</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// The maximum ascent in the font.</span>
+    <span class="ident">ascent</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// The maximum descent in the font.</span>
+    <span class="ident">descent</span>: <span class="ident">usize</span>,
 }
 
 <span class="doccomment">/// The font we choose to render in</span>
@@ -322,6 +360,7 @@
 <span class="kw">const</span> <span class="ident">FONT_SIZE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">10</span>;
 
 <span class="doccomment">/// Window creation requested size.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WindowSize</span> {
     <span class="doccomment">/// Takes the full screen.</span>
     <span class="ident">Fullscreen</span>,
@@ -339,6 +378,11 @@
 
 <span class="kw">impl</span> <span class="ident">Terminal</span> {
     <span class="doccomment">/// Creates a new Window of the requested size for terminal usage.</span>
+    <span class="comment">// TODO: Review Terminal::new cast_sign_loss and cast_possible_wrap</span>
+    <span class="comment">// BODY: Ping @orycterope. I&#39;m pretty sure they&#39;re correct but just want to</span>
+    <span class="comment">// BODY: make sure it looks good with you since it&#39;s originally your code.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_sign_loss</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_possible_wrap</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">WindowSize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">my_font</span> <span class="op">=</span> <span class="ident">font</span>::<span class="ident">parse</span>(<span class="ident">FONT</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Failed parsing provided font&quot;</span>);
@@ -392,11 +436,14 @@
         <span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">draw</span>()
     }
 
+    <span class="doccomment">/// Move the cursor to the beginning of the current line.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">carriage_return</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">cursor_pos</span>.<span class="ident">x</span> <span class="op">=</span> <span class="number">0</span>;
     }
 
+    <span class="doccomment">/// Move the cursor to the beginning of the next line, scrolling the screen</span>
+    <span class="doccomment">/// if necessary.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">line_feed</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">draw</span>();
@@ -409,6 +456,8 @@
         <span class="self">self</span>.<span class="ident">carriage_return</span>();
     }
 
+    <span class="doccomment">/// Move the cursor to the next position for drawing a character, possibly</span>
+    <span class="doccomment">/// the next line if we need to wrap.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">advance_pos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">cursor_pos</span>.<span class="ident">x</span> <span class="op">+=</span> <span class="self">self</span>.<span class="ident">advance_width</span>;
@@ -418,6 +467,8 @@
         }
     }
 
+    <span class="doccomment">/// Move the cursor back to the previous position. If we are already on the</span>
+    <span class="doccomment">/// first character position on this line, do not move.</span>
     <span class="kw">fn</span> <span class="ident">move_pos_back</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">cursor_pos</span>.<span class="ident">x</span> <span class="op">&gt;=</span> <span class="self">self</span>.<span class="ident">advance_width</span> {
             <span class="self">self</span>.<span class="ident">cursor_pos</span>.<span class="ident">x</span> <span class="op">-=</span> <span class="self">self</span>.<span class="ident">advance_width</span>;
@@ -434,14 +485,14 @@
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">lastline_top_left_corner</span> <span class="op">+</span> <span class="ident">linespace_size_in_framebuffer</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">len</span>(), <span class="string">&quot;Window is drunk: {} + {} &lt; {}&quot;</span>, <span class="ident">lastline_top_left_corner</span>, <span class="ident">linespace_size_in_framebuffer</span>, <span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">len</span>());
         <span class="kw">unsafe</span> {
             <span class="comment">// memmove in the same slice. Should be safe with the assert above.</span>
-            ::<span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">copy</span>(<span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">as_ptr</span>().<span class="ident">offset</span>(<span class="ident">linespace_size_in_framebuffer</span> <span class="kw">as</span> <span class="ident">isize</span>),
+            ::<span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">copy</span>(<span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">as_ptr</span>().<span class="ident">add</span>(<span class="ident">linespace_size_in_framebuffer</span>),
                               <span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">as_mut_ptr</span>(),
                               <span class="ident">lastline_top_left_corner</span>);
         }
         <span class="comment">// Erase last line</span>
         <span class="kw">unsafe</span> {
             <span class="comment">// memset to 0x00. Should be safe with the assert above</span>
-            ::<span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">write_bytes</span>(<span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">as_mut_ptr</span>().<span class="ident">offset</span>(<span class="ident">lastline_top_left_corner</span> <span class="kw">as</span> <span class="ident">isize</span>),
+            ::<span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">write_bytes</span>(<span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">as_mut_ptr</span>().<span class="ident">add</span>(<span class="ident">lastline_top_left_corner</span>),
                                     <span class="number">0x00</span>,
                                     <span class="self">self</span>.<span class="ident">framebuffer</span>.<span class="ident">get_buffer</span>().<span class="ident">len</span>() <span class="op">-</span> <span class="ident">lastline_top_left_corner</span>);
         }
@@ -463,7 +514,7 @@
                     <span class="kw">let</span> <span class="ident">empty_glyph</span> <span class="op">=</span> <span class="ident">GlyphBitmap</span> { <span class="ident">width</span>: <span class="number">0</span>, <span class="ident">height</span>: <span class="number">0</span>, <span class="ident">top</span>: <span class="number">0</span>, <span class="ident">left</span>: <span class="number">0</span>, <span class="ident">data</span>: <span class="ident">Vec</span>::<span class="ident">new</span>() };
                     <span class="self">Self</span>::<span class="ident">display_glyph_in_box</span>(<span class="kw-2">&amp;</span><span class="ident">empty_glyph</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">framebuffer</span>,
                                                <span class="self">self</span>.<span class="ident">advance_width</span>, <span class="self">self</span>.<span class="ident">ascent</span>, <span class="self">self</span>.<span class="ident">descent</span>,
-                                                <span class="kw-2">&amp;</span><span class="ident">fg</span>, <span class="kw-2">&amp;</span><span class="ident">bg</span>, <span class="self">self</span>.<span class="ident">cursor_pos</span>);
+                                                <span class="ident">fg</span>, <span class="ident">bg</span>, <span class="self">self</span>.<span class="ident">cursor_pos</span>);
                 }
                 <span class="ident">mychar</span> <span class="op">=&gt;</span> {
                     {
@@ -482,7 +533,7 @@
                                 });
                             <span class="self">Self</span>::<span class="ident">display_glyph_in_box</span>(<span class="ident">glyph</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">framebuffer</span>,
                                                        <span class="kw-2">*</span><span class="ident">advance_width</span>, <span class="kw-2">*</span><span class="ident">ascent</span>, <span class="kw-2">*</span><span class="ident">descent</span>,
-                                                       <span class="kw-2">&amp;</span><span class="ident">fg</span>, <span class="kw-2">&amp;</span><span class="ident">bg</span>, <span class="kw-2">*</span><span class="ident">cursor_pos</span>);
+                                                       <span class="ident">fg</span>, <span class="ident">bg</span>, <span class="kw-2">*</span><span class="ident">cursor_pos</span>);
                         } <span class="kw">else</span> {
                             <span class="comment">// Simply render the glyph and display it ...</span>
                             <span class="kw">let</span> <span class="ident">glyph</span> <span class="op">=</span> <span class="ident">font</span>.<span class="ident">lookup_glyph_id</span>(<span class="ident">mychar</span> <span class="kw">as</span> <span class="ident">u32</span>)
@@ -490,7 +541,7 @@
                                 .<span class="ident">unwrap_or</span>(<span class="ident">GlyphBitmap</span> { <span class="ident">width</span>: <span class="number">0</span>, <span class="ident">height</span>: <span class="number">0</span>, <span class="ident">top</span>: <span class="number">0</span>, <span class="ident">left</span>: <span class="number">0</span>, <span class="ident">data</span>: <span class="ident">Vec</span>::<span class="ident">new</span>() });
                             <span class="self">Self</span>::<span class="ident">display_glyph_in_box</span>(<span class="kw-2">&amp;</span><span class="ident">glyph</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">framebuffer</span>,
                                                        <span class="kw-2">*</span><span class="ident">advance_width</span>, <span class="kw-2">*</span><span class="ident">ascent</span>, <span class="kw-2">*</span><span class="ident">descent</span>,
-                                                       <span class="kw-2">&amp;</span><span class="ident">fg</span>, <span class="kw-2">&amp;</span><span class="ident">bg</span>, <span class="kw-2">*</span><span class="ident">cursor_pos</span>);
+                                                       <span class="ident">fg</span>, <span class="ident">bg</span>, <span class="kw-2">*</span><span class="ident">cursor_pos</span>);
                         }
                     }
                     <span class="self">self</span>.<span class="ident">advance_pos</span>();
@@ -499,22 +550,29 @@
         }
     }
 
+
     <span class="doccomment">/// Copies a rendered character to the screen, displaying it in a bg colored box</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if pos makes writing the glyph overflow the screen</span>
+    <span class="comment">// TODO: Review Terminal::display_glyph_in_box cast_sign_loss and cast_possible_wrap</span>
+    <span class="comment">// BODY: Ping @orycterope. I&#39;m pretty sure they&#39;re correct but just want to</span>
+    <span class="comment">// BODY: make sure it looks good with you since it&#39;s originally your code.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_sign_loss</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_possible_wrap</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
     <span class="kw">fn</span> <span class="ident">display_glyph_in_box</span>(<span class="ident">glyph</span>: <span class="kw-2">&amp;</span><span class="ident">GlyphBitmap</span>, <span class="ident">framebuffer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Window</span>,
                             <span class="ident">box_width</span>: <span class="ident">usize</span>, <span class="ident">box_ascent</span>: <span class="ident">usize</span>, <span class="ident">box_descent</span>: <span class="ident">usize</span>,
-                            <span class="ident">fg</span>: <span class="kw-2">&amp;</span><span class="ident">Color</span>, <span class="ident">bg</span>: <span class="kw-2">&amp;</span><span class="ident">Color</span>, <span class="ident">pos</span>: <span class="ident">Pos</span>) {
+                            <span class="ident">fg</span>: <span class="ident">Color</span>, <span class="ident">bg</span>: <span class="ident">Color</span>, <span class="ident">pos</span>: <span class="ident">Pos</span>) {
 
         <span class="doccomment">/// Blends foreground and background subpixels together</span>
         <span class="doccomment">/// by doing a weighted average of fg and bg</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
         <span class="kw">fn</span> <span class="ident">blend_subpixels</span>(<span class="ident">fg</span>: <span class="ident">u8</span>, <span class="ident">bg</span>: <span class="ident">u8</span>, <span class="ident">fg_alpha</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="ident">u8</span> {
             <span class="comment">// compute everything u16 to avoid overflows</span>
-            ((   <span class="ident">fg</span> <span class="kw">as</span> <span class="ident">u16</span> <span class="op">*</span> <span class="ident">fg_alpha</span> <span class="kw">as</span> <span class="ident">u16</span>
-               <span class="op">+</span> <span class="ident">bg</span> <span class="kw">as</span> <span class="ident">u16</span> <span class="op">*</span> (<span class="number">0xFF</span> <span class="op">-</span> <span class="ident">fg_alpha</span>) <span class="kw">as</span> <span class="ident">u16</span>
+            ((   <span class="ident">u16</span>::<span class="ident">from</span>(<span class="ident">fg</span>) <span class="op">*</span> <span class="ident">u16</span>::<span class="ident">from</span>(<span class="ident">fg_alpha</span>)
+               <span class="op">+</span> <span class="ident">u16</span>::<span class="ident">from</span>(<span class="ident">bg</span>) <span class="op">*</span> <span class="ident">u16</span>::<span class="ident">from</span>(<span class="number">0xFF</span> <span class="op">-</span> <span class="ident">fg_alpha</span>)
              ) <span class="op">/</span> <span class="number">0xFF</span> <span class="comment">// the weight should be (fg_alpha / 0xFF), but we move this division</span>
                       <span class="comment">// as final step so we don&#39;t loose precision</span>
             ) <span class="kw">as</span> <span class="ident">u8</span>
@@ -543,11 +601,11 @@
                     )
                 } <span class="kw">else</span> {
                     <span class="comment">// it&#39;s oustide the glyph box, just paint it bg color</span>
-                    <span class="kw-2">*</span><span class="ident">bg</span>
+                    <span class="ident">bg</span>
                 };
                 <span class="ident">framebuffer</span>.<span class="ident">write_px_at</span>((<span class="ident">pos</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">+</span> <span class="ident">x</span>) <span class="kw">as</span> <span class="ident">usize</span>,
                                              (<span class="ident">pos</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">+</span> <span class="ident">y</span>) <span class="kw">as</span> <span class="ident">usize</span>,
-                                             <span class="kw-2">&amp;</span><span class="ident">to_display</span>);
+                                             <span class="ident">to_display</span>);
             }
         }
     }

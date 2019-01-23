@@ -32,12 +32,42 @@
 <span id="32">32</span>
 <span id="33">33</span>
 <span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Multiboot Information</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Gives access to the [multiboot information structure] created by our bootloader (GRUB).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Bootloader (GRUB) passed its address in `$ebx` when we started.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Our bootstrap had the job of copy-ing it to a PAGE_SIZE aligned address, map it,</span>
+<span class="doccomment">//! and passed it to us in `$ebx`.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! When kernel initializes we store this address in [`BOOT_INFO`], and we can then access</span>
+<span class="doccomment">//! it at any moment by calling [`get_boot_information`].</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [multiboot information structure]: https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html#Boot-information-format</span>
+<span class="doccomment">//! [`BOOT_INFO`]: self::multiboot::BOOT_INFO</span>
+<span class="doccomment">//! [`get_boot_information`]: self::multiboot::get_boot_information</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">Once</span>;
 <span class="kw">use</span> <span class="ident">multiboot2</span>::<span class="ident">BootInformation</span>;
 
+<span class="doccomment">/// Stores the address of the multiboot.</span>
 <span class="kw">static</span> <span class="ident">BOOT_INFO</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">BootInformation</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once</span>::<span class="ident">new</span>();
 
 <span class="doccomment">/// Get a pointer to the multiboot information structure.</span>

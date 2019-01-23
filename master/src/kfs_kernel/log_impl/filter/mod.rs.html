@@ -567,6 +567,12 @@
 <span id="567">567</span>
 <span id="568">568</span>
 <span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Shamelessly stolen from env_logger.</span>
 <span class="doccomment">//! Filtering for log records.</span>
@@ -629,6 +635,9 @@
 <span class="doccomment">//! [Enabling Logging]: ../index.html#enabling-logging</span>
 <span class="doccomment">//! [`Builder::parse`]: struct.Builder.html#method.parse</span>
 <span class="doccomment">//! [`Filter::matches`]: struct.Filter.html#method.matches</span>
+
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
+<span class="comment">// cause apparently people we steal from can&#39;t even have the decency of writing docs.</span>
 
 <span class="comment">//use std::env;</span>
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>;
@@ -858,6 +867,9 @@
 <span class="doccomment">/// Parse a logging specification string (e.g: &quot;crate1,crate2::mod3,crate3::x=error/foo&quot;)</span>
 <span class="doccomment">/// and return a vector with log directives.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">option_map_unit_fn</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">len_zero</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">option_map_or_none</span>)]</span>
 <span class="kw">fn</span> <span class="ident">parse_spec</span>(<span class="ident">spec</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Directive</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">inner</span>::<span class="ident">Filter</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dirs</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
 
@@ -914,7 +926,7 @@
         }
     });
 
-    <span class="kw">return</span> (<span class="ident">dirs</span>, <span class="ident">filter</span>);
+    (<span class="ident">dirs</span>, <span class="ident">filter</span>)
 }
 
 

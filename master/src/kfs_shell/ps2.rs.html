@@ -358,7 +358,78 @@
 <span id="358">358</span>
 <span id="359">359</span>
 <span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! PS/2 Keyboard Driver</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Allows interacting with an IBM/PC PS/2 Driver. Requires next to no</span>
+<span class="doccomment">//! configuration: the user can just call the functions in this module right</span>
+<span class="doccomment">//! away.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Required Capabilities</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - SVC create_interrupt_event</span>
+<span class="doccomment">//! - SVC wait_synchronization</span>
+<span class="doccomment">//! - IOPort 60</span>
+<span class="doccomment">//! - IOPort 64</span>
+<span class="doccomment">//! - IRQ 1</span>
+
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">match_bool</span>)]</span> <span class="comment">// more readable</span>
+
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">io</span>::{<span class="ident">Io</span>, <span class="ident">Pio</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>};
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">string</span>::<span class="ident">String</span>;
@@ -367,17 +438,27 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">libuser</span>::<span class="ident">terminal</span>::<span class="ident">Terminal</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
 
+<span class="doccomment">/// PS2 keyboard state.</span>
 <span class="kw">struct</span> <span class="ident">PS2</span> {
+    <span class="doccomment">/// Status Register address</span>
     <span class="ident">status_port</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Data Register address</span>
     <span class="ident">data_port</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// IRQEvent for the PS/2 keyboard. Triggered each time the user presses a</span>
+    <span class="doccomment">/// key.</span>
     <span class="ident">event</span>: <span class="ident">ReadableEvent</span>,
+    <span class="doccomment">/// Flips when the user has toggled the caps lock key. When set to true, all</span>
+    <span class="doccomment">/// letters are returned in uppercase.</span>
     <span class="ident">is_capslocked</span>:  <span class="ident">AtomicBool</span>,
+    <span class="doccomment">/// Set to true if the user is currently holding the shift key. When set to</span>
+    <span class="doccomment">/// true, all letters are returned in uppercase.</span>
     <span class="ident">is_shift</span>:       <span class="ident">AtomicBool</span>
 }
 
 <span class="doccomment">/// A non-control key</span>
 <span class="doccomment">/// (lowercase_ascii, uppercase_ascii)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">struct</span> <span class="ident">LetterKey</span> {
     <span class="ident">lower_case</span>: <span class="ident">char</span>,
     <span class="ident">upper_case</span>: <span class="ident">char</span>
@@ -389,6 +470,7 @@
 
 <span class="doccomment">/// A key is either a letter key, a control key, or not attributed</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">enum</span> <span class="ident">Key</span> {
     <span class="ident">Letter</span>(<span class="ident">LetterKey</span>),
     <span class="ident">Control</span>(<span class="ident">ControlKey</span>),
@@ -396,10 +478,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Key</span> {
+    <span class="doccomment">/// Create a control key with the given human-readable name.</span>
     <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">ctrl</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">Key</span> {
         <span class="ident">Control</span>(<span class="ident">ControlKey</span>(<span class="ident">s</span>))
     }
 
+    <span class="doccomment">/// Create a unicode key with the given lowercase and uppercase</span>
+    <span class="doccomment">/// representations.</span>
     <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">letter</span>(<span class="ident">l</span>: <span class="ident">char</span>, <span class="ident">u</span>: <span class="ident">char</span>) <span class="op">-&gt;</span> <span class="ident">Key</span> {
         <span class="ident">Letter</span>(<span class="ident">LetterKey</span> {<span class="ident">lower_case</span>: <span class="ident">l</span>, <span class="ident">upper_case</span>: <span class="ident">u</span>})
     }
@@ -407,6 +492,8 @@
 
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">Key</span>::<span class="kw-2">*</span>;
 
+<span class="doccomment">/// State of a key on the keyboard.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">enum</span> <span class="ident">State</span> {
     <span class="ident">Pressed</span>,
     <span class="ident">Released</span>
@@ -415,6 +502,7 @@
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">State</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// A KeyEvent is the combination of a key and its state</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">struct</span> <span class="ident">KeyEvent</span> {
     <span class="ident">key</span>: <span class="ident">Key</span>,
     <span class="ident">state</span>: <span class="ident">State</span>,
@@ -423,7 +511,8 @@
 <span class="kw">impl</span> <span class="ident">KeyEvent</span> {
 
     <span class="doccomment">/// Reads one or more bytes from the port until it matches a known scancode sequence</span>
-    <span class="kw">fn</span> <span class="ident">read_key_event</span>(<span class="ident">port</span>: <span class="kw-2">&amp;</span><span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">KeyEvent</span> {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cyclomatic_complexity</span>)]</span> <span class="comment">// sorry clippy, but you don&#39;t how terrible ps2 scancodes are.</span>
+    <span class="kw">fn</span> <span class="ident">read_key_event</span>(<span class="ident">port</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">KeyEvent</span> {
         <span class="kw">let</span> <span class="ident">scancode</span> <span class="op">=</span> <span class="ident">port</span>.<span class="ident">read</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">Pressed</span>;
 
@@ -643,16 +732,20 @@
         }
     }
 
+    <span class="doccomment">/// Waits for a single key press, and return its unicode representation.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Key presses are bufferized: if nobody is calling read_key when the user</span>
+    <span class="doccomment">/// presses a key, it will be kept in a buffer until read_key is called.</span>
     <span class="kw">fn</span> <span class="ident">read_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">char</span> {
         <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">status_port</span>.<span class="ident">read</span>();
             <span class="kw">if</span> <span class="ident">status</span> <span class="op">&amp;</span> <span class="number">0x01</span> <span class="op">!=</span> <span class="number">0</span> {
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">KeyEvent</span>::<span class="ident">read_key_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data_port</span>);
+                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">KeyEvent</span>::<span class="ident">read_key_event</span>(<span class="self">self</span>.<span class="ident">data_port</span>);
                 <span class="kw">match</span> <span class="ident">key</span> {
                     <span class="ident">KeyEvent</span> {<span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">Control</span>(<span class="ident">k</span>), <span class="ident">state</span>: <span class="ident">s</span>               } <span class="op">=&gt;</span> { <span class="self">self</span>.<span class="ident">handle_control_key</span>(<span class="ident">k</span>, <span class="ident">s</span>); },
                     <span class="ident">KeyEvent</span> {<span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">Letter</span>(<span class="ident">l</span>),  <span class="ident">state</span>: <span class="ident">State</span>::<span class="ident">Pressed</span>  } <span class="op">=&gt;</span> { <span class="kw">return</span> <span class="self">self</span>.<span class="ident">key_to_letter</span>(<span class="ident">l</span>) },
                     <span class="ident">KeyEvent</span> {<span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">Letter</span>(<span class="kw">_</span>),  <span class="ident">state</span>: <span class="ident">State</span>::<span class="ident">Released</span> } <span class="op">=&gt;</span> { <span class="comment">/* ignore released letters */</span> },
-                    <span class="ident">KeyEvent</span> {<span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">Empty</span>,      <span class="ident">state</span>: <span class="kw">_</span>               } <span class="op">=&gt;</span> { <span class="comment">/* ignore unknown keys */</span> },
+                    <span class="ident">KeyEvent</span> {<span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">Empty</span>,      ..                     } <span class="op">=&gt;</span> { <span class="comment">/* ignore unknown keys */</span> },
                 }
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">syscalls</span>::<span class="ident">wait_synchronization</span>(<span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="ident">event</span>.<span class="number">0</span>.<span class="ident">as_ref</span>()], <span class="prelude-val">None</span>);
@@ -660,11 +753,13 @@
         }
     }
 
+    <span class="doccomment">/// If a key press is pending, return its unicode representation. This can be</span>
+    <span class="doccomment">/// used to implement poll-based or asynchronous reading from keyboard.</span>
     <span class="kw">fn</span> <span class="ident">try_read_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span> {
         <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">status_port</span>.<span class="ident">read</span>();
             <span class="kw">if</span> <span class="ident">status</span> <span class="op">&amp;</span> <span class="number">0x01</span> <span class="op">!=</span> <span class="number">0</span> {
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">KeyEvent</span>::<span class="ident">read_key_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data_port</span>);
+                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">KeyEvent</span>::<span class="ident">read_key_event</span>(<span class="self">self</span>.<span class="ident">data_port</span>);
                 <span class="kw">match</span> <span class="ident">key</span> {
                     <span class="ident">KeyEvent</span> {<span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">Control</span>(<span class="ident">k</span>), <span class="ident">state</span>: <span class="ident">s</span>               } <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">handle_control_key</span>(<span class="ident">k</span>, <span class="ident">s</span>),
                     <span class="ident">KeyEvent</span> {<span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">Letter</span>(<span class="ident">l</span>),  <span class="ident">state</span>: <span class="ident">State</span>::<span class="ident">Pressed</span>  } <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">key_to_letter</span>(<span class="ident">l</span>)),
@@ -676,12 +771,16 @@
         }
     }
 
+    <span class="doccomment">/// Get a ReadableEvent for the PS2 IRQ. Waiting on this event will wait until</span>
+    <span class="doccomment">/// a keypress is detected. Note that once this event is triggered, it won&#39;t</span>
+    <span class="doccomment">/// trigger again until [read_key] or [try_read_key] is called.</span>
     <span class="kw">fn</span> <span class="ident">event_irq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">ReadableEvent</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">event</span>
     }
 }
 
 <span class="macro">lazy_static</span><span class="macro">!</span> {
+    <span class="doccomment">/// Primary PS2 controller instance on a classical IBM/PC architecture.</span>
     <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">PRIMARY_PS2</span> : <span class="ident">PS2</span> <span class="op">=</span> <span class="ident">PS2</span> {
         <span class="ident">status_port</span>: <span class="ident">Pio</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="number">0x64</span>),
         <span class="ident">data_port</span>: <span class="ident">Pio</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="number">0x60</span>),
@@ -691,14 +790,22 @@
     };
 }
 
+<span class="doccomment">/// Waits for a single key press, and return its unicode representation.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Key presses are bufferized: if nobody is calling read_key when the user</span>
+<span class="doccomment">/// presses a key, it will be kept in a buffer until read_key is called.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_key</span>() <span class="op">-&gt;</span> <span class="ident">char</span> {
     <span class="ident">PRIMARY_PS2</span>.<span class="ident">read_key</span>()
 }
 
+<span class="doccomment">/// If a key press is pending, return its unicode representation. This can be</span>
+<span class="doccomment">/// used to implement poll-based or asynchronous reading from keyboard.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_read_key</span>() <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span> {
     <span class="ident">PRIMARY_PS2</span>.<span class="ident">try_read_key</span>()
 }
 
+<span class="doccomment">/// Read key presses until a \n is detected, and return the string</span>
+<span class="doccomment">/// (excluding \n).</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_next_line</span>(<span class="ident">logger</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Terminal</span>) <span class="op">-&gt;</span> <span class="ident">String</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>);
     <span class="kw">loop</span> {
@@ -715,6 +822,9 @@
     }
 }
 
+<span class="doccomment">/// Get a ReadableEvent for the PS2 IRQ. Waiting on this event will wait until</span>
+<span class="doccomment">/// a keypress is detected. Note that once this event is triggered, it won&#39;t</span>
+<span class="doccomment">/// trigger again until [read_key] or [try_read_key] is called.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_waitable</span>() <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ReadableEvent</span> {
     <span class="ident">PRIMARY_PS2</span>.<span class="ident">event_irq</span>()

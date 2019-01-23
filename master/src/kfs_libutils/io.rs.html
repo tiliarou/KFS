@@ -178,6 +178,13 @@
 <span id="178">178</span>
 <span id="179">179</span>
 <span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The IO interface</span>
 <span class="doccomment">//!</span>
@@ -209,15 +216,18 @@
     <span class="doccomment">/// this causes a read!</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">writef</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">flags</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">value</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="ident">tmp</span>: <span class="self">Self</span>::<span class="ident">Value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="bool-val">true</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">read</span>() <span class="op">|</span> <span class="ident">flags</span>,
-            <span class="bool-val">false</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">read</span>() <span class="op">&amp;</span> <span class="op">!</span><span class="ident">flags</span>,
+        <span class="kw">let</span> <span class="ident">tmp</span>: <span class="self">Self</span>::<span class="ident">Value</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">value</span> {
+            <span class="self">self</span>.<span class="ident">read</span>() <span class="op">|</span> <span class="ident">flags</span>
+        }<span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">read</span>() <span class="op">&amp;</span> <span class="op">!</span><span class="ident">flags</span>
         };
         <span class="self">self</span>.<span class="ident">write</span>(<span class="ident">tmp</span>);
     }
 }
 
 <span class="doccomment">/// A read-only wrapper around an IO device.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReadOnly</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
     <span class="ident">inner</span>: <span class="ident">I</span>
 }
@@ -246,6 +256,8 @@
 }
 
 <span class="doccomment">/// An Io that we can only write to.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WriteOnly</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
     <span class="ident">inner</span>: <span class="ident">I</span>
 }
@@ -271,9 +283,11 @@
 
 <span class="doccomment">/// Port IO accessor.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// IO-space address this Pio reads from.</span>
     <span class="ident">port</span>: <span class="ident">u16</span>,
+    <span class="doccomment">/// The word size of this pointer. Should be u8, u16 or u32.</span>
     <span class="ident">value</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 }
 

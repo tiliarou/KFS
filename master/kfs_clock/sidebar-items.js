@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["get_day_of_week",""],["get_month",""],["main",""]],"static":[["CAPABILITIES",""]],"struct":[["Rtc",""]]});
+initSidebarItems({"fn":[["get_day_of_week","Turns a day of week number from RTC into an english string."],["get_month","Turns a month number from RTC into an english string."],["main",""]],"static":[["CAPABILITIES",""]],"struct":[["Rtc","IBM Real Time Clock provides access to the current date and time (at second precision). The Real Time Clock is actually part of the CMOS on usual IBM/PC setups."]]});

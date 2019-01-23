@@ -236,6 +236,19 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Programmable Interval Timer</span>
 <span class="doccomment">//!</span>
@@ -303,7 +316,7 @@
 <span class="kw">const</span> <span class="ident">OSCILLATOR_FREQ</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1193182</span>;
 
 <span class="doccomment">/// The frequency of channel 0 irqs, in hertz.</span>
-<span class="doccomment">/// One every 10 millisecond</span>
+<span class="doccomment">/// One every 10 millisecond.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CHAN_0_FREQUENCY</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">100</span>;
 
 <span class="doccomment">/// The channel 0 reset value</span>
@@ -312,21 +325,28 @@
 <span class="macro">lazy_static</span><span class="macro">!</span> {
     <span class="doccomment">/// The mutex wrapping the ports</span>
     <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">PIT_PORTS</span>: <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">PITPorts</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SpinLock</span>::<span class="ident">new</span>(<span class="ident">PITPorts</span> {
+        <span class="doccomment">/// Port 0x40, PIT&#39;s Channel 0.</span>
         <span class="ident">port_chan_0</span>: <span class="ident">Pio</span>::<span class="ident">new</span>(<span class="number">0x40</span>),
+        <span class="doccomment">/// Port 0x42, PIT&#39;s Channel 2.</span>
         <span class="ident">port_chan_2</span>: <span class="ident">Pio</span>::<span class="ident">new</span>(<span class="number">0x42</span>),
+        <span class="doccomment">/// Port 0x43, PIT&#39;s Mode/Command register.</span>
         <span class="ident">port_cmd</span>:    <span class="ident">Pio</span>::<span class="ident">new</span>(<span class="number">0x43</span>),
+        <span class="doccomment">/// Port 0x61, reads as a [Port61Flags].</span>
         <span class="ident">port_61</span>:     <span class="ident">Pio</span>::<span class="ident">new</span>(<span class="number">0x61</span>)
     });
 }
 
-<span class="doccomment">/// Used internally to select which channel to apply operations to</span>
+<span class="doccomment">/// Used internally to select which channel to apply operations to.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">enum</span> <span class="ident">ChannelSelector</span> {
+    <span class="doccomment">/// Operation should apply to Channel 0.</span>
     <span class="ident">Channel0</span>,
+    <span class="doccomment">/// Operation should apply to Channel 2.</span>
     <span class="ident">Channel2</span>
 }
 
 <span class="macro">bitflags</span><span class="macro">!</span> {
-    <span class="doccomment">/// The port 0x61 flags we use</span>
+    <span class="doccomment">/// The port 0x61 flags we use.</span>
     <span class="kw">struct</span> <span class="ident">Port61Flags</span>: <span class="ident">u8</span> {
         <span class="kw">const</span> <span class="ident">SPKR_CONTROL</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="number">1</span>;
         <span class="kw">const</span> <span class="ident">OUT2_STATUS</span>  <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="number">5</span>;
@@ -342,6 +362,7 @@
 }
 
 <span class="doccomment">/// We put the PIT ports in a structure to have them under a single mutex</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">struct</span> <span class="ident">PITPorts</span> {
     <span class="ident">port_chan_0</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="ident">port_chan_2</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
@@ -365,12 +386,13 @@
 
 <span class="doccomment">/// Channel 2</span>
 <span class="kw">struct</span> <span class="ident">PITChannel2</span><span class="op">&lt;</span><span class="lifetime">&#39;ports</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// A reference to the PITPorts structure.</span>
     <span class="ident">ports</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;ports</span> <span class="kw-2">mut</span> <span class="ident">PITPorts</span>
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;ports</span><span class="op">&gt;</span> <span class="ident">PITChannel2</span><span class="op">&lt;</span><span class="lifetime">&#39;ports</span><span class="op">&gt;</span> {
 
-    <span class="doccomment">/// Sets mode #0 for channel 2</span>
+    <span class="doccomment">/// Sets mode #0 for Channel 2.</span>
     <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">ports</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PITPorts</span>) <span class="op">-&gt;</span> <span class="ident">PITChannel2</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="ident">ports</span>.<span class="ident">port_cmd</span>.<span class="ident">write</span>(
             <span class="number">0b10110000</span> <span class="comment">// channel 2, lobyte/hibyte, interrupt on terminal count</span>
@@ -431,10 +453,14 @@
     <span class="ident">chan2</span>.<span class="ident">spin_wait_ms</span>(<span class="ident">ms</span>);
 }
 
+<span class="doccomment">/// A stream of event that trigger every `ms` amount of milliseconds, by counting Channel 0 interruptions.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">WaitFor</span> {
+    <span class="doccomment">/// Approximation of number of ms spent between triggers.</span>
     <span class="ident">every_ms</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// The IRQ that we wait on (IRQ #0).</span>
     <span class="ident">parent_event</span>: <span class="ident">IRQEvent</span>,
+    <span class="doccomment">/// Number of IRQ #0 triggers to wait for. Derived from `.every_ms`. This is the exact time amout that is used.</span>
     <span class="ident">spins_needed</span>: <span class="ident">AtomicUsize</span>
 }
 
@@ -458,7 +484,7 @@
     }
 }
 
-<span class="doccomment">/// Returns a stream of event that trigger every `ms` amount of milliseconds</span>
+<span class="doccomment">/// Returns a stream of event that trigger every `ms` amount of milliseconds.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait_ms</span>(<span class="ident">ms</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="kw">impl</span> <span class="ident">Waitable</span> {
     <span class="ident">WaitFor</span> {
         <span class="ident">every_ms</span>: <span class="ident">ms</span>,
@@ -467,7 +493,7 @@
     }
 }
 
-<span class="doccomment">/// Initialize the channel 0 to send recurring irqs</span>
+<span class="doccomment">/// Initialize the channel 0 to send recurring irqs.</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">init_channel_0</span>() {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ports</span> <span class="op">=</span> <span class="ident">PIT_PORTS</span>.<span class="ident">lock</span>();
     <span class="ident">ports</span>.<span class="ident">port_cmd</span>.<span class="ident">write</span>(

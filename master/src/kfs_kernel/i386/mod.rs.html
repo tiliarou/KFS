@@ -434,6 +434,14 @@
 <span id="434">434</span>
 <span id="435">435</span>
 <span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This crate is x86_64&#39;s little brother. It provides i386 specific functions</span>
 <span class="doccomment">//! and data structures, and access to various system registers.</span>
@@ -469,17 +477,18 @@
 
         <span class="doccomment">/// A struct describing a pointer to a descriptor table (GDT / IDT).</span>
         <span class="doccomment">/// This is in a format suitable for giving to &#39;lgdt&#39; or &#39;lidt&#39;.</span>
+        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
         <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>, <span class="ident">packed</span>)]</span>
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DescriptorTablePointer</span> {
             <span class="doccomment">/// Size of the DT.</span>
             <span class="kw">pub</span> <span class="ident">limit</span>: <span class="ident">u16</span>,
-            <span class="doccomment">/// Pointer to the memory region containing the DT.</span>
+            <span class="doccomment">/// Physical address of the memory region containing the DT.</span>
             <span class="kw">pub</span> <span class="ident">base</span>: <span class="ident">u32</span>,
         }
 
         <span class="doccomment">/// Load GDT table.</span>
-        <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">lgdt</span>(<span class="ident">gdt</span>: <span class="kw-2">&amp;</span><span class="ident">DescriptorTablePointer</span>) {
-            <span class="macro">asm</span><span class="macro">!</span>(<span class="string">&quot;lgdt ($0)&quot;</span> :: <span class="string">&quot;r&quot;</span> (<span class="ident">gdt</span>) : <span class="string">&quot;memory&quot;</span> : <span class="string">&quot;volatile&quot;</span>);
+        <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">lgdt</span>(<span class="ident">gdt</span>: <span class="ident">DescriptorTablePointer</span>) {
+            <span class="macro">asm</span><span class="macro">!</span>(<span class="string">&quot;lgdt ($0)&quot;</span> :: <span class="string">&quot;r&quot;</span> (<span class="kw-2">&amp;</span><span class="ident">gdt</span>) : <span class="string">&quot;memory&quot;</span> : <span class="string">&quot;volatile&quot;</span>);
         }
 
         <span class="doccomment">/// Store GDT table.</span>
@@ -509,8 +518,8 @@
         }
 
         <span class="doccomment">/// Load IDT table.</span>
-        <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">lidt</span>(<span class="ident">idt</span>: <span class="kw-2">&amp;</span><span class="ident">DescriptorTablePointer</span>) {
-            <span class="macro">asm</span><span class="macro">!</span>(<span class="string">&quot;lidt ($0)&quot;</span> :: <span class="string">&quot;r&quot;</span> (<span class="ident">idt</span>) : <span class="string">&quot;memory&quot;</span>);
+        <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">lidt</span>(<span class="ident">idt</span>: <span class="ident">DescriptorTablePointer</span>) {
+            <span class="macro">asm</span><span class="macro">!</span>(<span class="string">&quot;lidt ($0)&quot;</span> :: <span class="string">&quot;r&quot;</span> (<span class="kw-2">&amp;</span><span class="ident">idt</span>) : <span class="string">&quot;memory&quot;</span>);
         }
     }
 
@@ -664,11 +673,17 @@
     <span class="ident">Ring3</span> <span class="op">=</span> <span class="number">3</span>,
 }
 
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PrivilegeLevel</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ring</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="ident">PrivilegeLevel</span> {
+        <span class="ident">PrivilegeLevel</span>::<span class="ident">from_u8</span>(<span class="ident">ring</span>)
+    }
+}
+
 <span class="kw">impl</span> <span class="ident">PrivilegeLevel</span> {
     <span class="doccomment">/// Creates a `PrivilegeLevel` from a numeric value. The value must be in the range 0..4.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function panics if the passed value is &gt;3.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_u16</span>(<span class="ident">value</span>: <span class="ident">u16</span>) <span class="op">-&gt;</span> <span class="ident">PrivilegeLevel</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_u8</span>(<span class="ident">value</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="ident">PrivilegeLevel</span> {
         <span class="kw">match</span> <span class="ident">value</span> {
             <span class="number">0</span> <span class="op">=&gt;</span> <span class="ident">PrivilegeLevel</span>::<span class="ident">Ring0</span>,
             <span class="number">1</span> <span class="op">=&gt;</span> <span class="ident">PrivilegeLevel</span>::<span class="ident">Ring1</span>,
@@ -685,7 +700,7 @@
 <span class="doccomment">/// ([see OSDEV](https://wiki.osdev.org/TSS))</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TssStruct</span> {
     <span class="kw">pub</span> <span class="ident">link</span>: <span class="ident">u16</span>,
     <span class="ident">_reserved1</span>: <span class="ident">u16</span>,
@@ -811,7 +826,7 @@
             <span class="ident">ds</span>: <span class="ident">ds</span>,
             <span class="ident">fs</span>: <span class="ident">ds</span>,
             <span class="ident">gs</span>: <span class="ident">ds</span>,
-            ..<span class="ident">Default</span>::<span class="ident">default</span>()
+            ..<span class="ident">TssStruct</span>::<span class="ident">default</span>()
         }
     }
 
@@ -847,6 +862,7 @@
 <span class="doccomment">///   begins, if part of the 104 bytes is not physically contiguous, the</span>
 <span class="doccomment">///   processor will access incorrect information without generating a</span>
 <span class="doccomment">///   page-fault exception.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>, <span class="ident">align</span>(<span class="number">4096</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AlignedTssStruct</span>(<span class="ident">TssStruct</span>);
 

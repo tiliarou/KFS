@@ -58,7 +58,7 @@
 
 <span class="doccomment">/// An error related to Memory Management</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Fail</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MmError</span> {
     <span class="attribute">#[<span class="ident">fail</span>(<span class="ident">display</span> <span class="op">=</span> <span class="string">&quot;Memory management error: Virtual region is already occupied&quot;</span>)]</span>
     <span class="ident">OccupiedMapping</span> {

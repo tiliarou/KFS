@@ -324,6 +324,24 @@
 <span id="324">324</span>
 <span id="325">325</span>
 <span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Arch-specific process switch functions</span>
 <span class="doccomment">//!</span>
@@ -344,12 +362,13 @@
 <span class="doccomment">/// Stored in the ThreadStruct of every thread.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ThreadHardwareContext</span> {
-    <span class="ident">esp</span>: <span class="ident">usize</span>, <span class="comment">// the top of the stack, where all other registers are saved</span>
+    <span class="doccomment">/// The top of the stack, where all other registers are saved.</span>
+    <span class="ident">esp</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">ThreadHardwareContext</span> {
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ThreadHardwareContext</span> {
     <span class="doccomment">/// Creates an empty ThreadHardwareContext.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="comment">// the saved esp will be overwritten on schedule-out anyway</span>
         <span class="self">Self</span> { <span class="ident">esp</span>: <span class="number">0x55555555</span> }
     }
@@ -421,7 +440,7 @@
             .<span class="ident">expect</span>(<span class="string">&quot;process_switch cannot get destination thread&#39; lock for writing&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">thread_current_lock_phwcontext</span> <span class="op">=</span> <span class="ident">thread_current</span>.<span class="ident">hwcontext</span>.<span class="ident">try_lock</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;process_switch cannot get current thread&#39; lock for writing&quot;</span>);
-        <span class="kw">let</span> <span class="ident">thread_b_lock_phwcontext</span> <span class="op">=</span> <span class="ident">thread_b</span>.<span class="ident">hwcontext</span>.<span class="ident">try_lock</span>()
+        <span class="kw">let</span>     <span class="ident">thread_b_lock_phwcontext</span> <span class="op">=</span> <span class="ident">thread_b</span>.<span class="ident">hwcontext</span>.<span class="ident">try_lock</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;process_switch cannot get destination thread&#39; lock for writing&quot;</span>);
 
         <span class="comment">// Switch the memory pages</span>
@@ -450,7 +469,7 @@
     <span class="comment">// Set IOPB back to &quot;nothing allowed&quot; state</span>
     <span class="comment">// todo do not change iopb if thread_b belongs to the same process.</span>
     <span class="kw">let</span> <span class="ident">iopb</span> <span class="op">=</span> <span class="ident">gdt</span>::<span class="ident">get_main_iopb</span>();
-    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">thread_current</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
+    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">thread_current</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span> {
         <span class="kw">let</span> <span class="ident">ioport</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ioport</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="ident">iopb</span>[<span class="ident">ioport</span> <span class="op">/</span> <span class="number">8</span>] <span class="op">=</span> <span class="number">0xFF</span>;
     }
@@ -505,7 +524,7 @@
     (<span class="kw-2">*</span><span class="ident">tss</span>).<span class="ident">esp0</span> <span class="op">=</span> <span class="ident">me</span>.<span class="ident">kstack</span>.<span class="ident">get_stack_start</span>() <span class="kw">as</span> <span class="ident">u32</span>;
 
     <span class="comment">// Set IOPB</span>
-    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">me</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
+    <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">me</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span> {
         <span class="kw">let</span> <span class="ident">ioport</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ioport</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="ident">iopb</span>[<span class="ident">ioport</span> <span class="op">/</span> <span class="number">8</span>] <span class="op">&amp;=</span> <span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;&lt;</span> (<span class="ident">ioport</span> <span class="op">%</span> <span class="number">8</span>));
     }
@@ -523,8 +542,10 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// This function will definitely fuck up your stack, so make sure you&#39;re calling it on a</span>
 <span class="doccomment">/// never-scheduled thread&#39;s empty-stack.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">fn_to_numeric_cast</span>)]</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">prepare_for_first_schedule</span>(<span class="ident">t</span>: <span class="kw-2">&amp;</span><span class="ident">ThreadStruct</span>, <span class="ident">entrypoint</span>: <span class="ident">usize</span>, <span class="ident">userspace_stack</span>: <span class="ident">usize</span>) {
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">packed</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
     <span class="kw">struct</span> <span class="ident">RegistersOnStack</span> {
         <span class="ident">eflags</span>: <span class="ident">u32</span>,
         <span class="ident">edi</span>: <span class="ident">u32</span>,
@@ -592,6 +613,7 @@
         &quot;</span> : : <span class="string">&quot;i&quot;</span>(<span class="ident">first_schedule_inner</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>) : : <span class="string">&quot;volatile&quot;</span>, <span class="string">&quot;intel&quot;</span>);
     }
 
+    <span class="doccomment">/// Stack is set-up, now we can run rust code.</span>
     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">first_schedule_inner</span>(<span class="ident">whoami</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadStruct</span>, <span class="ident">entrypoint</span>: <span class="ident">usize</span>, <span class="ident">userspace_stack</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
         <span class="comment">// reconstruct an Arc to our ProcessStruct from the leaked pointer</span>
         <span class="kw">let</span> <span class="ident">current</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Arc</span>::<span class="ident">from_raw</span>(<span class="ident">whoami</span>) };
@@ -608,7 +630,7 @@
         <span class="kw">let</span> <span class="ident">iopb</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">gdt</span>::<span class="ident">get_main_iopb</span>()
         };
-        <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="ident">current</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span>.<span class="ident">iter</span>() {
+        <span class="kw">for</span> <span class="ident">ioport</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">current</span>.<span class="ident">process</span>.<span class="ident">capabilities</span>.<span class="ident">ioports</span> {
             <span class="kw">let</span> <span class="ident">ioport</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ioport</span> <span class="kw">as</span> <span class="ident">usize</span>;
             <span class="ident">iopb</span>[<span class="ident">ioport</span> <span class="op">/</span> <span class="number">8</span>] <span class="op">&amp;=</span> <span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;&lt;</span> (<span class="ident">ioport</span> <span class="op">%</span> <span class="number">8</span>));
         }
@@ -621,7 +643,19 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">jump_to_entrypoint</span>(<span class="ident">ep</span>: <span class="ident">usize</span>, <span class="ident">userspace_stack_ptr</span>: <span class="ident">usize</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) {
+<span class="doccomment">/// Jumps to Userspace, and run a userspace program.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This function is called on the first schedule of a process or thread,</span>
+<span class="doccomment">/// after all the process_switch mechanics is over, and the thread is good to go.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// It jumps to ring 3 by pushing the given `ep` and `userspace_stack_ptr` on the KernelStack,</span>
+<span class="doccomment">/// and executing an `iret`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Just before doing the `iret`, it clears all general-purpose registers.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This way, just after the `iret`, cpu will be in ring 3, witl all of its registers cleared,</span>
+<span class="doccomment">/// `$eip` pointing to `ep`, and `$esp` pointing to `userspace_stack_ptr`.</span>
+<span class="kw">fn</span> <span class="ident">jump_to_entrypoint</span>(<span class="ident">ep</span>: <span class="ident">usize</span>, <span class="ident">userspace_stack_ptr</span>: <span class="ident">usize</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
     <span class="kw">unsafe</span> {
         <span class="macro">asm</span><span class="macro">!</span>(<span class="string">&quot;
         mov ax,0x2B // Set data segment selector to Userland Data, Ring 3
@@ -650,6 +684,8 @@
         &quot;</span> :: <span class="string">&quot;r&quot;</span>(<span class="ident">ep</span>), <span class="string">&quot;r&quot;</span>(<span class="ident">userspace_stack_ptr</span>), <span class="string">&quot;r&quot;</span>(<span class="ident">arg</span>) :
              <span class="comment">/* Prevent using eax as input, it&#39;s used early. */</span> <span class="string">&quot;eax&quot;</span> : <span class="string">&quot;intel&quot;</span>, <span class="string">&quot;volatile&quot;</span>);
     }
+
+    <span class="macro">unreachable</span><span class="macro">!</span>()
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../../";window.currentCrate = "kfs_kernel";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

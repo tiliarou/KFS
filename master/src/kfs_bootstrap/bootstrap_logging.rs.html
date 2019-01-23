@@ -79,14 +79,14 @@
 
 <span class="doccomment">/// Init the rs232 COM1. Must be called before logging anything.</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">init_bootstrap_log</span>() {
-    <span class="kw">let</span> <span class="ident">data_port</span>       <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="ident">_data_port</span>      <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">0</span>;
     <span class="kw">let</span> <span class="ident">interrupt_port</span>  <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">1</span>;
     <span class="kw">let</span> <span class="ident">baud_diviser_lo</span> <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">0</span>; <span class="comment">// when DLB is set, data and intr</span>
     <span class="kw">let</span> <span class="ident">baud_diviser_hi</span> <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">1</span>; <span class="comment">// become baud divisor lo and hi</span>
     <span class="kw">let</span> <span class="ident">fifo_port</span>       <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">2</span>;
     <span class="kw">let</span> <span class="ident">lcr_port</span>        <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">3</span>;
-    <span class="kw">let</span> <span class="ident">mcr_port</span>        <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">4</span>;
-    <span class="kw">let</span> <span class="ident">status_port</span>     <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">5</span>;
+    <span class="kw">let</span> <span class="ident">_mcr_port</span>       <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">4</span>;
+    <span class="kw">let</span> <span class="ident">_status_port</span>    <span class="op">=</span> <span class="ident">COM1</span> <span class="op">+</span> <span class="number">5</span>;
 
     <span class="ident">bootstrap_outb</span>(<span class="ident">interrupt_port</span> , <span class="number">0x00</span>);       <span class="comment">// Disable interrupts</span>
     <span class="ident">bootstrap_outb</span>(<span class="ident">lcr_port</span>       , <span class="number">0x80</span>);       <span class="comment">// Enable DLAB (set baud rate divisor)</span>

@@ -143,7 +143,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">kfs_libkern</span>::<span class="ident">error</span>::<span class="ident">KernelError</span> <span class="kw">as</span> <span class="ident">UserspaceError</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ArithmeticOperation</span> { <span class="ident">Add</span>, <span class="ident">Sub</span>, <span class="ident">Mul</span>, <span class="ident">Div</span>, <span class="ident">Mod</span>, <span class="ident">Pow</span> }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ArithmeticOperation</span> {
@@ -167,7 +167,7 @@
 <span class="doccomment">/// When a KernelError must be propagated to userspace, i.e. a syscall failed, it must be</span>
 <span class="doccomment">/// converted to a [UserspaceError].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Fail</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">KernelError</span> {
     <span class="attribute">#[<span class="ident">fail</span>(<span class="ident">display</span> <span class="op">=</span> <span class="string">&quot;Frame allocation error: physical address space exhausted&quot;</span>)]</span>
     <span class="ident">PhysicalMemoryExhaustion</span> {

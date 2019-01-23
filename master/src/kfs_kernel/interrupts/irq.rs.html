@@ -47,42 +47,38 @@
 <span id="47">47</span>
 <span id="48">48</span>
 <span id="49">49</span>
-<span id="50">50</span>
-<span id="51">51</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! IRQ Handling</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! IRQs are asynchronous interruptions coming from an external source,</span>
+<span class="doccomment">//! generally a device. Each platform has its own IRQ handlers. The API exposed</span>
+<span class="doccomment">//! by this module consists solely of an IRQ_HANDLERS array containing function</span>
+<span class="doccomment">//! pointers for all the IRQs, redirecting them to the generic IRQ management</span>
+<span class="doccomment">//! defined in the event module. It is expected that these pointer will then be</span>
+<span class="doccomment">//! inserted in an architecture-specific interrupt table (such as i386&#39;s IDT).</span>
+
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">structures</span>::<span class="ident">idt</span>::<span class="ident">ExceptionStackFrame</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">devices</span>::<span class="ident">pic</span>;
 
-<span class="kw">fn</span> <span class="ident">acknowledge_irq</span>(<span class="ident">irq</span>: <span class="ident">u8</span>) {
-    <span class="ident">pic</span>::<span class="ident">get</span>().<span class="ident">acknowledge</span>(<span class="ident">irq</span>)
-}
-
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">extern</span> <span class="string">&quot;x86-interrupt&quot;</span> <span class="kw">fn</span> <span class="ident">timer_handler</span>(<span class="ident">_stack_frame</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ExceptionStackFrame</span>) {
-    <span class="comment">// TODO: Reroute this into a generic interrupt system?</span>
-    <span class="ident">acknowledge_irq</span>(<span class="number">0</span>);
-}
-
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">irq_handler_none</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">irq</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>) <span class="op">=&gt;</span> {{
-        <span class="kw">extern</span> <span class="string">&quot;x86-interrupt&quot;</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">stack_frame</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ExceptionStackFrame</span>) {
-            <span class="comment">// TODO: Reroute this into a generic interrupt system?</span>
-            <span class="ident">acknowledge_irq</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">irq</span>);
-        }
-        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>
-    }}
+    <span class="comment">// TODO: Feed the timer handler into a kernel preemption handler.</span>
+    <span class="ident">pic</span>::<span class="ident">get</span>().<span class="ident">acknowledge</span>(<span class="number">0</span>);
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">irq_handler</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">irq</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>) <span class="op">=&gt;</span> {{
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
         <span class="kw">extern</span> <span class="string">&quot;x86-interrupt&quot;</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">_stack_frame</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ExceptionStackFrame</span>) {
-            <span class="ident">acknowledge_irq</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">irq</span>);
+            <span class="ident">pic</span>::<span class="ident">get</span>().<span class="ident">acknowledge</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">irq</span>);
             <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">dispatch_event</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">irq</span>);
         }
         <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>
     }}
 }
 
+<span class="doccomment">/// Array of interrupt handlers. The position in the array defines the IRQ this</span>
+<span class="doccomment">/// handler is targeting. See the module documentation for more information.</span>
 <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">IRQ_HANDLERS</span> : [<span class="kw">extern</span> <span class="string">&quot;x86-interrupt&quot;</span> <span class="kw">fn</span>(<span class="ident">stack_frame</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ExceptionStackFrame</span>); <span class="number">16</span>] <span class="op">=</span> [
     <span class="macro">irq_handler</span><span class="macro">!</span>(<span class="number">0</span>, <span class="ident">timer_handler</span>),
     <span class="macro">irq_handler</span><span class="macro">!</span>(<span class="number">1</span>, <span class="ident">keyboard_handler</span>),

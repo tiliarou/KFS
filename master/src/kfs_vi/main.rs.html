@@ -314,6 +314,31 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Visual Compositor</span>
 <span class="doccomment">//!</span>
@@ -324,7 +349,16 @@
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>, <span class="ident">const_vec_new</span>, <span class="ident">const_let</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
 
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="comment">// rustc warnings</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">unused</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_debug_implementations</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_unsafe</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unreachable_code</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">allow</span>(<span class="ident">unused_imports</span>))]</span>
+
+<span class="comment">// rustdoc warnings</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span> <span class="comment">// hopefully this will soon become deny(missing_docs)</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
@@ -352,7 +386,7 @@
 <span class="kw">use</span> <span class="ident">kfs_libutils</span>::<span class="ident">align_up</span>;
 
 <span class="doccomment">/// Entry point interface.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">ViInterface</span>;
 
 <span class="macro">object</span><span class="macro">!</span> {
@@ -421,6 +455,12 @@
 }
 
 <span class="doccomment">/// Draw a portion of a buffer onto the framebuffer.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Panics</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Panics if buf.width * buf.height * bpp (4) &gt;= 2^sizeof(usize).</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_sign_loss</span>)]</span> <span class="comment">// Code panics when shit hits the fan</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_possible_wrap</span>)]</span>
 <span class="kw">fn</span> <span class="ident">draw</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>, <span class="ident">framebuffer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Framebuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">top</span>: <span class="ident">u32</span>, <span class="ident">left</span>: <span class="ident">u32</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
     <span class="kw">unsafe</span> {
         <span class="comment">// TODO: Safety of the vi::draw IPC method</span>
@@ -438,6 +478,7 @@
             <span class="kw">while</span> <span class="ident">curtop</span> <span class="op">&lt;</span> <span class="ident">top</span> <span class="op">+</span> <span class="ident">height</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">curleft</span> <span class="op">=</span> <span class="ident">left</span>;
                 <span class="kw">while</span> <span class="ident">curleft</span> <span class="op">&lt;</span> <span class="ident">left</span> <span class="op">+</span> <span class="ident">width</span> {
+                    <span class="comment">// This overflows when buf.width * buf.height * 4 &gt;= sizeof(usize)</span>
                     <span class="kw">let</span> <span class="ident">dataidx</span> <span class="op">=</span> (((<span class="ident">curtop</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">-</span> <span class="ident">buf</span>.<span class="ident">top</span>) <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="ident">width</span> <span class="op">+</span> (<span class="ident">curleft</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">-</span> <span class="ident">buf</span>.<span class="ident">left</span>) <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">*</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">usize</span>;
                     <span class="kw">let</span> <span class="ident">fbidx</span> <span class="op">=</span> <span class="ident">framebuffer</span>.<span class="ident">get_px_offset</span>(<span class="ident">curleft</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">curtop</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="kw">as</span> <span class="ident">usize</span>;
                     <span class="comment">// TODO: Vi: Implement alpha blending</span>
@@ -455,10 +496,16 @@
     }
 }
 
-<span class="doccomment">/// See Buffer::get_real_bounds.</span>
+<span class="doccomment">/// See [Buffer::get_real_bounds].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Panics if width or height are &gt;= i32::max_value()</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_sign_loss</span>)]</span> <span class="comment">// max(x, 0) is always u32</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_possible_wrap</span>)]</span> <span class="comment">// Protected by the assert</span>
 <span class="kw">fn</span> <span class="ident">get_real_bounds</span>((<span class="ident">top</span>, <span class="ident">left</span>, <span class="ident">width</span>, <span class="ident">height</span>): (<span class="ident">i32</span>, <span class="ident">i32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>), <span class="ident">framebuffer_width</span>: <span class="ident">u32</span>, <span class="ident">framebuffer_height</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> (<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>) {
     <span class="kw">let</span> <span class="ident">dtop</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">max</span>(<span class="ident">top</span>, <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">framebuffer_height</span>);
     <span class="kw">let</span> <span class="ident">dleft</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">max</span>(<span class="ident">left</span>, <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">framebuffer_width</span>);
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">width</span> <span class="op">&lt;</span> <span class="ident">i32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u32</span>);
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">height</span> <span class="op">&lt;</span> <span class="ident">i32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u32</span>);
     <span class="kw">let</span> <span class="ident">dwidth</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">max</span>(<span class="ident">left</span> <span class="op">+</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">framebuffer_width</span>) <span class="op">-</span> <span class="ident">dleft</span>;
     <span class="kw">let</span> <span class="ident">dheight</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">max</span>(<span class="ident">top</span> <span class="op">+</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">framebuffer_height</span>) <span class="op">-</span> <span class="ident">dtop</span>;
     (<span class="ident">dtop</span>, <span class="ident">dleft</span>, <span class="ident">dwidth</span>, <span class="ident">dheight</span>)
@@ -466,6 +513,7 @@
 
 <span class="doccomment">/// Internal representation of a window.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">struct</span> <span class="ident">Buffer</span> {
     <span class="ident">top</span>: <span class="ident">i32</span>,
     <span class="ident">left</span>: <span class="ident">i32</span>,
@@ -487,7 +535,9 @@
 }
 
 <span class="doccomment">/// IPC Window object</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">IBuffer</span> {
+    <span class="doccomment">/// The Buffer linked with this window object instance.</span>
     <span class="ident">buffer</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Buffer</span><span class="op">&gt;</span>,
 }
 

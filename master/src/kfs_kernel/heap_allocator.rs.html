@@ -126,6 +126,9 @@
 <span id="126">126</span>
 <span id="127">127</span>
 <span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Virtual heap allocator.</span>
 <span class="doccomment">//!</span>
@@ -136,15 +139,17 @@
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">NonNull</span>;
 <span class="kw">use</span> <span class="ident">linked_list_allocator</span>::{<span class="ident">Heap</span>, <span class="ident">align_up</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingFlags</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingAccessRights</span>, <span class="ident">kernel_memory</span>::<span class="ident">get_kernel_memory</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
 
 <span class="doccomment">/// Simple wrapper around linked_list_allocator, growing heap by allocating pages</span>
 <span class="doccomment">/// with the frame allocator as necessary.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_debug_implementations</span>)]</span> <span class="comment">// Heap does not implement Debug :/</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Allocator</span>(<span class="ident">Once</span><span class="op">&lt;</span><span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">Heap</span><span class="op">&gt;&gt;</span>);
 
 <span class="comment">// 512MB. Should be a multiple of PAGE_SIZE.</span>
+<span class="doccomment">/// Maximum size of our Kernel Heap.</span>
 <span class="kw">const</span> <span class="ident">RESERVED_HEAP_SIZE</span> : <span class="ident">usize</span> <span class="op">=</span> <span class="number">512</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>;
 
 <span class="kw">impl</span> <span class="ident">Allocator</span> {
@@ -164,7 +169,7 @@
                 .<span class="ident">expect</span>(<span class="string">&quot;Cannot allocate physical memory for heap expansion&quot;</span>);
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">active_pages</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>();
             <span class="ident">active_pages</span>.<span class="ident">unmap</span>(<span class="ident">VirtualAddress</span>(<span class="ident">new_page</span>), <span class="ident">PAGE_SIZE</span>);
-            <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">frame</span>, <span class="ident">VirtualAddress</span>(<span class="ident">new_page</span>), <span class="ident">MappingFlags</span>::<span class="ident">k_rw</span>());
+            <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">frame</span>, <span class="ident">VirtualAddress</span>(<span class="ident">new_page</span>), <span class="ident">MappingAccessRights</span>::<span class="ident">k_rw</span>());
         }
         <span class="kw">unsafe</span> {
             <span class="comment">// Safety: We just allocated the area.</span>
@@ -172,6 +177,7 @@
         }
     }
 
+    <span class="doccomment">/// Create a new Heap of `RESERVED_HEAP_SIZE` bytes.</span>
     <span class="kw">fn</span> <span class="ident">init</span>() <span class="op">-&gt;</span> <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">Heap</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">active_pages</span> <span class="op">=</span> <span class="ident">get_kernel_memory</span>();
         <span class="comment">// Reserve 512MB of virtual memory for heap space. Don&#39;t actually allocate it.</span>
@@ -180,7 +186,7 @@
         <span class="comment">// map only the first page</span>
         <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frame</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Cannot allocate first frame of heap&quot;</span>);
-        <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">frame</span>, <span class="ident">heap_space</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_rw</span>());
+        <span class="ident">active_pages</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">frame</span>, <span class="ident">heap_space</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">k_rw</span>());
         <span class="comment">// guard the rest</span>
         <span class="ident">active_pages</span>.<span class="ident">guard</span>(<span class="ident">heap_space</span> <span class="op">+</span> <span class="ident">PAGE_SIZE</span>, <span class="ident">RESERVED_HEAP_SIZE</span> <span class="op">-</span> <span class="ident">PAGE_SIZE</span>);
         <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Reserving {} pages at {:#010x}&quot;</span>, <span class="ident">RESERVED_HEAP_SIZE</span> <span class="op">/</span> <span class="ident">PAGE_SIZE</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">heap_space</span>.<span class="ident">addr</span>() <span class="op">+</span> <span class="ident">PAGE_SIZE</span>);
@@ -216,7 +222,7 @@
                 <span class="self">self</span>.<span class="number">0</span>.<span class="ident">call_once</span>(<span class="self">Self</span>::<span class="ident">init</span>).<span class="ident">lock</span>().<span class="ident">allocate_first_fit</span>(<span class="ident">layout</span>)
             }
             <span class="kw">_</span> <span class="op">=&gt;</span> <span class="ident">allocation</span>
-        }.<span class="ident">ok</span>().<span class="ident">map_or</span>(<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="op">|</span><span class="ident">allocation</span><span class="op">|</span> <span class="ident">allocation</span>.<span class="ident">as_ptr</span>());
+        }.<span class="ident">ok</span>().<span class="ident">map_or</span>(::<span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">null_mut</span>(), <span class="op">|</span><span class="ident">allocation</span><span class="op">|</span> <span class="ident">allocation</span>.<span class="ident">as_ptr</span>());
 
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;ALLOC  {:#010x?}, size {:#x}&quot;</span>, <span class="ident">alloc</span>, <span class="ident">layout</span>.<span class="ident">size</span>());
         <span class="ident">alloc</span>

@@ -212,6 +212,15 @@
 <span id="212">212</span>
 <span id="213">213</span>
 <span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Synchronization primitives used by KFS</span>
 
@@ -264,11 +273,19 @@
     }
 }
 
+<span class="doccomment">/// Boolean to [permanently_disable_interrupts].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// If this bool is set, all [enable_interrupts] and [disable_interrupts] calls are ignored,</span>
+<span class="doccomment">/// and system is put in an unrecoverable state.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This is used by kernel panic handlers.</span>
 <span class="kw">static</span> <span class="ident">INTERRUPT_DISARM</span>: <span class="ident">AtomicBool</span> <span class="op">=</span> <span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">false</span>);
 
 <span class="doccomment">/// Permanently disables the interrupts. Forever.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Only used by the panic handlers!</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Simply sets [INTERRUPT_DISARM].</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">permanently_disable_interrupts</span>() {
     <span class="ident">INTERRUPT_DISARM</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
     <span class="kw">unsafe</span> { <span class="ident">cli</span>() }
@@ -291,6 +308,7 @@
 <span class="doccomment">/// a global counter to disable/enable interrupts. View INTERRUPT_DISABLE_COUNTER</span>
 <span class="doccomment">/// documentation for more information.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpinLockIRQ</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// SpinLock we wrap.</span>
     <span class="ident">internal</span>: <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 }
 

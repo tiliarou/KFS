@@ -636,13 +636,16 @@
 <span id="636">636</span>
 <span id="637">637</span>
 <span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Arch-independent traits for architectures that implement paging as a hierarchy of page tables</span>
 
 <span class="comment">// what the architecture code still has define</span>
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">arch</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">ENTRY_COUNT</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">lands</span>::{<span class="ident">RecursiveTablesLand</span>, <span class="ident">VirtualSpaceLand</span>};
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingFlags</span>;
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingAccessRights</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>};
@@ -711,7 +714,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">HierarchicalEntry</span> {
 
     <span class="doccomment">/// An entry comports some flags. They are often represented by a structure.</span>
-    <span class="kw">type</span> <span class="ident">EntryFlagsType</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MappingFlags</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">EntryFlagsType</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MappingAccessRights</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Is the entry unused ?</span>
     <span class="kw">fn</span> <span class="ident">is_unused</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
@@ -800,7 +803,7 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Should panic if called on a table which isn&#39;t a parent table.</span>
-    <span class="kw">fn</span> <span class="ident">get_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="self">Self</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">get_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span>;
 
     <span class="doccomment">/// Allocates a child page table, zero it and add an entry pointing to it.</span>
     <span class="doccomment">///</span>
@@ -808,14 +811,14 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Should panic if called on a table which isn&#39;t a parent table.</span>
     <span class="doccomment">/// Should panic if entry was not available.</span>
-    <span class="kw">fn</span> <span class="ident">create_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="self">Self</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">create_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Gets the child page table at given index, or creates it if it does not exist</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Should panic if called on a table which isn&#39;t a parent table.</span>
-    <span class="kw">fn</span> <span class="ident">get_child_table_or_create</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="self">Self</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_child_table_or_create</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="self">Self</span>::<span class="ident">table_level</span>() <span class="op">&gt;=</span> <span class="number">1</span>, <span class="string">&quot;get_child_table_or_create() called on non-parent table&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entries</span>()[<span class="ident">index</span>].<span class="ident">pointed_frame</span>() {
             <span class="ident">PageState</span>::<span class="ident">Present</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">get_child_table</span>(<span class="ident">index</span>),
@@ -849,6 +852,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>(<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">HierarchicalTable</span><span class="op">&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Wraps the given pointer in a `SmartHierarchicalTable`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">SmartHierarchicalTable</span>(<span class="ident">inner</span>, <span class="ident">PhantomData</span>)
     }
@@ -891,11 +895,12 @@
 <span class="doccomment">/// * an InactiveHierarchy will want to temporarily map the top level page</span>
 <span class="doccomment">/// * a  PagingOffHierarchy will point to physical memory</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TableHierarchy</span> {
+    <span class="doccomment">/// The type of the top level table.</span>
     <span class="kw">type</span> <span class="ident">TopLevelTableType</span> : <span class="ident">HierarchicalTable</span>;
 
     <span class="doccomment">/// Gets a reference to the top level table, either through recursive mapping,</span>
     <span class="doccomment">/// or by temporarily mapping it in the currently active page tables.</span>
-    <span class="kw">fn</span> <span class="ident">get_top_level_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="self">Self</span>::<span class="ident">TopLevelTableType</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">get_top_level_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TopLevelTableType</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Creates a mapping in the page tables with the given flags.</span>
     <span class="doccomment">///</span>
@@ -911,7 +916,7 @@
     <span class="kw">fn</span> <span class="ident">map_to_from_iterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                                <span class="ident">frames_iterator</span>: <span class="ident">I</span>,
                                <span class="ident">start_address</span>: <span class="ident">VirtualAddress</span>,
-                               <span class="ident">flags</span>: <span class="ident">MappingFlags</span>)
+                               <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
     <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="ident">PhysicalAddress</span><span class="op">&gt;</span>
     {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">start_address</span>.<span class="ident">addr</span>() <span class="op">%</span> <span class="ident">PAGE_SIZE</span>, <span class="number">0</span>, <span class="string">&quot;Address is not page aligned&quot;</span>);
@@ -921,7 +926,7 @@
         <span class="kw">fn</span> <span class="ident">rec_map_to</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">table</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span>,
                             <span class="ident">frames_iterator</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Peekable</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
                             <span class="ident">start_address</span>: <span class="ident">usize</span>,
-                            <span class="ident">flags</span>: <span class="ident">MappingFlags</span>)
+                            <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
         <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">HierarchicalTable</span>,
               <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="ident">PhysicalAddress</span><span class="op">&gt;</span>
         {
@@ -951,9 +956,9 @@
             }
         }
 
-        <span class="kw">return</span> <span class="ident">rec_map_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">get_top_level_table</span>(),
+        <span class="ident">rec_map_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">get_top_level_table</span>(),
                           <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">frames_iterator</span>.<span class="ident">peekable</span>(),
-                          <span class="ident">start_address</span>.<span class="ident">addr</span>(), <span class="ident">flags</span>);
+                          <span class="ident">start_address</span>.<span class="ident">addr</span>(), <span class="ident">flags</span>)
     }
 
     <span class="doccomment">/// Creates a span of guard pages</span>
@@ -1010,7 +1015,7 @@
             }
         }
 
-        <span class="kw">return</span> <span class="ident">rec_guard</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">get_top_level_table</span>(), <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>);
+        <span class="ident">rec_guard</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">get_top_level_table</span>(), <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>)
     }
 
     <span class="doccomment">/// Unmaps a range of virtual address.</span>
@@ -1139,6 +1144,7 @@
     <span class="doccomment">/// Panics if  alignment is not page-aligned.</span>
     <span class="doccomment">/// Panics if start_addr &gt; end_addr.</span>
     <span class="doccomment">/// Panics if length is zero.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
     <span class="kw">fn</span> <span class="ident">find_available_virtual_space_aligned</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                                             <span class="ident">length</span>: <span class="ident">usize</span>,
                                             <span class="ident">start_addr</span>: <span class="ident">VirtualAddress</span>,
@@ -1222,7 +1228,7 @@
                  <span class="ident">alignment</span>
         );
 
-        <span class="kw">return</span> <span class="kw">if</span> <span class="ident">hole</span>.<span class="ident">len</span> <span class="op">&gt;=</span> <span class="ident">length</span> {
+        <span class="kw">if</span> <span class="ident">hole</span>.<span class="ident">len</span> <span class="op">&gt;=</span> <span class="ident">length</span> {
             <span class="prelude-val">Some</span>(<span class="ident">VirtualAddress</span>(<span class="ident">hole</span>.<span class="ident">start_addr</span>))
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>

@@ -296,6 +296,17 @@
 <span id="296">296</span>
 <span id="297">297</span>
 <span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Bootstrap stage</span>
 <span class="doccomment">//!</span>
@@ -324,9 +335,22 @@
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">lang_items</span>, <span class="ident">start</span>, <span class="ident">asm</span>, <span class="ident">global_asm</span>, <span class="ident">compiler_builtins_lib</span>, <span class="ident">naked_functions</span>, <span class="ident">core_intrinsics</span>, <span class="ident">const_fn</span>, <span class="ident">abi_x86_interrupt</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>, <span class="ident">no_main</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
+
+<span class="comment">// rustc warnings</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">unused</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">missing_debug_implementations</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_unsafe</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unreachable_code</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">allow</span>(<span class="ident">unused_imports</span>))]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
+
+<span class="comment">// rustdoc warnings</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
+
+<span class="comment">// clippy override</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_lossless</span>)]</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">test</span>)))]</span>
 <span class="macro">compile_error</span><span class="macro">!</span>(<span class="string">&quot;WTF&quot;</span>);
@@ -341,7 +365,6 @@
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">static_assertions</span>;
 
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
-<span class="kw">use</span> <span class="ident">spin</span>::<span class="ident">Once</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bootstrap_logging</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gdt</span>;
@@ -353,9 +376,8 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bootstrap_logging</span>::<span class="ident">Serial</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_alloc</span>::<span class="ident">FrameAllocator</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PageTablesSet</span>, <span class="ident">KernelLand</span>, <span class="ident">EntryFlags</span>, <span class="ident">ACTIVE_PAGE_TABLES</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PageTablesSet</span>, <span class="ident">KernelLand</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bootstrap_stack</span>::<span class="ident">BootstrapStack</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::<span class="ident">VirtualAddress</span>;
 
 <span class="doccomment">/// 4 pages, PAGE_SIZE aligned.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">align</span>(<span class="number">4096</span>))]</span>
@@ -413,27 +435,27 @@
 <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
 <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">do_bootstrap</span>(<span class="ident">multiboot_info_addr</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
     <span class="kw">unsafe</span> { <span class="ident">bootstrap_logging</span>::<span class="ident">init_bootstrap_log</span>() };
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;Bootstrap starts...&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;Bootstrap starts...&quot;</span>);
 
     <span class="comment">// Set up (read: inhibit) the GDT.</span>
     <span class="ident">gdt</span>::<span class="ident">init_gdt</span>();
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Gdt initialized&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Gdt initialized&quot;</span>);
 
     <span class="comment">// Parse the multiboot infos</span>
     <span class="kw">let</span> <span class="ident">boot_info</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">multiboot2</span>::<span class="ident">load</span>(<span class="ident">multiboot_info_addr</span>) };
-    <span class="macro">write</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;{:?}&quot;</span>, <span class="ident">boot_info</span>);
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Parsed multiboot informations&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;{:?}&quot;</span>, <span class="ident">boot_info</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Parsed multiboot informations&quot;</span>);
 
     <span class="comment">// Setup frame allocator</span>
     <span class="ident">FrameAllocator</span>::<span class="ident">init</span>(<span class="kw-2">&amp;</span><span class="ident">boot_info</span>);
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Initialized frame allocator&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Initialized frame allocator&quot;</span>);
 
     <span class="comment">// Create a set of page tables</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">page_tables</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">paging</span>::<span class="ident">map_bootstrap</span>(<span class="kw-2">&amp;</span><span class="ident">boot_info</span>) };
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Created page tables&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Created page tables&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">kernel_entry_point</span> <span class="op">=</span> <span class="ident">elf_loader</span>::<span class="ident">load_kernel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">page_tables</span>, <span class="kw-2">&amp;</span><span class="ident">boot_info</span>);
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Loaded kernel&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Loaded kernel&quot;</span>);
 
     <span class="comment">// Move the multiboot_header to a single page in kernel space. This simplifies some</span>
     <span class="comment">// things in the kernel.</span>
@@ -447,20 +469,20 @@
                         <span class="ident">multiboot_phys_page</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>,
                         <span class="ident">total_size</span>);
     }
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Copied multiboot info to page {:#010x}&quot;</span>, <span class="ident">multiboot_info_page</span>.<span class="ident">addr</span>());
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Copied multiboot info to page {:#010x}&quot;</span>, <span class="ident">multiboot_info_page</span>.<span class="ident">addr</span>());
 
     <span class="comment">// Start using these page tables</span>
     <span class="kw">unsafe</span> { <span class="ident">page_tables</span>.<span class="ident">enable_paging</span>() }
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Paging on&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Paging on&quot;</span>);
 
     <span class="comment">// Allocate a stack for the kernel</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_stack</span> <span class="op">=</span> <span class="ident">BootstrapStack</span>::<span class="ident">allocate_stack</span>()
+    <span class="kw">let</span> <span class="ident">new_stack</span> <span class="op">=</span> <span class="ident">BootstrapStack</span>::<span class="ident">allocate_stack</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot allocate bootstrap stack&quot;</span>);
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Created kernel stack&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Created kernel stack&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">new_ebp_esp</span> <span class="op">=</span> <span class="ident">new_stack</span>.<span class="ident">get_stack_start</span>();
 
-    <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Jumping to kernel&quot;</span>);
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">Serial</span>, <span class="string">&quot;= Jumping to kernel&quot;</span>);
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
     <span class="kw">unsafe</span> {

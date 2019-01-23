@@ -493,6 +493,22 @@
 <span id="493">493</span>
 <span id="494">494</span>
 <span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The management of a process&#39; memory</span>
 <span class="doccomment">//!</span>
@@ -520,7 +536,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mapping</span>::{<span class="ident">Mapping</span>, <span class="ident">MappingType</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">cross_process</span>::<span class="ident">CrossProcessMapping</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingFlags</span>;
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingAccessRights</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>, <span class="ident">PhysicalMemRegion</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">arch</span>::<span class="ident">Entry</span>;
@@ -551,8 +567,21 @@
     <span class="ident">heap_base_address</span>: <span class="ident">VirtualAddress</span>,
 }
 
+<span class="doccomment">/// Page tables selector.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A process always stores its table_hierarchy as an inactive hierarchy. When it wants to modify</span>
+<span class="doccomment">/// its page tables, it will first call [`get_hierarchy`], which will detect if the hierarchy</span>
+<span class="doccomment">/// is already the currently active one, and return a `DynamicHierarchy`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This returned `DynamicHierarchy` is just a wrapper which will dispatch all its calls to the right</span>
+<span class="doccomment">/// hierarchy, either the already active one, shortcutting the method calls by not having to map</span>
+<span class="doccomment">/// temporary directories and page tables, or going the long way and actually use the inactive one.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`get_hierarchy`]: self::ProcessMemory::get_hierarchy</span>
 <span class="kw">enum</span> <span class="ident">DynamicHierarchy</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The process&#39;s hierarchy is already the currently active one.</span>
     <span class="ident">Active</span>(<span class="ident">ActiveHierarchy</span>),
+    <span class="doccomment">/// The process&#39;s hierarchy an inactive one.</span>
     <span class="ident">Inactive</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">InactiveHierarchy</span>)
 }
 
@@ -569,11 +598,11 @@
         <span class="macro">unimplemented</span><span class="macro">!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">SmartHierarchicalTable</span><span class="op">&lt;&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;&gt;</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">create_child_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">create_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">HierarchicalTable</span><span class="op">&gt;</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>()
     }
 }
@@ -581,55 +610,55 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span> <span class="ident">TableHierarchy</span> <span class="kw">for</span> <span class="ident">DynamicHierarchy</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">TopLevelTableType</span> <span class="op">=</span> (); <span class="comment">// Ignored</span>
 
-    <span class="kw">fn</span> <span class="ident">get_top_level_table</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, ()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_top_level_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Dynamic DynamicHierarchy reimplements everything&quot;</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">map_to_from_iterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                                <span class="ident">frames_iterator</span>: <span class="ident">I</span>,
                                <span class="ident">start_address</span>: <span class="ident">VirtualAddress</span>,
-                               <span class="ident">flags</span>: <span class="ident">MappingFlags</span>)
+                               <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
     <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="ident">PhysicalAddress</span><span class="op">&gt;</span>
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">map_to_from_iterator</span>(<span class="ident">frames_iterator</span>, <span class="ident">start_address</span>, <span class="ident">flags</span>),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">map_to_from_iterator</span>(<span class="ident">frames_iterator</span>, <span class="ident">start_address</span>, <span class="ident">flags</span>),
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">map_to_from_iterator</span>(<span class="ident">frames_iterator</span>, <span class="ident">start_address</span>, <span class="ident">flags</span>),
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">map_to_from_iterator</span>(<span class="ident">frames_iterator</span>, <span class="ident">start_address</span>, <span class="ident">flags</span>),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">guard</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">guard</span>(<span class="ident">address</span>, <span class="ident">length</span>),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">guard</span>(<span class="ident">address</span>, <span class="ident">length</span>),
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">guard</span>(<span class="ident">address</span>, <span class="ident">length</span>),
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">guard</span>(<span class="ident">address</span>, <span class="ident">length</span>),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">unmap</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">callback</span>: <span class="ident">C</span>) <span class="kw">where</span> <span class="ident">C</span>: <span class="ident">FnMut</span>(<span class="ident">PhysicalAddress</span>) {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">unmap</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">unmap</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">unmap</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">unmap</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">for_every_entry</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">callback</span>: <span class="ident">C</span>) <span class="kw">where</span> <span class="ident">C</span>: <span class="ident">FnMut</span>(<span class="ident">PageState</span><span class="op">&lt;</span><span class="ident">PhysicalAddress</span><span class="op">&gt;</span>, <span class="ident">usize</span>) {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">for_every_entry</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">for_every_entry</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">for_every_entry</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">for_every_entry</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">callback</span>),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">find_available_virtual_space_aligned</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">start_addr</span>: <span class="ident">VirtualAddress</span>, <span class="ident">end_addr</span>: <span class="ident">VirtualAddress</span>, <span class="ident">alignment</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VirtualAddress</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">find_available_virtual_space_aligned</span>(<span class="ident">length</span>, <span class="ident">start_addr</span>, <span class="ident">end_addr</span>, <span class="ident">alignment</span>),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">find_available_virtual_space_aligned</span>(<span class="ident">length</span>, <span class="ident">start_addr</span>, <span class="ident">end_addr</span>, <span class="ident">alignment</span>),
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Active</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">find_available_virtual_space_aligned</span>(<span class="ident">length</span>, <span class="ident">start_addr</span>, <span class="ident">end_addr</span>, <span class="ident">alignment</span>),
+            <span class="ident">DynamicHierarchy</span>::<span class="ident">Inactive</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">hierarchy</span>) <span class="op">=&gt;</span> <span class="ident">hierarchy</span>.<span class="ident">find_available_virtual_space_aligned</span>(<span class="ident">length</span>, <span class="ident">start_addr</span>, <span class="ident">end_addr</span>, <span class="ident">alignment</span>),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ProcessMemory</span> {
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ProcessMemory</span> {
     <span class="doccomment">/// Creates a ProcessMemory, allocating the userspace-bookkeeping,</span>
     <span class="doccomment">/// and the top-level table of the table hierarchy.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="comment">// we don&#39;t have ASRL yet :(</span>
         <span class="kw">let</span> <span class="ident">heap_base_address</span> <span class="op">=</span> <span class="ident">VirtualAddress</span>(<span class="number">0x80000000</span>);
 
@@ -643,7 +672,9 @@
             .<span class="ident">expect</span>(<span class="string">&quot;Cannot guard first page of ProcessMemory&quot;</span>);
         <span class="ident">ret</span>
     }
+}
 
+<span class="kw">impl</span> <span class="ident">ProcessMemory</span> {
     <span class="doccomment">/// Creates a ProcessMemory referencing the current page tables.</span>
     <span class="doccomment">/// Used only when becoming the first process for creating the first ProcessMemory.</span>
     <span class="doccomment">///</span>
@@ -682,7 +713,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_phys_region_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                               <span class="ident">phys</span>: <span class="ident">PhysicalMemRegion</span>,
                               <span class="ident">address</span>: <span class="ident">VirtualAddress</span>,
-                              <span class="ident">flags</span>: <span class="ident">MappingFlags</span>)
+                              <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
                               <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">phys</span>.<span class="ident">size</span>();
         <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
@@ -707,7 +738,7 @@
     <span class="doccomment">/// Returns a KernelError if there was already a mapping in the range.</span>
     <span class="doccomment">/// Returns a KernelError if address does not fall in UserLand.</span>
     <span class="doccomment">/// Returns a KernelError if address or length is not PAGE_SIZE aligned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_regular_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">MappingFlags</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_regular_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
@@ -734,7 +765,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_shared_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                               <span class="ident">shared_mapping</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span><span class="op">&gt;&gt;</span>,
                               <span class="ident">address</span>: <span class="ident">VirtualAddress</span>,
-                              <span class="ident">flags</span>: <span class="ident">MappingFlags</span>)
+                              <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
                               <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="comment">// compute the length</span>
@@ -828,7 +859,7 @@
         };
         <span class="kw">if</span> <span class="ident">new_size</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="comment">// remove the mapping entirely, return everything as spill.</span>
-            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">unmap</span>(<span class="ident">start_addr</span>, <span class="ident">old_size</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">mapping</span><span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">mapping</span>))
+            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">unmap</span>(<span class="ident">start_addr</span>, <span class="ident">old_size</span>).<span class="ident">map</span>(<span class="prelude-val">Some</span>)
         }
         <span class="kw">if</span> <span class="ident">new_size</span> <span class="op">==</span> <span class="ident">old_size</span> {
             <span class="comment">// don&#39;t do anything, and produce no spill</span>
@@ -961,12 +992,13 @@
     <span class="doccomment">/// * InvalidSize if \[`address`..`new_size`\] does not fall in UserLand,</span>
     <span class="doccomment">///   or overlaps an existing mapping.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resize_heap</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">new_size</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VirtualAddress</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
         <span class="kw">enum</span> <span class="ident">HeapState</span> { <span class="ident">NoHeap</span>, <span class="ident">Heap</span>(<span class="ident">usize</span>) };
         <span class="ident">UserLand</span>::<span class="ident">check_contains_region</span>(<span class="self">self</span>.<span class="ident">heap_base_address</span>, <span class="ident">new_size</span>)<span class="question-mark">?</span>;
         <span class="comment">// get the previous heap size</span>
         <span class="kw">let</span> <span class="ident">previous_heap_state</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">mapping_at</span>(<span class="self">self</span>.<span class="ident">heap_base_address</span>);
-            <span class="kw">let</span> <span class="ident">heap</span> <span class="op">=</span> <span class="ident">query</span>.<span class="ident">as_ref</span>();
+            <span class="kw">let</span> <span class="ident">heap</span> <span class="op">=</span> <span class="ident">query</span>.<span class="ident">mapping</span>();
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">MappingType</span>::<span class="ident">Available</span> <span class="op">=</span> <span class="ident">heap</span>.<span class="ident">mtype_ref</span>() {
                 <span class="ident">HeapState</span>::<span class="ident">NoHeap</span>
             } <span class="kw">else</span> {
@@ -976,7 +1008,7 @@
         <span class="kw">let</span> <span class="ident">heap_base_address</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">heap_base_address</span>;
         <span class="kw">match</span> <span class="ident">previous_heap_state</span> {
             <span class="ident">HeapState</span>::<span class="ident">NoHeap</span> <span class="kw">if</span> <span class="ident">new_size</span> <span class="op">==</span> <span class="number">0</span> <span class="op">=&gt;</span> (), <span class="comment">// don&#39;t do anything</span>
-            <span class="ident">HeapState</span>::<span class="ident">NoHeap</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">create_regular_mapping</span>(<span class="ident">heap_base_address</span>, <span class="ident">new_size</span>, <span class="ident">MappingFlags</span>::<span class="ident">u_rw</span>())<span class="question-mark">?</span>,
+            <span class="ident">HeapState</span>::<span class="ident">NoHeap</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">create_regular_mapping</span>(<span class="ident">heap_base_address</span>, <span class="ident">new_size</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">u_rw</span>())<span class="question-mark">?</span>,
             <span class="ident">HeapState</span>::<span class="ident">Heap</span>(<span class="ident">old_size</span>) <span class="kw">if</span> <span class="ident">new_size</span> <span class="op">&lt;</span> <span class="ident">old_size</span> <span class="op">=&gt;</span> { <span class="self">self</span>.<span class="ident">shrink_mapping</span>(<span class="ident">heap_base_address</span>, <span class="ident">new_size</span>)<span class="question-mark">?</span>; },
             <span class="ident">HeapState</span>::<span class="ident">Heap</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">expand_mapping</span>(<span class="ident">heap_base_address</span>, <span class="ident">new_size</span>)<span class="question-mark">?</span>
         }

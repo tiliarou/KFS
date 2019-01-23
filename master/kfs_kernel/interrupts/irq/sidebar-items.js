@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["acknowledge_irq",""],["timer_handler",""]],"static":[["IRQ_HANDLERS",""]]});
+initSidebarItems({"fn":[["timer_handler",""]],"static":[["IRQ_HANDLERS","Array of interrupt handlers. The position in the array defines the IRQ this handler is targeting. See the module documentation for more information."]]});

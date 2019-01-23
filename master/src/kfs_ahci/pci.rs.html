@@ -301,6 +301,9 @@
 <span id="301">301</span>
 <span id="302">302</span>
 <span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! PCI discovery</span>
 <span class="doccomment">//!</span>
@@ -410,6 +413,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This is done by reading the Device ID - Vendor ID register (register 0).</span>
     <span class="doccomment">/// If `0xFFFF_FFFF` is read back, this means that the device was non-existent, and we return None.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">absurd_extreme_comparisons</span>)]</span>
     <span class="kw">fn</span> <span class="ident">probe</span>(<span class="ident">bus</span>: <span class="ident">u8</span>, <span class="ident">slot</span>: <span class="ident">u8</span>, <span class="ident">function</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">bus</span> <span class="op">&lt;=</span> <span class="ident">MAX_BUS</span>);
         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">slot</span> <span class="op">&lt;=</span> <span class="ident">MAX_SLOT</span>);
@@ -512,15 +516,16 @@
 }
 
 <span class="doccomment">/// Read one of the 64 32-bit registers of a pci bus&gt;device&gt;func.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">absurd_extreme_comparisons</span>)]</span>
 <span class="kw">fn</span> <span class="ident">pci_config_read_word</span>(<span class="ident">bus</span>: <span class="ident">u8</span>, <span class="ident">slot</span>: <span class="ident">u8</span>, <span class="ident">func</span>: <span class="ident">u8</span>, <span class="ident">register</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">bus</span> <span class="op">&lt;=</span> <span class="ident">MAX_BUS</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">slot</span> <span class="op">&lt;=</span> <span class="ident">MAX_SLOT</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">func</span> <span class="op">&lt;=</span> <span class="ident">MAX_FUNC</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">register</span> <span class="op">&lt;=</span> <span class="ident">MAX_REGISTER</span>);
-    <span class="kw">let</span> <span class="ident">lbus</span> <span class="op">=</span> <span class="ident">bus</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lslot</span> <span class="op">=</span> <span class="ident">slot</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lfunc</span> <span class="op">=</span> <span class="ident">func</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lregister</span> <span class="op">=</span> <span class="ident">register</span> <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">let</span> <span class="ident">lbus</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">bus</span>);
+    <span class="kw">let</span> <span class="ident">lslot</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">slot</span>);
+    <span class="kw">let</span> <span class="ident">lfunc</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">func</span>);
+    <span class="kw">let</span> <span class="ident">lregister</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">register</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ports</span> <span class="op">=</span> <span class="ident">PCI_CONFIG_PORTS</span>.<span class="ident">lock</span>();
 
     <span class="comment">/* create the configuration address */</span>
@@ -535,15 +540,16 @@
 }
 
 <span class="doccomment">/// Read one of the 64 32-bit registers of a pci bus&gt;device&gt;func.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">absurd_extreme_comparisons</span>)]</span>
 <span class="kw">fn</span> <span class="ident">pci_config_write_word</span>(<span class="ident">bus</span>: <span class="ident">u8</span>, <span class="ident">slot</span>: <span class="ident">u8</span>, <span class="ident">func</span>: <span class="ident">u8</span>, <span class="ident">register</span>: <span class="ident">u8</span>, <span class="ident">value</span>: <span class="ident">u32</span>) {
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">bus</span> <span class="op">&lt;=</span> <span class="ident">MAX_BUS</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">slot</span> <span class="op">&lt;=</span> <span class="ident">MAX_SLOT</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">func</span> <span class="op">&lt;=</span> <span class="ident">MAX_FUNC</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">register</span> <span class="op">&lt;=</span> <span class="ident">MAX_REGISTER</span>);
-    <span class="kw">let</span> <span class="ident">lbus</span> <span class="op">=</span> <span class="ident">bus</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lslot</span> <span class="op">=</span> <span class="ident">slot</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lfunc</span> <span class="op">=</span> <span class="ident">func</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lregister</span> <span class="op">=</span> <span class="ident">register</span> <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">let</span> <span class="ident">lbus</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">bus</span>);
+    <span class="kw">let</span> <span class="ident">lslot</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">slot</span>);
+    <span class="kw">let</span> <span class="ident">lfunc</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">func</span>);
+    <span class="kw">let</span> <span class="ident">lregister</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">register</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ports</span> <span class="op">=</span> <span class="ident">PCI_CONFIG_PORTS</span>.<span class="ident">lock</span>();
 
     <span class="comment">/* create the configuration address */</span>

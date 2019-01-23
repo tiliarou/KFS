@@ -49,8 +49,10 @@
 <span id="49">49</span>
 <span id="50">50</span>
 <span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! TODO: Write some AHCI documentation</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>, <span class="ident">const_let</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
 
@@ -63,7 +65,11 @@
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">allow</span>(<span class="ident">unused_imports</span>))]</span>
 
 <span class="comment">// rustdoc warnings</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span> <span class="comment">// hopefully this will soon become deny(missing_docs)</span>
+<span class="comment">// TODO: Write documentation for AHCI</span>
+<span class="comment">// BODY: Documentation lints are disabled on AHCI for now, to avoid conflicts.</span>
+<span class="comment">// BODY: Get @orycterope to write some doc \o/</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>

@@ -144,7 +144,7 @@
 
 <span class="macro">bitflags</span><span class="macro">!</span> {
     <span class="doccomment">/// The flags of a mapping.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MappingFlags</span> : <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MappingAccessRights</span> : <span class="ident">u32</span> {
         <span class="doccomment">/// Mapping is readable.</span>
         <span class="kw">const</span> <span class="ident">READABLE</span> <span class="op">=</span>        <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="number">0</span>;
         <span class="doccomment">/// Mapping is writable.</span>
@@ -157,68 +157,68 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MappingFlags</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">perms</span>: <span class="ident">MappingFlags</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MappingAccessRights</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">perms</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">newperms</span> <span class="op">=</span> <span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">empty</span>();
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingFlags</span>::<span class="ident">USER_ACCESSIBLE</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingAccessRights</span>::<span class="ident">USER_ACCESSIBLE</span>) {
             <span class="kw">return</span> <span class="ident">newperms</span>;
         }
-        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">READABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingFlags</span>::<span class="ident">READABLE</span>));
-        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">WRITABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>));
-        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">EXECUTABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingFlags</span>::<span class="ident">EXECUTABLE</span>));
+        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">READABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span>));
+        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">WRITABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>));
+        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">EXECUTABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">MappingAccessRights</span>::<span class="ident">EXECUTABLE</span>));
         <span class="ident">newperms</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MappingFlags</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MappingAccessRights</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">perms</span>: <span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">newperms</span> <span class="op">=</span> <span class="ident">MappingFlags</span>::<span class="ident">USER_ACCESSIBLE</span>;
-        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">MappingFlags</span>::<span class="ident">READABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">READABLE</span>));
-        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">WRITABLE</span>));
-        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">MappingFlags</span>::<span class="ident">EXECUTABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">EXECUTABLE</span>));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">newperms</span> <span class="op">=</span> <span class="ident">MappingAccessRights</span>::<span class="ident">USER_ACCESSIBLE</span>;
+        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">READABLE</span>));
+        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">WRITABLE</span>));
+        <span class="ident">newperms</span>.<span class="ident">set</span>(<span class="ident">MappingAccessRights</span>::<span class="ident">EXECUTABLE</span>, <span class="ident">perms</span>.<span class="ident">contains</span>(<span class="ident">kfs_libkern</span>::<span class="ident">MemoryPermissions</span>::<span class="ident">EXECUTABLE</span>));
         <span class="ident">newperms</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">MappingFlags</span> {
+<span class="kw">impl</span> <span class="ident">MappingAccessRights</span> {
     <span class="doccomment">/// Shorthand for READABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_r</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">READABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_r</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span>
     }
 
     <span class="doccomment">/// Shorthand for WRITABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_w</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_w</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>
     }
 
     <span class="doccomment">/// Shorthand for READABLE | WRITABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_rw</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_rw</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>
     }
 
     <span class="doccomment">/// Shorthand for READABLE | EXECUTABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_rx</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">EXECUTABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">k_rx</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">EXECUTABLE</span>
     }
 
     <span class="doccomment">/// Shorthand for USER_ACCESSIBLE | READABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_r</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">READABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_r</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span>
     }
 
     <span class="doccomment">/// Shorthand for USER_ACCESSIBLE | WRITABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_w</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_w</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>
     }
 
     <span class="doccomment">/// Shorthand for USER_ACCESSIBLE | WRITABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_rw</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">WRITABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_rw</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">WRITABLE</span>
     }
 
     <span class="doccomment">/// Shorthand for USER_ACCESSIBLE | WRITABLE</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_rx</span>() <span class="op">-&gt;</span> <span class="ident">MappingFlags</span> {
-        <span class="ident">MappingFlags</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingFlags</span>::<span class="ident">EXECUTABLE</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u_rx</span>() <span class="op">-&gt;</span> <span class="ident">MappingAccessRights</span> {
+        <span class="ident">MappingAccessRights</span>::<span class="ident">USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">READABLE</span> <span class="op">|</span> <span class="ident">MappingAccessRights</span>::<span class="ident">EXECUTABLE</span>
     }
 }
 </pre></div>

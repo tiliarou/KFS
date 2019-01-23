@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["FrameAllocatorTraitPrivate",""]]});
+initSidebarItems({"trait":[["FrameAllocatorTraitPrivate","An arch-specifig FrameAllocator must expose the following functions."]]});

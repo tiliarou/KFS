@@ -204,6 +204,30 @@
 <span id="204">204</span>
 <span id="205">205</span>
 <span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Shell</span>
 <span class="doccomment">//!</span>
@@ -214,7 +238,16 @@
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">const_let</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
 
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="comment">// rustc warnings</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">unused</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_debug_implementations</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_unsafe</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unreachable_code</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">allow</span>(<span class="ident">unused_imports</span>))]</span>
+
+<span class="comment">// rustdoc warnings</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span> <span class="comment">// hopefully this will soon become deny(missing_docs)</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">intra_doc_link_resolution_failure</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">gif</span>;
@@ -269,6 +302,8 @@
     }
 }
 
+<span class="doccomment">/// Shows a GIF in a new window, blocking the caller. When a key is pressed, the</span>
+<span class="doccomment">/// window is closed and control is given back to the caller.</span>
 <span class="kw">fn</span> <span class="ident">show_gif</span>(<span class="ident">louis</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">Window</span>::<span class="ident">new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1280</span>, <span class="number">800</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">gif</span>::<span class="ident">Decoder</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">louis</span>[..]).<span class="ident">read_info</span>().<span class="ident">unwrap</span>();
@@ -288,7 +323,7 @@
         <span class="kw">for</span> <span class="ident">y</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">reader</span>.<span class="ident">height</span>() <span class="kw">as</span> <span class="ident">usize</span>) {
             <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">reader</span>.<span class="ident">width</span>() <span class="kw">as</span> <span class="ident">usize</span>) {
                 <span class="kw">let</span> <span class="ident">frame_coord</span> <span class="op">=</span> (<span class="ident">y</span> <span class="op">*</span> <span class="ident">reader</span>.<span class="ident">width</span>() <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="ident">x</span>) <span class="op">*</span> <span class="number">4</span>;
-                <span class="ident">window</span>.<span class="ident">write_px_at</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="kw-2">&amp;</span><span class="ident">Color</span>::<span class="ident">rgb</span>(<span class="ident">buf</span>[<span class="ident">frame_coord</span>], <span class="ident">buf</span>[<span class="ident">frame_coord</span> <span class="op">+</span> <span class="number">1</span>], <span class="ident">buf</span>[<span class="ident">frame_coord</span> <span class="op">+</span> <span class="number">2</span>]));
+                <span class="ident">window</span>.<span class="ident">write_px_at</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">Color</span>::<span class="ident">rgb</span>(<span class="ident">buf</span>[<span class="ident">frame_coord</span>], <span class="ident">buf</span>[<span class="ident">frame_coord</span> <span class="op">+</span> <span class="number">1</span>], <span class="ident">buf</span>[<span class="ident">frame_coord</span> <span class="op">+</span> <span class="number">2</span>]));
             }
         }
         <span class="ident">window</span>.<span class="ident">draw</span>().<span class="ident">unwrap</span>();
@@ -298,7 +333,9 @@
     }
 }
 
+<span class="doccomment">/// Test function ensuring threads are working properly.</span>
 <span class="kw">fn</span> <span class="ident">test_threads</span>(<span class="ident">terminal</span>: <span class="ident">Terminal</span>) <span class="op">-&gt;</span> <span class="ident">Terminal</span> {
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="kw">fn</span> <span class="ident">thread_a</span>(<span class="ident">terminal</span>: <span class="ident">usize</span>) {
         <span class="kw">let</span> <span class="ident">terminal</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">Arc</span>::<span class="ident">from_raw</span>(<span class="ident">terminal</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Terminal</span><span class="op">&gt;</span>)
@@ -311,6 +348,7 @@
         }
     }
 
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="kw">fn</span> <span class="ident">thread_b</span>(<span class="ident">terminal</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="op">!</span> {
         <span class="comment">// Wrap in a block to forcibly call Arc destructor before exiting the thread.</span>
         {
@@ -327,6 +365,7 @@
         <span class="ident">libuser</span>::<span class="ident">syscalls</span>::<span class="ident">exit_thread</span>()
     }
 
+    <span class="doccomment">/// Small wrapper around thread_b fixing the thread calling convention.</span>
     <span class="attribute">#[<span class="ident">naked</span>]</span>
     <span class="kw">extern</span> <span class="kw">fn</span> <span class="ident">function_wrapper</span>() {
         <span class="kw">unsafe</span> {
@@ -337,11 +376,12 @@
         }
     }
 
+    <span class="doccomment">/// Size of the test_threads stack.</span>
     <span class="kw">const</span> <span class="ident">THREAD_STACK_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x2000</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">terminal</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">terminal</span>));
     <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">new</span>([<span class="number">0u8</span>; <span class="ident">THREAD_STACK_SIZE</span>]);
-    <span class="kw">let</span> <span class="ident">sp</span> <span class="op">=</span> (<span class="ident">Box</span>::<span class="ident">into_raw</span>(<span class="ident">stack</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>).<span class="ident">wrapping_offset</span>(<span class="ident">THREAD_STACK_SIZE</span> <span class="kw">as</span> <span class="ident">isize</span>);
+    <span class="kw">let</span> <span class="ident">sp</span> <span class="op">=</span> (<span class="ident">Box</span>::<span class="ident">into_raw</span>(<span class="ident">stack</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>).<span class="ident">wrapping_add</span>(<span class="ident">THREAD_STACK_SIZE</span>);
     <span class="kw">let</span> <span class="ident">ip</span> : <span class="kw">extern</span> <span class="kw">fn</span>() <span class="op">-&gt;</span> <span class="op">!</span> <span class="op">=</span> <span class="kw">unsafe</span> {
         <span class="comment">// Safety: This is changing the return type from () to !. It&#39;s safe. It</span>
         <span class="comment">// sucks though. This is, yet again, an instance of &quot;naked functions are</span>
@@ -371,6 +411,8 @@
     }
 }
 
+<span class="doccomment">/// Test function ensuring divide by zero interruption kills only the current</span>
+<span class="doccomment">/// process.</span>
 <span class="kw">fn</span> <span class="ident">test_divide_by_zero</span>() {
     <span class="comment">// don&#39;t panic, we want to actually divide by zero</span>
     <span class="kw">unsafe</span> {
@@ -381,13 +423,19 @@
     }
 }
 
+<span class="doccomment">/// Test function ensuring pagefaults kills only the current process.</span>
 <span class="kw">fn</span> <span class="ident">test_page_fault</span>() {
-    <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="number">0x00000000</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>;
+    <span class="kw">let</span> <span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span> <span class="op">=</span> <span class="ident">core</span>::<span class="ident">ptr</span>::<span class="ident">null</span>();
     <span class="kw">let</span> <span class="ident">_res</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">ptr</span> };
 }
 
+<span class="doccomment">/// Meme for KFS3</span>
 <span class="kw">static</span> <span class="ident">LOUIS3</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>; <span class="number">1318100</span>] <span class="op">=</span> <span class="macro">include_bytes</span><span class="macro">!</span>(<span class="string">&quot;../img/meme3.gif&quot;</span>);
+<span class="doccomment">/// Meme for KFS4</span>
 <span class="kw">static</span> <span class="ident">LOUIS4</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>; <span class="number">103803</span>] <span class="op">=</span> <span class="macro">include_bytes</span><span class="macro">!</span>(<span class="string">&quot;../img/meme4.gif&quot;</span>);
+<span class="comment">// TODO: Meme for KFS5.</span>
+<span class="comment">// BODY: We cannot give KFS5 until we have a meme. It is of utmost importance</span>
+<span class="comment">// BODY: that a meme is found and placed here.</span>
 
 <span class="macro">capabilities</span><span class="macro">!</span>(<span class="ident">CAPABILITIES</span> <span class="op">=</span> <span class="ident">Capabilities</span> {
     <span class="ident">svcs</span>: [

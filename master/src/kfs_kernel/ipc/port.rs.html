@@ -197,6 +197,8 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! IPC Port</span>
 <span class="doccomment">//!</span>
@@ -235,8 +237,12 @@
 <span class="doccomment">/// An endpoint which can be connected to.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">Port</span> {
+    <span class="doccomment">/// List of incoming connection requests.</span>
     <span class="ident">incoming_connections</span>: <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IncomingConnection</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// List of threads waiting for a connection request.</span>
     <span class="ident">accepters</span>: <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Number of active ServerPort. When it drops to 0, future connection</span>
+    <span class="doccomment">/// attempts will faill with [UserspaceError::PortRemoteDead].</span>
     <span class="ident">servercount</span>: <span class="ident">AtomicUsize</span>,
 }
 
@@ -255,17 +261,6 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ServerPort</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Port</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">Port</span> {
-    <span class="doccomment">/// Creates a new port. This port may only have _max_sessions sessions active at</span>
-    <span class="doccomment">/// a given time.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">_max_sessions</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> (<span class="ident">ServerPort</span>, <span class="ident">ClientPort</span>) {
-        <span class="kw">let</span> <span class="ident">port</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Port</span> {
-            <span class="ident">servercount</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="number">0</span>),
-            <span class="ident">incoming_connections</span>: <span class="ident">SpinLock</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>()),
-            <span class="ident">accepters</span>: <span class="ident">SpinLock</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>())
-        });
-        (<span class="ident">Port</span>::<span class="ident">server</span>(<span class="ident">port</span>.<span class="ident">clone</span>()), <span class="ident">Port</span>::<span class="ident">client</span>(<span class="ident">port</span>.<span class="ident">clone</span>()))
-    }
-
     <span class="doccomment">/// Returns a ClientPort from this Port.</span>
     <span class="kw">fn</span> <span class="ident">client</span>(<span class="ident">this</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">ClientPort</span> {
         <span class="ident">ClientPort</span>(<span class="ident">this</span>)
@@ -280,8 +275,14 @@
 
 <span class="doccomment">/// Create a new Port pair. Those ports are linked to each-other: The server will</span>
 <span class="doccomment">/// receive connections from the client.</span>
+<span class="doccomment">/// A port may only have max_sessions sessions active at a given time.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">_max_sessions</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> (<span class="ident">ServerPort</span>, <span class="ident">ClientPort</span>) {
-    <span class="ident">Port</span>::<span class="ident">new</span>(<span class="ident">_max_sessions</span>)
+    <span class="kw">let</span> <span class="ident">port</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Port</span> {
+        <span class="ident">servercount</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="number">0</span>),
+        <span class="ident">incoming_connections</span>: <span class="ident">SpinLock</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>()),
+        <span class="ident">accepters</span>: <span class="ident">SpinLock</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>())
+    });
+    (<span class="ident">Port</span>::<span class="ident">server</span>(<span class="ident">port</span>.<span class="ident">clone</span>()), <span class="ident">Port</span>::<span class="ident">client</span>(<span class="ident">port</span>.<span class="ident">clone</span>()))
 }
 
 <span class="comment">// Wait for a connection to become available.</span>
@@ -323,9 +324,12 @@
     }
 }
 
+<span class="doccomment">/// Represents a connection request from the creator thread.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">IncomingConnection</span> {
+    <span class="doccomment">/// Session that this connection request is for.</span>
     <span class="ident">session</span>: <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ClientSession</span><span class="op">&gt;&gt;</span>,
+    <span class="doccomment">/// Thread that wants to connect to this Port.</span>
     <span class="ident">creator</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>
 }
 
@@ -337,7 +341,7 @@
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">event</span>::<span class="ident">wait</span>(<span class="prelude-val">Some</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Waitable</span>))<span class="question-mark">?</span>;
 
             <span class="comment">// Acquire the connection.</span>
-            <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">incoming</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">incoming_connections</span>.<span class="ident">lock</span>().<span class="ident">pop</span>() {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">incoming</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">incoming_connections</span>.<span class="ident">lock</span>().<span class="ident">pop</span>() {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">incoming</span>.<span class="ident">session</span>.<span class="ident">lock</span>();
 
                 <span class="comment">// Check if it was already handled by another accepter!</span>

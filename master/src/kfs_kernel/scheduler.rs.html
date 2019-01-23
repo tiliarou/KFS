@@ -314,6 +314,8 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The Completly Unfair Scheduler</span>
 
@@ -379,6 +381,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// The passed function will be executed after setting the CURRENT_THREAD, but before</span>
 <span class="doccomment">/// setting it back to the RUNNING state.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">needless_pass_by_value</span>)]</span> <span class="comment">// more readable</span>
 <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_current_thread</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">F</span>: <span class="ident">FnOnce</span>() <span class="op">-&gt;</span> <span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">t</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>, <span class="ident">f</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="ident">R</span> {
     <span class="ident">mem</span>::<span class="ident">replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">CURRENT_THREAD</span>, <span class="prelude-val">Some</span>(<span class="ident">t</span>.<span class="ident">clone</span>()));
 
@@ -516,17 +519,18 @@
 <span class="doccomment">///  * as new process *</span>
 <span class="doccomment">/// 6. Re-enables interrupts</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schedule</span>() {
+    <span class="doccomment">/// A dummy Lock.</span>
     <span class="kw">struct</span> <span class="ident">NoopLock</span>;
     <span class="kw">impl</span> <span class="ident">Lock</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, ()<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NoopLock</span> {
-        <span class="kw">fn</span> <span class="ident">lock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> () { () }
+        <span class="kw">fn</span> <span class="ident">lock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) { <span class="comment">/* no-op */</span> }
     }
 
-    <span class="kw">let</span> <span class="kw">_</span> : () <span class="op">=</span> <span class="ident">internal_schedule</span>(<span class="kw-2">&amp;</span><span class="ident">NoopLock</span>, <span class="bool-val">false</span>);
+    <span class="ident">internal_schedule</span>(<span class="kw-2">&amp;</span><span class="ident">NoopLock</span>, <span class="bool-val">false</span>);
 }
 
 <span class="doccomment">/// Parses the queue to find the first unlocked process.</span>
 <span class="doccomment">/// Returns the index of found process</span>
-<span class="kw">fn</span> <span class="ident">find_next_thread_to_run</span>(<span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">find_next_thread_to_run</span>(<span class="ident">queue</span>: <span class="kw-2">&amp;</span>[<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
     <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">thread</span>) <span class="kw">in</span> <span class="ident">queue</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
         <span class="kw">if</span> <span class="ident">thread</span>.<span class="ident">hwcontext</span>.<span class="ident">try_lock</span>().<span class="ident">is_some</span>() {
             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>)

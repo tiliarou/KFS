@@ -323,6 +323,11 @@
 <span id="323">323</span>
 <span id="324">324</span>
 <span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Core kernel types.</span>
 <span class="doccomment">//!</span>
@@ -380,8 +385,11 @@
 <span class="doccomment">/// the handle, and without an expensive conversion from an array of pointers to</span>
 <span class="doccomment">/// an array of handles.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HandleRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The underlying handle number.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">inner</span>: <span class="ident">NonZeroU32</span>,
+    <span class="doccomment">/// The real handle this reference is tied to.</span>
     <span class="ident">lifetime</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Handle</span><span class="op">&gt;</span>
 }
 
@@ -579,12 +587,14 @@
 <span class="doccomment">/// When dropped, the memory region will be unmapped, and the SharedMemory handle</span>
 <span class="doccomment">/// associated with it will be closed.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MappedSharedMemory</span> {
     <span class="ident">handle</span>: <span class="ident">SharedMemory</span>,
     <span class="ident">addr</span>: <span class="ident">usize</span>,
     <span class="ident">size</span>: <span class="ident">usize</span>
 }
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">len_without_is_empty</span>)]</span> <span class="comment">// len cannot be zero.</span>
 <span class="kw">impl</span> <span class="ident">MappedSharedMemory</span> {
     <span class="doccomment">/// Get the underlying shared memory as a byte slice.</span>
     <span class="doccomment">///</span>
@@ -610,7 +620,7 @@
     <span class="doccomment">/// unless the application has a way to synchronize access.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`as_mut_ptr`]: MappedSharedMemory::as_mut_ptr</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>] {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>] {
         ::<span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="self">self</span>.<span class="ident">size</span>)
     }
 

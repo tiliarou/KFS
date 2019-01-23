@@ -669,7 +669,7 @@
             <span class="comment">// all the arguments to msgout.</span>
             <span class="kw">match</span> <span class="ident">ret</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">ret</span>) <span class="op">=&gt;</span> <span class="macro">object</span><span class="macro">!</span>(@<span class="ident">genret</span> <span class="ident">fields</span><span class="op">=</span>(), <span class="ident">retfields</span><span class="op">=</span>(), <span class="ident">msgout</span>, <span class="ident">ret</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret</span>)<span class="kw-2">*</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=&gt;</span> { <span class="ident">msgout</span>.<span class="ident">set_error</span>(<span class="ident">err</span>.<span class="ident">into_code</span>()); }
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=&gt;</span> { <span class="ident">msgout</span>.<span class="ident">set_error</span>(<span class="ident">err</span>.<span class="ident">as_code</span>()); }
             }
             <span class="comment">// Pack the message to msgout and we&#39;re done :D</span>
             <span class="ident">msgout</span>.<span class="ident">pack</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">buf</span>);

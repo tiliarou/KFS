@@ -684,6 +684,31 @@
 <span id="684">684</span>
 <span id="685">685</span>
 <span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! i386 implementation of the frame allocator.</span>
 <span class="doccomment">//!</span>
@@ -714,10 +739,30 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
-<span class="kw">const</span> <span class="ident">FRAME_OFFSET_MASK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0xFFF</span>;              <span class="comment">// The offset part in a frame</span>
-<span class="kw">const</span> <span class="ident">FRAME_BASE_MASK</span>:   <span class="ident">usize</span> <span class="op">=</span> <span class="op">!</span><span class="ident">FRAME_OFFSET_MASK</span>; <span class="comment">// The base part in a frame</span>
-
-<span class="kw">const</span> <span class="ident">FRAME_BASE_LOG</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">12</span>; <span class="comment">// frame_number = addr &gt;&gt; 12</span>
+<span class="doccomment">/// The offset part in a [PhysicalAddress].</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// let phys_address = PhysicalAddress(0xccccc567);</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let offset_in_frame = phys_address &amp; FRAME_OFFSET_MASK;</span>
+<span class="doccomment">/// assert_eq!(offset_in_frame, 0x567);</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">const</span> <span class="ident">FRAME_OFFSET_MASK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0xFFF</span>;
+<span class="doccomment">/// The frame part in [PhysicalAddress].</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// let phys_address = PhysicalAddress(0xccccc567);</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let frame_addr = phys_address &amp; FRAME_BASE_MASK;</span>
+<span class="doccomment">/// assert_eq!(offset_in_frame, 0xccccc000);</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">const</span> <span class="ident">FRAME_BASE_MASK</span>:   <span class="ident">usize</span> <span class="op">=</span> <span class="op">!</span><span class="ident">FRAME_OFFSET_MASK</span>;
+<span class="doccomment">/// The right shift to perform to a Physical address to get its frame id.</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// let phys_address = PhysicalAddress(0xabcde567);</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let frame_id = phys_address &gt;&gt; FRAME_BASE_LOG;</span>
+<span class="doccomment">/// assert_eq!(frame_id, 0xabcde);</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">const</span> <span class="ident">FRAME_BASE_LOG</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">12</span>;
 
 <span class="doccomment">/// The size of the frames_bitmap (~128ko)</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
@@ -739,7 +784,7 @@
     <span class="ident">frame</span> <span class="op">&lt;&lt;</span> <span class="ident">FRAME_BASE_LOG</span>
 }
 
-
+<span class="doccomment">/// A frame allocator backed up by a giant bitmap.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FrameAllocatori386</span> {
     <span class="doccomment">/// A big bitmap denoting for every frame if it is free or not</span>
     <span class="doccomment">///</span>
@@ -752,7 +797,9 @@
     <span class="ident">initialized</span>: <span class="ident">bool</span>
 }
 
+<span class="doccomment">/// In the the bitmap, 1 means the frame is free.</span>
 <span class="kw">const</span> <span class="ident">FRAME_FREE</span>:     <span class="ident">bool</span> <span class="op">=</span> <span class="bool-val">true</span>;
+<span class="doccomment">/// In the the bitmap, 0 means the frame is occupied.</span>
 <span class="kw">const</span> <span class="ident">FRAME_OCCUPIED</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
 <span class="doccomment">/// A physical memory manger to allocate and free memory frames</span>
@@ -761,6 +808,7 @@
 <span class="kw">static</span> <span class="ident">FRAME_ALLOCATOR</span> : <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">FrameAllocatori386</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SpinLock</span>::<span class="ident">new</span>(<span class="ident">FrameAllocatori386</span>::<span class="ident">new</span>());
 
 <span class="kw">impl</span> <span class="ident">FrameAllocatori386</span> {
+    <span class="doccomment">/// Called to initialize the [FRAME_ALLOCATOR] global.</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="ident">FrameAllocatori386</span> {
             <span class="comment">// 0 is allocated/reserved</span>
@@ -777,6 +825,7 @@
 <span class="doccomment">/// An allocation request returns a [PhysicalMemRegion], which represents a list of</span>
 <span class="doccomment">/// physically adjacent frames. When this returned `PhysicalMemRegion` is eventually dropped</span>
 <span class="doccomment">/// the frames are automatically freed and can be re-served by the FrameAllocator.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FrameAllocator</span>;
 
 <span class="kw">impl</span> <span class="ident">FrameAllocatorTraitPrivate</span> <span class="kw">for</span> <span class="ident">FrameAllocator</span> {
@@ -844,6 +893,7 @@
     <span class="doccomment">/// # Panic</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// * Panics if FRAME_ALLOCATOR was not initialized.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">match_bool</span>)]</span>
     <span class="kw">fn</span> <span class="ident">allocate_region</span>(<span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
@@ -970,7 +1020,7 @@
     <span class="kw">let</span> <span class="ident">memory_map_tag</span> <span class="op">=</span> <span class="ident">boot_info</span>.<span class="ident">memory_map_tag</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;GRUB, you&#39;re drunk. Give us our memory_map_tag.&quot;</span>);
     <span class="kw">for</span> <span class="ident">memarea</span> <span class="kw">in</span> <span class="ident">memory_map_tag</span>.<span class="ident">memory_areas</span>() {
-        <span class="kw">if</span> <span class="ident">memarea</span>.<span class="ident">start_address</span>() <span class="op">&gt;</span> <span class="ident">u32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">||</span> <span class="ident">memarea</span>.<span class="ident">end_address</span>() <span class="op">&gt;</span> <span class="ident">u32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u64</span> {
+        <span class="kw">if</span> <span class="ident">memarea</span>.<span class="ident">start_address</span>() <span class="op">&gt;</span> <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">u32</span>::<span class="ident">max_value</span>()) <span class="op">||</span> <span class="ident">memarea</span>.<span class="ident">end_address</span>() <span class="op">&gt;</span> <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">u32</span>::<span class="ident">max_value</span>()) {
             <span class="kw">continue</span>;
         }
         <span class="ident">mark_area_free</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">allocator</span>.<span class="ident">memory_bitmap</span>,

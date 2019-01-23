@@ -351,6 +351,9 @@
 <span id="351">351</span>
 <span id="352">352</span>
 <span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The management of kernel memory</span>
 <span class="doccomment">//!</span>
@@ -379,7 +382,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">lands</span>::{<span class="ident">KernelLand</span>, <span class="ident">RecursiveTablesLand</span>, <span class="ident">VirtualSpaceLand</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">arch</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">ActiveHierarchy</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">hierarchical_table</span>::{<span class="ident">TableHierarchy</span>, <span class="ident">PageState</span>};
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingFlags</span>;
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingAccessRights</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">PhysicalMemRegion</span>, <span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>,
                       <span class="ident">mark_frame_bootstrap_allocated</span>};
@@ -395,7 +398,9 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Because of this mechanism we do not permit modifying KernelLand in other tables</span>
 <span class="doccomment">/// than the currently active ones.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KernelMemory</span> {
+    <span class="doccomment">/// The currently active page tables.</span>
     <span class="ident">tables</span>: <span class="ident">ActiveHierarchy</span>
 }
 
@@ -430,7 +435,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if virtual region is not in KernelLand.</span>
     <span class="comment">// todo check va alignment</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_phys_region_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">phys</span>: <span class="ident">PhysicalMemRegion</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">flags</span>: <span class="ident">MappingFlags</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_phys_region_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">phys</span>: <span class="ident">PhysicalMemRegion</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">contains_region</span>(<span class="ident">address</span>, <span class="ident">phys</span>.<span class="ident">size</span>()));
         <span class="self">self</span>.<span class="ident">tables</span>.<span class="ident">map_to_from_iterator</span>(<span class="ident">phys</span>.<span class="ident">into_iter</span>(), <span class="ident">address</span>, <span class="ident">flags</span>);
         <span class="comment">// physical region must not be deallocated while it is mapped</span>
@@ -442,7 +447,7 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if encounters virtual space exhaustion.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_phys_region</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">phys</span>: <span class="ident">PhysicalMemRegion</span>, <span class="ident">flags</span>: <span class="ident">MappingFlags</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_phys_region</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">phys</span>: <span class="ident">PhysicalMemRegion</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span> {
         <span class="kw">let</span> <span class="ident">va</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_virtual_space</span>(<span class="ident">phys</span>.<span class="ident">size</span>()).<span class="ident">unwrap</span>();
         <span class="self">self</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">phys</span>, <span class="ident">va</span>, <span class="ident">flags</span>);
         <span class="ident">va</span>
@@ -457,7 +462,7 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if encounters virtual space exhaustion.</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">map_phys_regions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">phys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PhysicalMemRegion</span>], <span class="ident">flags</span>: <span class="ident">MappingFlags</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">map_phys_regions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">phys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PhysicalMemRegion</span>], <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span> {
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">phys</span>.<span class="ident">iter</span>().<span class="ident">flatten</span>().<span class="ident">count</span>() <span class="op">*</span> <span class="ident">PAGE_SIZE</span>;
         <span class="kw">let</span> <span class="ident">va</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_virtual_space</span>(<span class="ident">length</span>).<span class="ident">unwrap</span>();
         <span class="self">self</span>.<span class="ident">tables</span>.<span class="ident">map_to_from_iterator</span>(<span class="ident">phys</span>.<span class="ident">iter</span>().<span class="ident">flatten</span>(), <span class="ident">va</span>, <span class="ident">flags</span>);
@@ -475,7 +480,7 @@
     <span class="doccomment">/// Panics if virtual region is not in KernelLand.</span>
     <span class="doccomment">/// Panics if encounters virtual space exhaustion.</span>
     <span class="comment">// todo check va alignment</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">map_frame_iterator_to</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">iterator</span>: <span class="ident">I</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">flags</span>: <span class="ident">MappingFlags</span>)
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">map_frame_iterator_to</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">iterator</span>: <span class="ident">I</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
     <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="ident">PhysicalAddress</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>
     {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">contains_region</span>(<span class="ident">address</span>,
@@ -493,7 +498,7 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if encounters virtual space exhaustion.</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">map_frame_iterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">iterator</span>: <span class="ident">I</span>, <span class="ident">flags</span>: <span class="ident">MappingFlags</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">map_frame_iterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">iterator</span>: <span class="ident">I</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span>
     <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">=</span><span class="ident">PhysicalAddress</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>
     {
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">iterator</span>.<span class="ident">clone</span>().<span class="ident">count</span>() <span class="op">*</span> <span class="ident">PAGE_SIZE</span>;
@@ -510,7 +515,7 @@
     <span class="doccomment">/// Panics if encounters virtual space exhaustion.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_page</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span> {
         <span class="kw">let</span> <span class="ident">pr</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
-        <span class="self">self</span>.<span class="ident">map_phys_region</span>(<span class="ident">pr</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_rw</span>())
+        <span class="self">self</span>.<span class="ident">map_phys_region</span>(<span class="ident">pr</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">k_rw</span>())
     }
 
     <span class="doccomment">/// Allocates non-contiguous frames, and map them at the given address.</span>
@@ -522,7 +527,7 @@
     <span class="doccomment">/// Panics if destination was already mapped.</span>
     <span class="doccomment">/// Panics if `length` is not a multiple of PAGE_SIZE.</span>
     <span class="comment">// todo check va alignment</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_allocate_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">va</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">MappingFlags</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_allocate_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">va</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">contains_region</span>(<span class="ident">va</span>, <span class="ident">length</span>));
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">length</span> <span class="op">%</span> <span class="ident">PAGE_SIZE</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;length must be a multiple of PAGE_SIZE&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prs</span> <span class="op">=</span> <span class="ident">FrameAllocator</span>::<span class="ident">allocate_frames_fragmented</span>(<span class="ident">length</span>).<span class="ident">unwrap</span>();
@@ -544,7 +549,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pages</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span> {
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">length</span> <span class="op">%</span> <span class="ident">PAGE_SIZE</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;length must be a multiple of PAGE_SIZE&quot;</span>);
         <span class="kw">let</span> <span class="ident">va</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_virtual_space</span>(<span class="ident">length</span>).<span class="ident">unwrap</span>();
-        <span class="self">self</span>.<span class="ident">map_allocate_to</span>(<span class="ident">va</span>, <span class="ident">length</span>, <span class="ident">MappingFlags</span>::<span class="ident">k_rw</span>());
+        <span class="self">self</span>.<span class="ident">map_allocate_to</span>(<span class="ident">va</span>, <span class="ident">length</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">k_rw</span>());
         <span class="ident">va</span>
     }
 
@@ -591,7 +596,7 @@
         <span class="self">self</span>.<span class="ident">tables</span>.<span class="ident">unmap</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="op">|</span><span class="ident">paddr</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">pr</span> <span class="op">=</span> <span class="kw">unsafe</span> {
                 <span class="comment">// safe, they were only tracked by the page tables</span>
-                <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct</span>(<span class="ident">paddr</span>, <span class="ident">PAGE_SIZE</span>);
+                <span class="ident">PhysicalMemRegion</span>::<span class="ident">reconstruct</span>(<span class="ident">paddr</span>, <span class="ident">PAGE_SIZE</span>)
             };
             <span class="ident">drop</span>(<span class="ident">pr</span>)
         });
@@ -635,15 +640,16 @@
     }
 
     <span class="doccomment">/// Prints the state of the KernelLand by parsing the page tables. Used for debugging purposes.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dump_kernelland_state</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
         <span class="kw">enum</span> <span class="ident">State</span> { <span class="ident">Present</span>(<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>), <span class="ident">Guarded</span>(<span class="ident">VirtualAddress</span>), <span class="ident">Available</span>(<span class="ident">VirtualAddress</span>) }
         <span class="kw">impl</span> <span class="ident">State</span> {
             <span class="kw">fn</span> <span class="ident">get_vaddr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">VirtualAddress</span> {
-                <span class="kw">match</span> <span class="self">self</span> {
-                    <span class="kw-2">&amp;</span><span class="ident">State</span>::<span class="ident">Present</span>(<span class="ident">addr</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">addr</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">State</span>::<span class="ident">Guarded</span>(<span class="ident">addr</span>) <span class="op">=&gt;</span> <span class="ident">addr</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">State</span>::<span class="ident">Available</span>(<span class="ident">addr</span>) <span class="op">=&gt;</span> <span class="ident">addr</span>,
+                <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+                    <span class="ident">State</span>::<span class="ident">Present</span>(<span class="ident">addr</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">addr</span>,
+                    <span class="ident">State</span>::<span class="ident">Guarded</span>(<span class="ident">addr</span>) <span class="op">=&gt;</span> <span class="ident">addr</span>,
+                    <span class="ident">State</span>::<span class="ident">Available</span>(<span class="ident">addr</span>) <span class="op">=&gt;</span> <span class="ident">addr</span>,
                 }
             }
 

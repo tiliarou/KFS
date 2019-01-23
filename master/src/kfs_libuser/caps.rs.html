@@ -183,6 +183,10 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Kernel Capabilities declaration</span>
 <span class="doccomment">//!</span>
@@ -320,6 +324,7 @@
 
 <span class="doccomment">/// Create a kernel flag capability. Specifies the lowest/highest priority this</span>
 <span class="doccomment">/// process is allowed to take, and which CPUs it is allowed to access.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_lossless</span>)]</span> <span class="comment">// Can&#39;t use From::from in const fn</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">kernel_flags</span>(<span class="ident">lowest_prio</span>: <span class="ident">u32</span>, <span class="ident">highest_prio</span>: <span class="ident">u32</span>, <span class="ident">lowest_cpuid</span>: <span class="ident">u8</span>, <span class="ident">highest_cpuid</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
     <span class="number">0b111</span> <span class="op">|</span> ((<span class="ident">lowest_prio</span> <span class="op">&amp;</span> <span class="number">0x3F</span>) <span class="op">&lt;&lt;</span> <span class="number">4</span>) <span class="op">|</span> ((<span class="ident">highest_prio</span> <span class="op">&amp;</span> <span class="number">0x3F</span>) <span class="op">&lt;&lt;</span> <span class="number">10</span>)
         <span class="op">|</span> ((<span class="ident">lowest_cpuid</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;&lt;</span> <span class="number">16</span>) <span class="op">|</span> ((<span class="ident">highest_cpuid</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;&lt;</span> <span class="number">24</span>)
@@ -336,6 +341,7 @@
 }
 
 <span class="doccomment">/// Allows the process to use the given IO Ports directly (through the in/out).</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_lossless</span>)]</span> <span class="comment">// Can&#39;t use From::from in const fn</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">ioport</span>(<span class="ident">ioport</span>: <span class="ident">u16</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
    <span class="number">0b1111111111</span> <span class="op">|</span> ((<span class="ident">ioport</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;&lt;</span> <span class="number">11</span>)
 }
@@ -343,6 +349,7 @@
 <span class="doccomment">/// Allows the process to create an IRQEvent for those IRQs. Each IRQ should be</span>
 <span class="doccomment">/// under or equal to 0xFF, or equal to 0x3FF, in which case the IRQ will be</span>
 <span class="doccomment">/// ignored.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_lossless</span>)]</span> <span class="comment">// Can&#39;t use From::from in const fn</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">irq_pair</span>(<span class="ident">irq1</span>: <span class="ident">u16</span>, <span class="ident">irq2</span>: <span class="ident">u16</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
     <span class="number">0b11111111111</span> <span class="op">|</span> ((<span class="ident">irq1</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&amp;</span> <span class="number">0x3FF</span>) <span class="op">&lt;&lt;</span> <span class="number">12</span>) <span class="op">|</span> ((<span class="ident">irq2</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&amp;</span> <span class="number">0x3FF</span>) <span class="op">&lt;&lt;</span> <span class="number">22</span>)
 }
@@ -366,6 +373,7 @@
 
 <span class="doccomment">/// Declares whether this application can be debugged (e.g. it allows the use</span>
 <span class="doccomment">/// of the debug syscalls on it), and whether it can debug other processes.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_lossless</span>)]</span> <span class="comment">// Can&#39;t use From::from in const fn</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">debug_flags</span>(<span class="ident">can_be_debugged</span>: <span class="ident">bool</span>, <span class="ident">can_debug_others</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="ident">u32</span> {
     <span class="number">0b1111111111111111</span> <span class="op">|</span> ((<span class="ident">can_be_debugged</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;&lt;</span> <span class="number">17</span>) <span class="op">|</span> ((<span class="ident">can_debug_others</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;&lt;</span> <span class="number">18</span>)
 }
