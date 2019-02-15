@@ -302,12 +302,6 @@
 <span id="302">302</span>
 <span id="303">303</span>
 <span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Terminal rendering APIs</span>
 <span class="doccomment">//!</span>
@@ -378,9 +372,6 @@
 
 <span class="kw">impl</span> <span class="ident">Terminal</span> {
     <span class="doccomment">/// Creates a new Window of the requested size for terminal usage.</span>
-    <span class="comment">// TODO: Review Terminal::new cast_sign_loss and cast_possible_wrap</span>
-    <span class="comment">// BODY: Ping @orycterope. I&#39;m pretty sure they&#39;re correct but just want to</span>
-    <span class="comment">// BODY: make sure it looks good with you since it&#39;s originally your code.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_sign_loss</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_possible_wrap</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">WindowSize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
@@ -556,9 +547,6 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Panics if pos makes writing the glyph overflow the screen</span>
-    <span class="comment">// TODO: Review Terminal::display_glyph_in_box cast_sign_loss and cast_possible_wrap</span>
-    <span class="comment">// BODY: Ping @orycterope. I&#39;m pretty sure they&#39;re correct but just want to</span>
-    <span class="comment">// BODY: make sure it looks good with you since it&#39;s originally your code.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_sign_loss</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_possible_wrap</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
