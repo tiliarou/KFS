@@ -665,19 +665,6 @@
 <span id="665">665</span>
 <span id="666">666</span>
 <span id="667">667</span>
-<span id="668">668</span>
-<span id="669">669</span>
-<span id="670">670</span>
-<span id="671">671</span>
-<span id="672">672</span>
-<span id="673">673</span>
-<span id="674">674</span>
-<span id="675">675</span>
-<span id="676">676</span>
-<span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
-<span id="680">680</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Process</span>
 
@@ -786,17 +773,6 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The currently running process is indirectly kept alive by the `CURRENT_THREAD` global in scheduler.</span>
     <span class="kw">pub</span> <span class="ident">process</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ProcessStruct</span><span class="op">&gt;</span>,
-
-    <span class="doccomment">/// Interrupt disable counter.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Description</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Allows recursively disabling interrupts while keeping a sane behavior.</span>
-    <span class="doccomment">/// Should only be manipulated through sync::enable_interrupts and</span>
-    <span class="doccomment">/// sync::disable_interrupts.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Used by the SpinLockIRQ to implement recursive irqsave logic.</span>
-    <span class="kw">pub</span> <span class="ident">int_disable_counter</span>: <span class="ident">AtomicUsize</span>,
 
     <span class="doccomment">/// Argument passed to the entrypoint on first schedule.</span>
     <span class="kw">pub</span> <span class="ident">arg</span>: <span class="ident">usize</span>
@@ -1215,7 +1191,6 @@
                 <span class="ident">state</span>,
                 <span class="ident">kstack</span>,
                 <span class="ident">hwcontext</span> : <span class="ident">empty_hwcontext</span>,
-                <span class="ident">int_disable_counter</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="number">0</span>),
                 <span class="ident">process</span>: <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="ident">belonging_process</span>),
                 <span class="ident">arg</span>
             }
@@ -1288,7 +1263,6 @@
                 <span class="ident">state</span>,
                 <span class="ident">kstack</span>,
                 <span class="ident">hwcontext</span>,
-                <span class="ident">int_disable_counter</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="number">0</span>),
                 <span class="ident">process</span>: <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">process</span>),
                 <span class="ident">arg</span>: <span class="number">0</span>
             }

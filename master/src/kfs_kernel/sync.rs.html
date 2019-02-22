@@ -218,9 +218,6 @@
 <span id="218">218</span>
 <span id="219">219</span>
 <span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Synchronization primitives used by KFS</span>
 
@@ -232,51 +229,18 @@
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">spin</span>::{<span class="ident">Mutex</span> <span class="kw">as</span> <span class="ident">SpinLock</span>, <span class="ident">MutexGuard</span> <span class="kw">as</span> <span class="ident">SpinLockGuard</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">interrupts</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">i386</span>::<span class="ident">instructions</span>::<span class="ident">interrupts</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">scheduler</span>;
 
 <span class="doccomment">/// Placeholder for future Mutex implementation.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
 <span class="doccomment">/// Placeholder for future Mutex implementation.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SpinLockGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// Decrement the interrupt disable counter.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Look at documentation for ProcessStruct::pint_disable_counter to know more.</span>
-<span class="kw">fn</span> <span class="ident">enable_interrupts</span>() {
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">INTERRUPT_DISARM</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">thread</span>) <span class="op">=</span> <span class="ident">scheduler</span>::<span class="ident">try_get_current_thread</span>() {
-            <span class="kw">if</span> <span class="ident">thread</span>.<span class="ident">int_disable_counter</span>.<span class="ident">fetch_sub</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) <span class="op">==</span> <span class="number">1</span> {
-                <span class="kw">unsafe</span> { <span class="ident">sti</span>() }
-            }
-        } <span class="kw">else</span> {
-            <span class="comment">// TODO: Safety???</span>
-            <span class="comment">// don&#39;t do anything.</span>
-        }
-    }
-}
-
-<span class="doccomment">/// Increment the interrupt disable counter.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Look at documentation for INTERRUPT_DISABLE_COUNTER to know more.</span>
-<span class="kw">fn</span> <span class="ident">disable_interrupts</span>() {
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">INTERRUPT_DISARM</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">thread</span>) <span class="op">=</span> <span class="ident">scheduler</span>::<span class="ident">try_get_current_thread</span>() {
-            <span class="kw">if</span> <span class="ident">thread</span>.<span class="ident">int_disable_counter</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) <span class="op">==</span> <span class="number">0</span> {
-                <span class="kw">unsafe</span> { <span class="ident">cli</span>() }
-            }
-        } <span class="kw">else</span> {
-            <span class="comment">// TODO: Safety???</span>
-            <span class="comment">// don&#39;t do anything.</span>
-        }
-    }
-}
-
 <span class="doccomment">/// Boolean to [permanently_disable_interrupts].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// If this bool is set, all [enable_interrupts] and [disable_interrupts] calls are ignored,</span>
-<span class="doccomment">/// and system is put in an unrecoverable state.</span>
+<span class="doccomment">/// If this bool is set, all attempts to enable interrupts through a SpinLockIRQ</span>
+<span class="doccomment">/// are ignored, leaving the system in an unrecoverable state.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This is used by kernel panic handlers.</span>
 <span class="kw">static</span> <span class="ident">INTERRUPT_DISARM</span>: <span class="ident">AtomicBool</span> <span class="op">=</span> <span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">false</span>);
@@ -288,7 +252,7 @@
 <span class="doccomment">/// Simply sets [INTERRUPT_DISARM].</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">permanently_disable_interrupts</span>() {
     <span class="ident">INTERRUPT_DISARM</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
-    <span class="kw">unsafe</span> { <span class="ident">cli</span>() }
+    <span class="kw">unsafe</span> { <span class="ident">interrupts</span>::<span class="ident">cli</span>() }
 }
 
 <span class="doccomment">/// SpinLock that disables IRQ.</span>
@@ -301,12 +265,27 @@
 <span class="doccomment">/// - `lock` behaves like a `spinlock_irqsave`. It returns a guard.</span>
 <span class="doccomment">/// - Dropping the guard behaves like `spinlock_irqrestore`</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// This means that locking a spinlock disables interrupts until all spinlocks</span>
-<span class="doccomment">/// have been dropped.</span>
+<span class="doccomment">/// This means that locking a spinlock disables interrupts until all spinlock</span>
+<span class="doccomment">/// guards have been dropped.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Note that it is allowed to lock/unlock the locks in a different order. It uses</span>
-<span class="doccomment">/// a global counter to disable/enable interrupts. View INTERRUPT_DISABLE_COUNTER</span>
-<span class="doccomment">/// documentation for more information.</span>
+<span class="doccomment">/// A note on reordering: reordering lock drops is prohibited and doing so will</span>
+<span class="doccomment">/// result in UB.</span>
+<span class="comment">//</span>
+<span class="comment">// TODO: Find sane design for SpinLockIRQ safety</span>
+<span class="comment">// BODY: Currently, SpinLockIRQ API is unsound. If the guards are dropped in</span>
+<span class="comment">// BODY: the wrong order, it may cause IF to be reset too early.</span>
+<span class="comment">// BODY:</span>
+<span class="comment">// BODY: Ideally, we would need a way to prevent the guard variable to be</span>
+<span class="comment">// BODY: reassigned. AKA: prevent moving. Note that this is different from what</span>
+<span class="comment">// BODY: the Pin API solves. The Pin API is about locking a variable in one</span>
+<span class="comment">// BODY: memory location, but its binding may still be moved and dropped.</span>
+<span class="comment">// BODY: Unfortunately, Rust does not have a way to express that a value cannot</span>
+<span class="comment">// BODY: be reassigned.</span>
+<span class="comment">// BODY:</span>
+<span class="comment">// BODY: Another possibility would be to switch to a callback API. This would</span>
+<span class="comment">// BODY: solve the problem, but the scheduler would be unable to consume such</span>
+<span class="comment">// BODY: locks. Maybe we could have an unsafe &quot;scheduler_relock&quot; function that</span>
+<span class="comment">// BODY: may only be called from the scheduler?</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpinLockIRQ</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> {
     <span class="doccomment">/// SpinLock we wrap.</span>
     <span class="ident">internal</span>: <span class="ident">SpinLock</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
@@ -328,32 +307,45 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">SpinLockIRQ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Disables interrupts and locks the mutex.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="comment">// Disable irqs</span>
-        <span class="kw">unsafe</span> { <span class="ident">disable_interrupts</span>(); }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">INTERRUPT_DISARM</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
+            <span class="kw">let</span> <span class="ident">internalguard</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">internal</span>.<span class="ident">lock</span>();
+            <span class="ident">SpinLockIRQGuard</span>(<span class="ident">ManuallyDrop</span>::<span class="ident">new</span>(<span class="ident">internalguard</span>), <span class="bool-val">false</span>)
+        } <span class="kw">else</span> {
+            <span class="comment">// Save current interrupt state.</span>
+            <span class="kw">let</span> <span class="ident">saved_intpt_flag</span> <span class="op">=</span> <span class="ident">interrupts</span>::<span class="ident">are_enabled</span>();
 
-        <span class="comment">// TODO: Disable preemption.</span>
-        <span class="comment">// TODO: Spin acquire</span>
+            <span class="comment">// Disable interruptions</span>
+            <span class="kw">unsafe</span> { <span class="ident">interrupts</span>::<span class="ident">cli</span>(); }
 
-        <span class="comment">// lock</span>
-        <span class="kw">let</span> <span class="ident">internalguard</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">internal</span>.<span class="ident">lock</span>();
-        <span class="ident">SpinLockIRQGuard</span>(<span class="ident">ManuallyDrop</span>::<span class="ident">new</span>(<span class="ident">internalguard</span>))
+            <span class="kw">let</span> <span class="ident">internalguard</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">internal</span>.<span class="ident">lock</span>();
+            <span class="ident">SpinLockIRQGuard</span>(<span class="ident">ManuallyDrop</span>::<span class="ident">new</span>(<span class="ident">internalguard</span>), <span class="ident">saved_intpt_flag</span>)
+        }
     }
 
     <span class="doccomment">/// Disables interrupts and locks the mutex.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_lock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;&gt;</span> {
-        <span class="comment">// Disable irqs</span>
-        <span class="kw">unsafe</span> { <span class="ident">disable_interrupts</span>(); }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_lock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span> {
+        <span class="kw">if</span> <span class="ident">INTERRUPT_DISARM</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
+            <span class="self">self</span>.<span class="ident">internal</span>.<span class="ident">try_lock</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">SpinLockIRQGuard</span>(<span class="ident">ManuallyDrop</span>::<span class="ident">new</span>(<span class="ident">v</span>), <span class="bool-val">false</span>))
+        } <span class="kw">else</span> {
+            <span class="comment">// Save current interrupt state.</span>
+            <span class="kw">let</span> <span class="ident">saved_intpt_flag</span> <span class="op">=</span> <span class="ident">interrupts</span>::<span class="ident">are_enabled</span>();
 
-        <span class="comment">// TODO: Disable preemption.</span>
-        <span class="comment">// TODO: Spin acquire</span>
+            <span class="comment">// Disable interruptions</span>
+            <span class="kw">unsafe</span> { <span class="ident">interrupts</span>::<span class="ident">cli</span>(); }
 
-        <span class="comment">// lock</span>
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">internal</span>.<span class="ident">try_lock</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">internalguard</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">SpinLockIRQGuard</span>(<span class="ident">ManuallyDrop</span>::<span class="ident">new</span>(<span class="ident">internalguard</span>))),
-            <span class="prelude-val">None</span> <span class="op">=&gt;</span> {
-                <span class="comment">// We couldn&#39;t lock. Restore irqs and return None</span>
-                <span class="kw">unsafe</span> { <span class="ident">enable_interrupts</span>(); }
+            <span class="comment">// Lock spinlock</span>
+            <span class="kw">let</span> <span class="ident">internalguard</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">internal</span>.<span class="ident">try_lock</span>();
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">internalguard</span>) <span class="op">=</span> <span class="ident">internalguard</span> {
+                <span class="comment">// if lock is successful, return guard.</span>
+                <span class="prelude-val">Some</span>(<span class="ident">SpinLockIRQGuard</span>(<span class="ident">ManuallyDrop</span>::<span class="ident">new</span>(<span class="ident">internalguard</span>), <span class="ident">saved_intpt_flag</span>))
+            } <span class="kw">else</span> {
+                <span class="comment">// Else, restore interrupt state</span>
+                <span class="kw">if</span> <span class="ident">saved_intpt_flag</span> {
+                    <span class="kw">unsafe</span> { <span class="ident">interrupts</span>::<span class="ident">sti</span>(); }
+                }
                 <span class="prelude-val">None</span>
             }
         }
@@ -367,20 +359,20 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">SpinLockIRQ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">try_lock</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">d</span>) <span class="op">=&gt;</span> {
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;SpinLockIRQ {{ data: &quot;</span>)<span class="question-mark">?</span>;
-                <span class="ident">d</span>.<span class="ident">fmt</span>(<span class="ident">f</span>)<span class="question-mark">?</span>;
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;}}&quot;</span>)
-            },
-            <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;SpinLockIRQ {{ &lt;locked&gt; }}&quot;</span>)
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">try_lock</span>() {
+            <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;SpinLockIRQ&quot;</span>)
+                .<span class="ident">field</span>(<span class="string">&quot;data&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">v</span>)
+                .<span class="ident">finish</span>()
+        } <span class="kw">else</span> {
+            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;SpinLockIRQ {{ &lt;locked&gt; }}&quot;</span>)
         }
     }
 }
 
+
 <span class="doccomment">/// The SpinLockIrq lock guard.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">ManuallyDrop</span><span class="op">&lt;</span><span class="ident">SpinLockGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;&gt;</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">ManuallyDrop</span><span class="op">&lt;</span><span class="ident">SpinLockGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;&gt;</span>, <span class="ident">bool</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">SpinLockIRQGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
@@ -389,7 +381,9 @@
         <span class="kw">unsafe</span> { <span class="ident">ManuallyDrop</span>::<span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>); }
 
         <span class="comment">// Restore irq</span>
-        <span class="kw">unsafe</span> { <span class="ident">enable_interrupts</span>(); }
+        <span class="kw">if</span> <span class="self">self</span>.<span class="number">1</span> {
+            <span class="kw">unsafe</span> { <span class="ident">interrupts</span>::<span class="ident">sti</span>(); }
+        }
 
         <span class="comment">// TODO: Enable preempt</span>
     }
