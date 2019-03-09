@@ -9,3 +9,4 @@ sourcesIndex["kfs_libutils"] = {"name":"","dirs":[],"files":["cursor.rs","io.rs"
 sourcesIndex["kfs_shell"] = {"name":"","dirs":[],"files":["main.rs","ps2.rs"]};
 sourcesIndex["kfs_sm"] = {"name":"","dirs":[],"files":["main.rs"]};
 sourcesIndex["kfs_vi"] = {"name":"","dirs":[],"files":["main.rs","vbe.rs"]};
+createSourceSidebar();
