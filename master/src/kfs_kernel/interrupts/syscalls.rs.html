@@ -637,6 +637,82 @@
 <span id="637">637</span>
 <span id="638">638</span>
 <span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Syscall implementations</span>
 
@@ -655,7 +731,8 @@
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ipc</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">check_thread_killed</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">UserspaceError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">UserspaceError</span>, <span class="ident">KernelError</span>};
+<span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 <span class="kw">use</span> <span class="ident">kfs_libkern</span>::{<span class="ident">nr</span>, <span class="ident">SYSCALL_NAMES</span>, <span class="ident">MemoryInfo</span>, <span class="ident">MemoryAttributes</span>, <span class="ident">MemoryPermissions</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitArray</span>;
 
@@ -688,7 +765,7 @@
                                 <span class="op">*</span> <span class="ident">tag</span>.<span class="ident">framebuffer_dimensions</span>().<span class="number">0</span> <span class="kw">as</span> <span class="ident">usize</span>
                                 <span class="op">*</span> <span class="ident">tag</span>.<span class="ident">framebuffer_dimensions</span>().<span class="number">1</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">/</span> <span class="number">8</span>;
     <span class="kw">let</span> <span class="ident">frame_buffer_phys_region</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-        <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">tag</span>.<span class="ident">framebuffer_addr</span>()), <span class="ident">framebuffer_size</span>)
+        <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">tag</span>.<span class="ident">framebuffer_addr</span>()), <span class="ident">framebuffer_size</span>)<span class="question-mark">?</span>
     };
 
     <span class="kw">let</span> <span class="ident">process</span> <span class="op">=</span> <span class="ident">get_current_process</span>();
@@ -737,6 +814,56 @@
     }
     <span class="kw">let</span> <span class="ident">hnd</span> <span class="op">=</span> <span class="ident">curproc</span>.<span class="ident">phandles</span>.<span class="ident">lock</span>().<span class="ident">add_handle</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Handle</span>::<span class="ident">ReadableEvent</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">event</span>::<span class="ident">wait_event</span>(<span class="ident">irq_num</span>)))));
     <span class="prelude-val">Ok</span>(<span class="ident">hnd</span> <span class="kw">as</span> <span class="kw">_</span>)
+}
+
+<span class="doccomment">/// Gets the physical region a given virtual address maps.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This syscall is mostly used for DMAs, where the physical address of a buffer needs to be known</span>
+<span class="doccomment">/// by userspace.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Return</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// 0. The start address of the physical region.</span>
+<span class="doccomment">/// 1. 0x00000000 (On Horizon it contains the KernelSpace virtual address of this mapping,</span>
+<span class="doccomment">///    but I don&#39;t see any use for it).</span>
+<span class="doccomment">/// 2. The length of the physical region.</span>
+<span class="comment">// kfs extension</span>
+<span class="doccomment">/// 3. The offset in the region of the given virtual address.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Error</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - InvalidAddress: This address does not map physical memory.</span>
+<span class="comment">// TODO: Kernel mappings must be physically continuous.</span>
+<span class="comment">// BODY: Virtual memory is a great thing, it can make a fragmented mapping appear contiguous from the</span>
+<span class="comment">// BODY: userspace. But unfortunately Horizon does not take advantage of this feature, and</span>
+<span class="comment">// BODY: allocates its mapping as a single Physical Memory Region.</span>
+<span class="comment">// BODY:</span>
+<span class="comment">// BODY: Its syscalls are based around that fact, and to do a `virt_to_phys(addr)`, you simply</span>
+<span class="comment">// BODY: need to `query_memory(addr).offset` to get its offset in its mapping, and compute its</span>
+<span class="comment">// BODY: physical address as `query_physical_address(addr).base + offset`.</span>
+<span class="comment">// BODY:</span>
+<span class="comment">// BODY: This will not work when the mapping is composed of several physical regions, and</span>
+<span class="comment">// BODY: Horizon drivers will not be expecting that. So for them to work on our kernel, we must</span>
+<span class="comment">// BODY: renounce using fragmented mappings.</span>
+<span class="comment">// BODY:</span>
+<span class="comment">// BODY: For now `query_physical_address` is providing an additional &quot;offset in physical region&quot; return value,</span>
+<span class="comment">// BODY: to help KFS drivers doing a virt_to_phys without needing to walk the list of physical regions.</span>
+<span class="kw">fn</span> <span class="ident">query_physical_address</span>(<span class="ident">virtual_address</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">usize</span>), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">virtual_address</span> <span class="op">=</span> <span class="ident">VirtualAddress</span>(<span class="ident">virtual_address</span>);
+    <span class="kw">let</span> <span class="ident">proc</span> <span class="op">=</span> <span class="ident">scheduler</span>::<span class="ident">get_current_process</span>();
+    <span class="kw">let</span> <span class="ident">mem</span> <span class="op">=</span> <span class="ident">proc</span>.<span class="ident">pmemory</span>.<span class="ident">lock</span>();
+    <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">mem</span>.<span class="ident">query_memory</span>(<span class="ident">virtual_address</span>);
+    <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">mapping</span>().<span class="ident">mtype_ref</span>() {
+        <span class="ident">MappingType</span>::<span class="ident">Regular</span>(<span class="ident">regions</span>) <span class="op">=&gt;</span> <span class="ident">regions</span>,
+        <span class="ident">MappingType</span>::<span class="ident">Shared</span>(<span class="ident">arc_regions</span>) <span class="op">=&gt;</span> <span class="ident">arc_regions</span>.<span class="ident">as_ref</span>(),
+        <span class="ident">MappingType</span>::<span class="ident">Available</span> <span class="op">|</span> <span class="ident">MappingType</span>::<span class="ident">Guarded</span> <span class="op">|</span> <span class="ident">MappingType</span>::<span class="ident">SystemReserved</span> <span class="op">=&gt;</span>
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">virtual_address</span>, <span class="ident">length</span>: <span class="number">1</span>, <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }.<span class="ident">into</span>()),
+    };
+    <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">virtual_address</span> <span class="op">-</span> <span class="ident">mapping</span>.<span class="ident">mapping</span>().<span class="ident">address</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">frames</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">region</span><span class="op">|</span> { <span class="ident">i</span> <span class="op">+=</span> <span class="ident">region</span>.<span class="ident">size</span>(); <span class="ident">i</span> <span class="op">&gt;</span> <span class="ident">offset</span> })
+        .<span class="ident">expect</span>(<span class="string">&quot;Mapping region count is corrupted&quot;</span>);
+    <span class="prelude-val">Ok</span>((<span class="ident">frames</span>[<span class="ident">pos</span>].<span class="ident">address</span>().<span class="ident">addr</span>(), <span class="number">0x00000000</span>, <span class="ident">frames</span>[<span class="ident">pos</span>].<span class="ident">size</span>(), <span class="ident">offset</span> <span class="op">-</span> (<span class="ident">i</span> <span class="op">-</span> <span class="ident">frames</span>[<span class="ident">pos</span>].<span class="ident">size</span>())))
 }
 
 <span class="doccomment">/// Waits for one of the handles to signal an event.</span>
@@ -1123,6 +1250,29 @@
     <span class="prelude-val">Ok</span>((<span class="ident">serverhnd</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">clienthnd</span> <span class="kw">as</span> <span class="kw">_</span>))
 }
 
+<span class="doccomment">/// Maps a physical region in the address space of the process.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Returns</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The virtual address where it was mapped.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Errors</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * InvalidAddress:</span>
+<span class="doccomment">///     * `virtual_address` is already occupied.</span>
+<span class="doccomment">///     * `virtual_address` is not PAGE_SIZE aligned.</span>
+<span class="doccomment">///     * `physical_address` points to a physical region in DRAM (it&#39;s not MMIO).</span>
+<span class="doccomment">/// * InvalidLength:</span>
+<span class="doccomment">///     * `length` is not PAGE_SIZE aligned.</span>
+<span class="doccomment">///     * `length` is zero.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_mmio_region</span>(<span class="ident">physical_address</span>: <span class="ident">usize</span>, <span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">virtual_address</span>: <span class="ident">usize</span>, <span class="ident">writable</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">physical_address</span>), <span class="ident">size</span>)<span class="question-mark">?</span> };
+    <span class="kw">let</span> <span class="ident">curproc</span> <span class="op">=</span> <span class="ident">scheduler</span>::<span class="ident">get_current_process</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mem</span> <span class="op">=</span> <span class="ident">curproc</span>.<span class="ident">pmemory</span>.<span class="ident">lock</span>();
+    <span class="ident">mem</span>.<span class="ident">map_phys_region_to</span>(<span class="ident">region</span>, <span class="ident">VirtualAddress</span>(<span class="ident">virtual_address</span>), <span class="kw">if</span> <span class="ident">writable</span> { <span class="ident">MappingAccessRights</span>::<span class="ident">u_rw</span>() } <span class="kw">else</span> { <span class="ident">MappingAccessRights</span>::<span class="ident">u_r</span>() })<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+}
+
 <span class="kw">impl</span> <span class="ident">Registers</span> {
     <span class="doccomment">/// Update the Registers with the passed result.</span>
     <span class="kw">fn</span> <span class="ident">apply0</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ret</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span>) {
@@ -1248,12 +1398,14 @@
         (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ReplyAndReceiveWithUserBuffer</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">reply_and_receive_with_user_buffer</span>(<span class="ident">UserSpacePtrMut</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span>), <span class="ident">UserSpacePtr</span>::<span class="ident">from_raw_parts</span>(<span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x3</span>), <span class="ident">x4</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x5</span>)),
         (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreateSharedMemory</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_shared_memory</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>)),
         (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreateInterruptEvent</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">create_interrupt_event</span>(<span class="ident">x0</span>, <span class="ident">x1</span> <span class="kw">as</span> <span class="ident">u32</span>)),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">QueryPhysicalAddress</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply4</span>(<span class="ident">query_physical_address</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
         (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">CreatePort</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply2</span>(<span class="ident">create_port</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">x1</span> <span class="op">!=</span> <span class="number">0</span>, <span class="ident">UserSpacePtr</span>(<span class="ident">x2</span> <span class="kw">as</span> <span class="kw">_</span>))),
         (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ManageNamedPort</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">manage_named_port</span>(<span class="ident">UserSpacePtr</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>), <span class="ident">x1</span> <span class="kw">as</span> <span class="kw">_</span>)),
         (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">ConnectToPort</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply1</span>(<span class="ident">connect_to_port</span>(<span class="ident">x0</span> <span class="kw">as</span> <span class="kw">_</span>)),
 
         <span class="comment">// KFS extensions</span>
         (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">MapFramebuffer</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply4</span>(<span class="ident">map_framebuffer</span>()),
+        (<span class="bool-val">true</span>, <span class="ident">nr</span>::<span class="ident">MapMmioRegion</span>) <span class="op">=&gt;</span> <span class="ident">registers</span>.<span class="ident">apply0</span>(<span class="ident">map_mmio_region</span>(<span class="ident">x0</span>, <span class="ident">x1</span>, <span class="ident">x2</span>, <span class="ident">x3</span> <span class="op">!=</span> <span class="number">0</span>)),
 
         <span class="comment">// Unknown/unauthorized syscall.</span>
         (<span class="bool-val">false</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> {

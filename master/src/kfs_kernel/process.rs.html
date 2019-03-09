@@ -1160,7 +1160,7 @@
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">ProcessStruct</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="comment">// todo this should be a debug !</span>
-        <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Dropped a process : {:?}&quot;</span>, <span class="self">self</span>)
+        <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;☠️ Dropped a process : {}&quot;</span>, <span class="self">self</span>.<span class="ident">name</span>)
     }
 }
 
@@ -1329,7 +1329,7 @@
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">ThreadStruct</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="comment">// todo this should be a debug !</span>
-        <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Dropped a thread : {:?}&quot;</span>, <span class="self">self</span>)
+        <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;💀 Dropped a thread : {}&quot;</span>, <span class="self">self</span>.<span class="ident">process</span>.<span class="ident">name</span>)
     }
 }
 

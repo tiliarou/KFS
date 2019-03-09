@@ -449,7 +449,6 @@
 <span id="449">449</span>
 <span id="450">450</span>
 <span id="451">451</span>
-<span id="452">452</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! PhysicalMemRegion</span>
 <span class="doccomment">//!</span>
@@ -457,14 +456,15 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTraitPrivate</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">align_down</span>, <span class="ident">div_ceil</span>, <span class="ident">check_aligned</span>, <span class="ident">Splittable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">PhysicalAddress</span>, <span class="ident">VirtualAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">div_ceil</span>, <span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>, <span class="ident">Splittable</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Range</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">iter</span>::<span class="ident">StepBy</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="ident">Formatter</span>, <span class="ident">Error</span>, <span class="ident">Debug</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
+<span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 
 <span class="doccomment">/// A span of adjacent physical frames. A frame is [PAGE_SIZE].</span>
 <span class="doccomment">///</span>
@@ -498,16 +498,27 @@
     <span class="doccomment">/// On drop the region won&#39;t be given back to the [FrameAllocator],</span>
     <span class="doccomment">/// and thous stay marked as reserved.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panic</span>
+    <span class="doccomment">/// # Error</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * Panics if any of the frames in this span wasn&#39;t marked as reserved in</span>
-    <span class="doccomment">/// the [FrameAllocator], as it could had mistakenly given it as regular ram.</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">on_fixed_mmio</span>(<span class="ident">start_addr</span>: <span class="ident">PhysicalAddress</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">FrameAllocator</span>::<span class="ident">check_is_reserved</span>(<span class="ident">start_addr</span>, <span class="ident">len</span>));
-        <span class="ident">PhysicalMemRegion</span> {
-            <span class="ident">start_addr</span>: <span class="ident">align_down</span>(<span class="ident">start_addr</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>),
-            <span class="ident">frames</span>: <span class="ident">div_ceil</span>(<span class="ident">len</span>, <span class="ident">PAGE_SIZE</span>),
-            <span class="ident">should_free_on_drop</span>: <span class="bool-val">false</span>
+    <span class="doccomment">/// * InvalidAddress:</span>
+    <span class="doccomment">///     * `address` is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">///     * One or more of the frames in this span wasn&#39;t marked as reserved in</span>
+    <span class="doccomment">///       the [FrameAllocator], as it could had mistakenly given it as regular RAM.</span>
+    <span class="doccomment">/// * InvalidLength:</span>
+    <span class="doccomment">///     * `length` is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">///     * `length` is zero.</span>
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">on_fixed_mmio</span>(<span class="ident">address</span>: <span class="ident">PhysicalAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
+        <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">FrameAllocator</span>::<span class="ident">check_is_reserved</span>(<span class="ident">address</span>, <span class="ident">length</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">VirtualAddress</span>(<span class="ident">address</span>.<span class="ident">addr</span>()), <span class="ident">length</span>, <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">PhysicalMemRegion</span> {
+                <span class="ident">start_addr</span>: <span class="ident">address</span>.<span class="ident">addr</span>(),
+                <span class="ident">frames</span>: <span class="ident">div_ceil</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>),
+                <span class="ident">should_free_on_drop</span>: <span class="bool-val">false</span>
+            })
         }
     }
 
@@ -669,22 +680,9 @@
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">PAGE_SIZE</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
     <span class="kw">fn</span> <span class="ident">on_fixed_mmio_checks_reserved</span>() {
         <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
-        <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0x00000000</span>), <span class="ident">PAGE_SIZE</span>) };
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">on_fixed_mmio_rounds_unaligned</span>() {
-        <span class="kw">let</span> <span class="ident">_f</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">init</span>();
-        <span class="comment">// reserve them so we don&#39;t panic</span>
-        <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">mark_frame_bootstrap_allocated</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0</span>));
-        <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">mark_frame_bootstrap_allocated</span>(<span class="ident">PhysicalAddress</span>(<span class="ident">PAGE_SIZE</span>));
-
-        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0x00000007</span>), <span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">1</span>) };
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">region</span>.<span class="ident">start_addr</span>, <span class="number">0</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">region</span>.<span class="ident">frames</span>, <span class="number">2</span>);
+        <span class="kw">unsafe</span> { <span class="ident">PhysicalMemRegion</span>::<span class="ident">on_fixed_mmio</span>(<span class="ident">PhysicalAddress</span>(<span class="number">0x00000000</span>), <span class="ident">PAGE_SIZE</span>) }.<span class="ident">unwrap_err</span>();
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>

@@ -52,6 +52,7 @@
 <span id="52">52</span>
 <span id="53">53</span>
 <span id="54">54</span>
+<span id="55">55</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">alloc</span>)]</span>
 <span class="attribute">#![<span class="ident">no_std</span>]</span>
@@ -101,6 +102,7 @@
         <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">UnmapSharedMemory</span>,
         <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">ConnectToNamedPort</span>,
         <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">CreateInterruptEvent</span>,
+        <span class="ident">kfs_libuser</span>::<span class="ident">syscalls</span>::<span class="ident">nr</span>::<span class="ident">QueryPhysicalAddress</span>,
     ],
     <span class="ident">raw_caps</span>: [
         <span class="ident">kfs_libuser</span>::<span class="ident">caps</span>::<span class="ident">ioport</span>(<span class="ident">pci</span>::<span class="ident">CONFIG_ADDRESS</span> <span class="op">+</span> <span class="number">0</span>), <span class="ident">kfs_libuser</span>::<span class="ident">caps</span>::<span class="ident">ioport</span>(<span class="ident">pci</span>::<span class="ident">CONFIG_ADDRESS</span> <span class="op">+</span> <span class="number">1</span>), <span class="ident">kfs_libuser</span>::<span class="ident">caps</span>::<span class="ident">ioport</span>(<span class="ident">pci</span>::<span class="ident">CONFIG_ADDRESS</span> <span class="op">+</span> <span class="number">2</span>), <span class="ident">kfs_libuser</span>::<span class="ident">caps</span>::<span class="ident">ioport</span>(<span class="ident">pci</span>::<span class="ident">CONFIG_ADDRESS</span> <span class="op">+</span> <span class="number">3</span>),

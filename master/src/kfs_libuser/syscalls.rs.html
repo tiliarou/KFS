@@ -397,6 +397,48 @@
 <span id="397">397</span>
 <span id="398">398</span>
 <span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Syscall Wrappers</span>
 
@@ -765,6 +807,30 @@ syscall_inner:
     }
 }
 
+<span class="doccomment">/// Gets the physical region a given virtual address maps.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This syscall is mostly used for DMAs, where the physical address of a buffer needs to be known</span>
+<span class="doccomment">/// by userspace.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Return</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// 0. The start address of the physical region.</span>
+<span class="doccomment">/// 1. 0x00000000 (On Horizon it contains the KernelSpace virtual address of this mapping,</span>
+<span class="doccomment">///    but I don&#39;t see any use for it).</span>
+<span class="doccomment">/// 2. The length of the physical region.</span>
+<span class="comment">// kfs extension</span>
+<span class="doccomment">/// 3. The offset in the region of the given virtual address.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Error</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - InvalidAddress: This address does not map physical memory.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_physical_address</span>(<span class="ident">virtual_address</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">usize</span>), <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">unsafe</span> {
+        <span class="kw">let</span> (<span class="ident">phys_addr</span>, <span class="ident">kernel_addr</span>, <span class="ident">phys_len</span>, <span class="ident">offset</span>, ..) <span class="op">=</span> <span class="ident">syscall</span>(<span class="ident">nr</span>::<span class="ident">QueryPhysicalAddress</span>, <span class="ident">virtual_address</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((<span class="ident">phys_addr</span>, <span class="ident">kernel_addr</span>, <span class="ident">phys_len</span>, <span class="ident">offset</span>))
+    }
+}
+
 <span class="doccomment">/// Creates an anonymous port.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_port</span>(<span class="ident">max_sessions</span>: <span class="ident">u32</span>, <span class="ident">is_light</span>: <span class="ident">bool</span>, <span class="ident">name_ptr</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ClientPort</span>, <span class="ident">ServerPort</span>), <span class="ident">KernelError</span><span class="op">&gt;</span> {
     <span class="kw">unsafe</span> {
@@ -795,6 +861,24 @@ syscall_inner:
         <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">width</span>, <span class="ident">height</span>, <span class="ident">bpp</span>) <span class="op">=</span> <span class="ident">syscall</span>(<span class="ident">nr</span>::<span class="ident">MapFramebuffer</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">framebuffer_size</span> <span class="op">=</span> <span class="ident">bpp</span> <span class="op">*</span> <span class="ident">width</span> <span class="op">*</span> <span class="ident">height</span> <span class="op">/</span> <span class="number">8</span>;
         <span class="prelude-val">Ok</span>((<span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">framebuffer_size</span>), <span class="ident">width</span>, <span class="ident">height</span>, <span class="ident">bpp</span>))
+    }
+}
+
+<span class="doccomment">/// Maps a physical region in the address space of the process.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Errors</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * InvalidAddress:</span>
+<span class="doccomment">///     * `virtual_address` is already occupied.</span>
+<span class="doccomment">///     * `virtual_address` is not PAGE_SIZE aligned.</span>
+<span class="doccomment">///     * `physical_address` points to a physical region in DRAM (it&#39;s not MMIO).</span>
+<span class="doccomment">/// * InvalidLength:</span>
+<span class="doccomment">///     * `length` is not PAGE_SIZE aligned.</span>
+<span class="doccomment">///     * `length` is zero.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_mmio_region</span>(<span class="ident">physical_address</span>: <span class="ident">usize</span>, <span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">virtual_address</span>: <span class="ident">usize</span>, <span class="ident">writable</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">unsafe</span> {
+        <span class="ident">syscall</span>(<span class="ident">nr</span>::<span class="ident">MapMmioRegion</span>, <span class="ident">physical_address</span>, <span class="ident">size</span>, <span class="ident">virtual_address</span>, <span class="ident">writable</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="number">0</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </pre></div>
