@@ -218,6 +218,7 @@
 <span id="218">218</span>
 <span id="219">219</span>
 <span id="220">220</span>
+<span id="221">221</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The core event handling primitives of KFS.</span>
 <span class="doccomment">//!</span>
@@ -400,9 +401,10 @@
 }
 
 <span class="doccomment">/// Creates an IRQEvent waiting for the given IRQ number.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait_event</span>(<span class="ident">irq</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">IRQEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait_event</span>(<span class="ident">irq</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="ident">IRQEvent</span> {
+    <span class="kw">crate</span>::<span class="ident">devices</span>::<span class="ident">pic</span>::<span class="ident">get</span>().<span class="ident">unmask</span>(<span class="ident">irq</span>);
     <span class="ident">IRQEvent</span> {
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">IRQ_STATES</span>[<span class="ident">irq</span>], <span class="ident">ack</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="ident">IRQ_STATES</span>[<span class="ident">irq</span>].<span class="ident">counter</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>))
+        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">IRQ_STATES</span>[<span class="ident">irq</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">ack</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="ident">IRQ_STATES</span>[<span class="ident">irq</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">counter</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>))
     }
 }
 

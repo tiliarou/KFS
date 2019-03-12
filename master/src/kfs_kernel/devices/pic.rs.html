@@ -156,6 +156,29 @@
 <span id="156">156</span>
 <span id="157">157</span>
 <span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Driver for the 8259 Programmable Interrupt Controller.</span>
 <span class="doccomment">//!</span>
@@ -254,6 +277,21 @@
         }
     }
 
+    <span class="doccomment">/// Unmask the given IRQ number. Will redirect the call to the right Pic device.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unmask</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">irq</span>: <span class="ident">u8</span>) {
+        <span class="kw">if</span> <span class="ident">irq</span> <span class="op">&lt;</span> <span class="number">8</span> {
+            <span class="self">self</span>.<span class="ident">master</span>.<span class="ident">lock</span>().<span class="ident">unmask</span>(<span class="ident">irq</span>);
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">slave</span>.<span class="ident">lock</span>().<span class="ident">unmask</span>(<span class="ident">irq</span> <span class="op">-</span> <span class="number">8</span>);
+        }
+    }
+
+    <span class="doccomment">/// Reads the PIC interrupt mask. Used for debug purposes.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// LSB is irq 0, MSB is irq 15.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mask</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u16</span> {
+        <span class="ident">u16</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">master</span>.<span class="ident">lock</span>().<span class="ident">get_mask</span>()) <span class="op">|</span> (<span class="ident">u16</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">slave</span>.<span class="ident">lock</span>().<span class="ident">get_mask</span>()) <span class="op">&lt;&lt;</span> <span class="number">8</span>)
+    }
 
     <span class="doccomment">/// Acknowledges an IRQ, allowing the PIC to send a new IRQ on the next</span>
     <span class="doccomment">/// cycle.</span>
@@ -310,9 +348,17 @@
 
     <span class="doccomment">/// Mask the given IRQ</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mask</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">irq</span>: <span class="ident">u8</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">port_data</span>.<span class="ident">read</span>();
-        <span class="ident">data</span> <span class="op">|=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">irq</span>;
-        <span class="self">self</span>.<span class="ident">port_data</span>.<span class="ident">write</span>(<span class="ident">data</span>);
+        <span class="self">self</span>.<span class="ident">port_data</span>.<span class="ident">writef</span>(<span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">irq</span>, <span class="bool-val">true</span>);
+    }
+
+    <span class="doccomment">/// Unmask the given IRQ</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unmask</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">irq</span>: <span class="ident">u8</span>) {
+        <span class="self">self</span>.<span class="ident">port_data</span>.<span class="ident">writef</span>(<span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">irq</span>, <span class="bool-val">false</span>);
+    }
+
+    <span class="doccomment">/// Read the IRQ mask. Used mostly for debug purposes.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mask</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u8</span> {
+        <span class="self">self</span>.<span class="ident">port_data</span>.<span class="ident">read</span>()
     }
 }
 </pre></div>

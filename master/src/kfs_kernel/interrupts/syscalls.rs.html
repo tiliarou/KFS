@@ -812,7 +812,7 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">NoSuchEntry</span>);
         }
     }
-    <span class="kw">let</span> <span class="ident">hnd</span> <span class="op">=</span> <span class="ident">curproc</span>.<span class="ident">phandles</span>.<span class="ident">lock</span>().<span class="ident">add_handle</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Handle</span>::<span class="ident">ReadableEvent</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">event</span>::<span class="ident">wait_event</span>(<span class="ident">irq_num</span>)))));
+    <span class="kw">let</span> <span class="ident">hnd</span> <span class="op">=</span> <span class="ident">curproc</span>.<span class="ident">phandles</span>.<span class="ident">lock</span>().<span class="ident">add_handle</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Handle</span>::<span class="ident">ReadableEvent</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">event</span>::<span class="ident">wait_event</span>(<span class="ident">irq_num</span> <span class="kw">as</span> <span class="ident">u8</span>)))));
     <span class="prelude-val">Ok</span>(<span class="ident">hnd</span> <span class="kw">as</span> <span class="kw">_</span>)
 }
 
