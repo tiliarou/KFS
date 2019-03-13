@@ -304,6 +304,29 @@
 <span id="304">304</span>
 <span id="305">305</span>
 <span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! PCI discovery</span>
 <span class="doccomment">//!</span>
@@ -320,7 +343,23 @@
 
 <span class="doccomment">/// A struct tying the two pci config ports together.</span>
 <span class="kw">struct</span> <span class="ident">PciConfigPortsPair</span> {
+    <span class="doccomment">/// The address port.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Write the &#39;&#39;&#39;address&#39;&#39;&#39; of the config-space register you want to access.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// An address is formatted as follow:</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * 31    Enable bit</span>
+    <span class="doccomment">/// * 30:24 Reserved</span>
+    <span class="doccomment">/// * 23:16 Bus Number</span>
+    <span class="doccomment">/// * 15:11 Device Number</span>
+    <span class="doccomment">/// * 10:8  Function Number</span>
+    <span class="doccomment">/// * 7:0   Register Offset</span>
     <span class="ident">address</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The data port.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// After having put the address of the register you want in `.address`,</span>
+    <span class="doccomment">/// read this port to retrieve its value.</span>
     <span class="ident">data</span>: <span class="ident">Pio</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>
 }
 
@@ -341,7 +380,7 @@
 
 <span class="doccomment">/// A pci device, addressed by its bus number, slot, and function.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">struct</span> <span class="ident">PciDevice</span> {
     <span class="doccomment">/// The device&#39;s bus number.</span>
     <span class="ident">bus</span>: <span class="ident">u8</span>,
@@ -374,6 +413,7 @@
 
 <span class="doccomment">/// Pci header when Header Type == 0x00 (General device).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_docs_in_private_items</span>)]</span>
 <span class="kw">struct</span> <span class="ident">PciHeader00</span> {
     <span class="ident">bar0</span>: <span class="ident">BAR</span>,
     <span class="ident">bar1</span>: <span class="ident">BAR</span>,
@@ -395,17 +435,23 @@
 <span class="doccomment">/// Contents of pci config registers 0x4-0xf, structure varies based on Header Type.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">PciHeader</span> {
-    <span class="ident">GeneralDevice</span>(<span class="ident">PciHeader00</span>), <span class="comment">// header type == 0x00</span>
-    <span class="ident">PCItoPCIBridge</span>,             <span class="comment">// header type == 0x01, not implemented</span>
-    <span class="ident">CardBus</span>,                    <span class="comment">// header type == 0x02, not implemented</span>
-    <span class="ident">UnknownHeaderType</span>(<span class="ident">u8</span>)       <span class="comment">// header type == other</span>
+    <span class="doccomment">/// header type == 0x00</span>
+    <span class="ident">GeneralDevice</span>(<span class="ident">PciHeader00</span>),
+    <span class="doccomment">/// header type == 0x01, not implemented</span>
+    <span class="ident">PCItoPCIBridge</span>,
+    <span class="doccomment">/// header type == 0x02, not implemented</span>
+    <span class="ident">CardBus</span>,
+    <span class="doccomment">/// header type == other</span>
+    <span class="ident">UnknownHeaderType</span>(<span class="ident">u8</span>)
 }
 
 <span class="doccomment">/// Base Address Registers. Minimal implementation, does not support 64-bits BARs.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">BAR</span> {
-    <span class="ident">Memory</span>(<span class="ident">u32</span>, <span class="ident">u32</span>), <span class="comment">// a memory space address and its size</span>
-    <span class="ident">Io</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)      <span class="comment">// an IO space address</span>
+    <span class="doccomment">/// a memory space address and its size</span>
+    <span class="ident">Memory</span>(<span class="ident">u32</span>, <span class="ident">u32</span>),
+    <span class="doccomment">/// an IO space address</span>
+    <span class="ident">Io</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)
 }
 
 <span class="kw">impl</span> <span class="ident">PciDevice</span> {

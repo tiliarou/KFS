@@ -161,6 +161,31 @@
 <span id="161">161</span>
 <span id="162">162</span>
 <span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Error handling</span>
 <span class="doccomment">//!</span>
@@ -213,6 +238,8 @@
     <span class="comment">//Vi(ViError, Backtrace),</span>
     <span class="doccomment">/// Internal Libuser error.</span>
     <span class="ident">Libuser</span>(<span class="ident">LibuserError</span>, <span class="ident">Backtrace</span>),
+    <span class="doccomment">/// Ahci driver error.</span>
+    <span class="ident">Ahci</span>(<span class="ident">AhciError</span>, <span class="ident">Backtrace</span>),
     <span class="doccomment">/// An unknown error type. Either someone returned a custom error, or this</span>
     <span class="doccomment">/// version of libuser is outdated.</span>
     <span class="ident">Unknown</span>(<span class="ident">u32</span>, <span class="ident">Backtrace</span>)
@@ -229,6 +256,7 @@
             <span class="ident">Module</span>::<span class="ident">Sm</span> <span class="op">=&gt;</span> <span class="ident">Error</span>::<span class="ident">Sm</span>(<span class="ident">SmError</span>(<span class="ident">description</span>), <span class="ident">Backtrace</span>::<span class="ident">new</span>()),
             <span class="comment">//Module::Vi =&gt; Error::Vi(ViError(description), Backtrace::new()),</span>
             <span class="ident">Module</span>::<span class="ident">Libuser</span> <span class="op">=&gt;</span> <span class="ident">Error</span>::<span class="ident">Libuser</span>(<span class="ident">LibuserError</span>(<span class="ident">description</span>), <span class="ident">Backtrace</span>::<span class="ident">new</span>()),
+            <span class="ident">Module</span>::<span class="ident">Ahci</span> <span class="op">=&gt;</span> <span class="ident">Error</span>::<span class="ident">Ahci</span>(<span class="ident">AhciError</span>(<span class="ident">description</span>), <span class="ident">Backtrace</span>::<span class="ident">new</span>()),
             <span class="kw">_</span> <span class="op">=&gt;</span> <span class="ident">Error</span>::<span class="ident">Unknown</span>(<span class="ident">errcode</span>, <span class="ident">Backtrace</span>::<span class="ident">new</span>())
         }
     }
@@ -242,6 +270,7 @@
             <span class="ident">Error</span>::<span class="ident">Sm</span>(<span class="ident">err</span>, ..) <span class="op">=&gt;</span> <span class="ident">err</span>.<span class="number">0</span> <span class="op">&lt;&lt;</span> <span class="number">9</span> <span class="op">|</span> <span class="ident">Module</span>::<span class="ident">Sm</span>.<span class="number">0</span>,
             <span class="comment">//Error::Vi(err, ..) =&gt; err.0 &lt;&lt; 9 | Module::Vi.0,</span>
             <span class="ident">Error</span>::<span class="ident">Libuser</span>(<span class="ident">err</span>, ..) <span class="op">=&gt;</span> <span class="ident">err</span>.<span class="number">0</span> <span class="op">&lt;&lt;</span> <span class="number">9</span> <span class="op">|</span> <span class="ident">Module</span>::<span class="ident">Libuser</span>.<span class="number">0</span>,
+            <span class="ident">Error</span>::<span class="ident">Ahci</span>(<span class="ident">err</span>, ..) <span class="op">=&gt;</span> <span class="ident">err</span>.<span class="number">0</span> <span class="op">&lt;&lt;</span> <span class="number">9</span> <span class="op">|</span> <span class="ident">Module</span>::<span class="ident">Ahci</span>.<span class="number">0</span>,
             <span class="ident">Error</span>::<span class="ident">Unknown</span>(<span class="ident">err</span>, ..) <span class="op">=&gt;</span> <span class="ident">err</span>,
         }
     }
@@ -268,7 +297,8 @@
         <span class="ident">Kernel</span> <span class="op">=</span> <span class="number">1</span>,
         <span class="ident">Sm</span> <span class="op">=</span> <span class="number">21</span>,
         <span class="ident">Vi</span> <span class="op">=</span> <span class="number">114</span>,
-        <span class="ident">Libuser</span> <span class="op">=</span> <span class="number">115</span>
+        <span class="ident">Libuser</span> <span class="op">=</span> <span class="number">115</span>,
+        <span class="ident">Ahci</span> <span class="op">=</span> <span class="number">116</span>,
     }
 }
 
@@ -323,6 +353,26 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SmError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="ident">SmError</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>::<span class="ident">Sm</span>(<span class="ident">error</span>, <span class="ident">Backtrace</span>::<span class="ident">new</span>())
+    }
+}
+
+<span class="macro">enum_with_val</span><span class="macro">!</span> {
+    <span class="doccomment">/// AHCI driver errors.</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AhciError</span>(<span class="ident">u32</span>) {
+        <span class="doccomment">/// Passed argument were found to be illegal.</span>
+        <span class="ident">InvalidArg</span> <span class="op">=</span> <span class="number">1</span>,
+        <span class="doccomment">/// Passed buffer for DMA is too physically scattered. This can only happen for read/writes</span>
+        <span class="doccomment">/// of 1985 sectors or more.</span>
+        <span class="ident">BufferTooScattered</span> <span class="op">=</span> <span class="number">2</span>,
+        <span class="doccomment">/// The hardware reported an error.</span>
+        <span class="ident">IoError</span> <span class="op">=</span> <span class="number">3</span>,
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">AhciError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="ident">AhciError</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Error</span>::<span class="ident">Ahci</span>(<span class="ident">error</span>, <span class="ident">Backtrace</span>::<span class="ident">new</span>())
     }
 }
 </pre></div>

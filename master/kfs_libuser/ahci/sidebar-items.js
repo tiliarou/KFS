@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AhciInterface","Main ahci interface."],["IDisk","Interface to an AHCI device."]]});
