@@ -318,8 +318,8 @@
 <span class="doccomment">/// Shows a GIF in a new window, blocking the caller. When a key is pressed, the</span>
 <span class="doccomment">/// window is closed and control is given back to the caller.</span>
 <span class="kw">fn</span> <span class="ident">show_gif</span>(<span class="ident">louis</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">Window</span>::<span class="ident">new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1280</span>, <span class="number">800</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">gif</span>::<span class="ident">Decoder</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">louis</span>[..]).<span class="ident">read_info</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">Window</span>::<span class="ident">new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">reader</span>.<span class="ident">width</span>()), <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">reader</span>.<span class="ident">height</span>())).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
 
     <span class="kw">loop</span> {

@@ -151,10 +151,6 @@
 <span id="151">151</span>
 <span id="152">152</span>
 <span id="153">153</span>
-<span id="154">154</span>
-<span id="155">155</span>
-<span id="156">156</span>
-<span id="157">157</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Userspace library</span>
 <span class="doccomment">//!</span>
@@ -215,13 +211,9 @@
 
 <span class="kw">use</span> <span class="ident">kfs_libutils</span> <span class="kw">as</span> <span class="ident">utils</span>;
 
-<span class="comment">// TODO: report #[cfg(not(test))] and #[global_allocator]</span>
-<span class="comment">// BODY: `#[cfg(not(test))]` still compiles this item with cargo test,</span>
-<span class="comment">// BODY: but `#[cfg(target_os = &quot;none&quot;)] does not. I think this is a bug,</span>
-<span class="comment">// BODY: we should report it.</span>
 <span class="doccomment">/// Global allocator. Every implicit allocation in the rust liballoc library (for</span>
 <span class="doccomment">/// instance for Vecs, Arcs, etc...) are allocated with this allocator.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
 <span class="attribute">#[<span class="ident">global_allocator</span>]</span>
 <span class="kw">static</span> <span class="ident">ALLOCATOR</span>: <span class="ident">allocator</span>::<span class="ident">Allocator</span> <span class="op">=</span> <span class="ident">allocator</span>::<span class="ident">Allocator</span>::<span class="ident">new</span>();
 
