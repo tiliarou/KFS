@@ -185,8 +185,6 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Paging on i386</span>
 
@@ -357,16 +355,14 @@
 
 <span class="comment">// Assertions to check that Kernel/User pages falls on distinct page tables</span>
 <span class="comment">// and also that they do not overlap</span>
-<span class="kw">fn</span> <span class="ident">__land_assertions</span>() {
-    <span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span> <span class="op">&lt;</span> <span class="ident">KernelLand</span>::<span class="ident">end_addr</span>().<span class="number">0</span>);
-    <span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">UserLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span> <span class="op">&lt;</span> <span class="ident">UserLand</span>::<span class="ident">end_addr</span>().<span class="number">0</span>);
-    <span class="comment">// TODO: Const FN sucks! Check that the kernelland and userland don&#39;t overlap.</span>
-    <span class="comment">//const_assert!(::core::cmp::max(KernelLand::start_addr(), UserLand::start_addr()) &gt;=</span>
-    <span class="comment">//              ::core::cmp::min(KernelLand::end_addr(),   UserLand::end_addr()));</span>
+<span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span> <span class="op">&lt;</span> <span class="ident">KernelLand</span>::<span class="ident">end_addr</span>().<span class="number">0</span>);
+<span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">UserLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span> <span class="op">&lt;</span> <span class="ident">UserLand</span>::<span class="ident">end_addr</span>().<span class="number">0</span>);
+<span class="comment">// TODO: Const FN sucks! Check that the kernelland and userland don&#39;t overlap.</span>
+<span class="comment">//const_assert!(::core::cmp::max(KernelLand::start_addr(), UserLand::start_addr()) &gt;=</span>
+<span class="comment">//              ::core::cmp::min(KernelLand::end_addr(),   UserLand::end_addr()));</span>
 
-    <span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span> <span class="op">%</span> (<span class="ident">ENTRY_COUNT</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>) <span class="op">==</span> <span class="number">0</span>);
-    <span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">UserLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span>   <span class="op">%</span> (<span class="ident">ENTRY_COUNT</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>) <span class="op">==</span> <span class="number">0</span>);
-}
+<span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">KernelLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span> <span class="op">%</span> (<span class="ident">ENTRY_COUNT</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>) <span class="op">==</span> <span class="number">0</span>);
+<span class="macro">const_assert</span><span class="macro">!</span>(<span class="ident">UserLand</span>::<span class="ident">start_addr</span>().<span class="number">0</span>   <span class="op">%</span> (<span class="ident">ENTRY_COUNT</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>) <span class="op">==</span> <span class="number">0</span>);
 
 <span class="doccomment">/// Creates a mapping in the page tables with the given flags.</span>
 <span class="doccomment">/// Allocates the pointed page and chooses the virtual address.</span>

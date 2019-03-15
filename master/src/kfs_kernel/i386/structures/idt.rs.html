@@ -1194,7 +1194,7 @@
     }
 }
 
-<span class="macro">const_assert_eq</span><span class="macro">!</span>(<span class="ident">const_assert_idt</span>; <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Idt</span><span class="op">&gt;</span>(), <span class="number">256</span> <span class="op">*</span> <span class="number">8</span>);
+<span class="macro">const_assert_eq</span><span class="macro">!</span>(<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Idt</span><span class="op">&gt;</span>(), <span class="number">256</span> <span class="op">*</span> <span class="number">8</span>);
 
 
 <span class="kw">impl</span> <span class="ident">Idt</span> {
@@ -1346,7 +1346,7 @@
     }
 }
 
-<span class="macro">const_assert_eq</span><span class="macro">!</span>(<span class="ident">const_assert_idtentry</span>; <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">IdtEntry</span><span class="op">&lt;</span>()<span class="op">&gt;&gt;</span>(), <span class="number">8</span>);
+<span class="macro">const_assert_eq</span><span class="macro">!</span>(<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">IdtEntry</span><span class="op">&lt;</span>()<span class="op">&gt;&gt;</span>(), <span class="number">8</span>);
 
 <span class="doccomment">/// A handler function for an interrupt or an exception without error code.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">HandlerFunc</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;x86-interrupt&quot;</span> <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ExceptionStackFrame</span>);

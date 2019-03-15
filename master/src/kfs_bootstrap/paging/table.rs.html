@@ -1001,9 +1001,6 @@
 <span id="1001">1001</span>
 <span id="1002">1002</span>
 <span id="1003">1003</span>
-<span id="1004">1004</span>
-<span id="1005">1005</span>
-<span id="1006">1006</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! i386 page table / directory</span>
 
@@ -1031,12 +1028,9 @@
 <span class="doccomment">/// A page directory</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageDirectory</span>(<span class="ident">PageTable</span>);
 
-<span class="comment">// Assertions</span>
-<span class="kw">fn</span> <span class="ident">__assertions</span>() {
-    <span class="macro">const_assert</span><span class="macro">!</span>(::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageDirectory</span><span class="op">&gt;</span>() <span class="op">&gt;=</span> <span class="ident">MEMORY_FRAME_SIZE</span>);
-    <span class="macro">const_assert</span><span class="macro">!</span>(::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageTable</span><span class="op">&gt;</span>() <span class="op">&gt;=</span> <span class="ident">MEMORY_FRAME_SIZE</span>);
-    <span class="macro">const_assert</span><span class="macro">!</span>(::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageTable</span><span class="op">&gt;</span>() <span class="op">==</span> ::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageDirectory</span><span class="op">&gt;</span>());
-}
+<span class="macro">const_assert</span><span class="macro">!</span>(::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageDirectory</span><span class="op">&gt;</span>() <span class="op">&gt;=</span> <span class="ident">MEMORY_FRAME_SIZE</span>);
+<span class="macro">const_assert</span><span class="macro">!</span>(::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageTable</span><span class="op">&gt;</span>() <span class="op">&gt;=</span> <span class="ident">MEMORY_FRAME_SIZE</span>);
+<span class="macro">const_assert</span><span class="macro">!</span>(::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageTable</span><span class="op">&gt;</span>() <span class="op">==</span> ::<span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PageDirectory</span><span class="op">&gt;</span>());
 
 <span class="doccomment">/// When paging is on, accessing this address loops back to the directory itself thanks to</span>
 <span class="doccomment">/// recursive mapping on directory&#39;s last entry</span>

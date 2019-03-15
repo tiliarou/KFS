@@ -2248,7 +2248,7 @@ impl Debug for PortIterator&lt;&#39;_&gt; {
     <span class="kw">pub</span> <span class="ident">slots</span>: [<span class="ident">CmdHeader</span>; <span class="number">32</span>]
 }
 
-<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">size_CmdHeaderArray</span>; <span class="ident">CmdHeaderArray</span>, [<span class="ident">u8</span>; <span class="number">1024</span>]);
+<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">CmdHeaderArray</span>, [<span class="ident">u8</span>; <span class="number">1024</span>]);
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">ZeroInitialized</span> <span class="kw">for</span> <span class="ident">CmdHeaderArray</span> {}
 
@@ -2290,7 +2290,7 @@ impl Debug for PortIterator&lt;&#39;_&gt; {
                             <span class="comment">// 248 entries fills the rest of the page.</span>
 }
 
-<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">size_CmdTable</span>; <span class="ident">CmdTable</span>, [<span class="ident">u8</span>; <span class="number">4096</span>]);
+<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">CmdTable</span>, [<span class="ident">u8</span>; <span class="number">4096</span>]);
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">ZeroInitialized</span> <span class="kw">for</span> <span class="ident">CmdTable</span> {}
 
@@ -2306,7 +2306,7 @@ impl Debug for PortIterator&lt;&#39;_&gt; {
     <span class="comment">// ...</span>
 }
 
-<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">size_Cfis</span>; <span class="ident">Cfis</span>, [<span class="ident">u8</span>; <span class="number">64</span>]);
+<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">Cfis</span>, [<span class="ident">u8</span>; <span class="number">64</span>]);
 
 <span class="doccomment">/// Physical Region Descriptor Table entry.</span>
 <span class="doccomment">///</span>
@@ -2411,7 +2411,7 @@ impl Debug for PortIterator&lt;&#39;_&gt; {
     <span class="ident">_rsv3</span>:  [<span class="ident">u8</span>; <span class="number">0x60</span>],
 }
 
-<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">size_ReceivedFis</span>; <span class="ident">ReceivedFis</span>, [<span class="ident">u8</span>; <span class="number">0x100</span>]);
+<span class="macro">assert_eq_size</span><span class="macro">!</span>(<span class="ident">ReceivedFis</span>, [<span class="ident">u8</span>; <span class="number">0x100</span>]);
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">ZeroInitialized</span> <span class="kw">for</span> <span class="ident">ReceivedFis</span> {}
 
