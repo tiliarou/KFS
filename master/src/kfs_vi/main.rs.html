@@ -340,6 +340,32 @@
 <span id="340">340</span>
 <span id="341">341</span>
 <span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Visual Compositor</span>
 <span class="doccomment">//!</span>
@@ -422,10 +448,13 @@
             <span class="prelude-val">Ok</span>((<span class="ident">client</span>.<span class="ident">into_handle</span>(),))
         }
 
-        <span class="doccomment">/// Gets the screen resolution.</span>
+        <span class="doccomment">/// Gets the screen (width, height) in pixels.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// Cannot fail.</span>
         <span class="attribute">#[<span class="ident">cmdid</span>(<span class="number">1</span>)]</span>
-        <span class="kw">fn</span> <span class="ident">get_resolution</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>,), <span class="ident">Error</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Ok</span>((<span class="number">1280</span>, <span class="number">800</span>))
+        <span class="kw">fn</span> <span class="ident">get_screen_resolution</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>,), <span class="ident">Error</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">fb</span> <span class="op">=</span> <span class="ident">FRAMEBUFFER</span>.<span class="ident">lock</span>();
+            <span class="prelude-val">Ok</span>((<span class="ident">fb</span>.<span class="ident">width</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">fb</span>.<span class="ident">height</span>() <span class="kw">as</span> <span class="kw">_</span>))
         }
     }
 }
@@ -436,7 +465,14 @@
 <span class="kw">static</span> <span class="ident">BUFFERS</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">Buffer</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>());
 
 <span class="doccomment">/// The backbuffer to draw into.</span>
-<span class="kw">static</span> <span class="ident">BACKBUFFER_ARR</span>: <span class="ident">Mutex</span><span class="op">&lt;</span>[<span class="ident">VBEColor</span>; <span class="number">1280</span> <span class="op">*</span> <span class="number">800</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex</span>::<span class="ident">new</span>([<span class="ident">VBEColor</span>::<span class="ident">rgb</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>); <span class="number">1280</span> <span class="op">*</span> <span class="number">800</span>]);
+<span class="doccomment">///</span>
+<span class="doccomment">/// This is an array residing in the .bss, big enough to hold a UHD 4K screen.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Most of the time, the actual screen will be much smaller, and only</span>
+<span class="doccomment">/// `BACKBUFFER_ARR[0..(screen_height * screen_width)]` should be accessed.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Its actual size is irrelevant.</span>
+<span class="kw">static</span> <span class="ident">BACKBUFFER_ARR</span>: <span class="ident">Mutex</span><span class="op">&lt;</span>[<span class="ident">VBEColor</span>; <span class="number">3840</span> <span class="op">*</span> <span class="number">2160</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex</span>::<span class="ident">new</span>([<span class="ident">VBEColor</span>::<span class="ident">rgb</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>); <span class="number">3840</span> <span class="op">*</span> <span class="number">2160</span>]);
 
 <span class="doccomment">/// Gets the intersection between two rectangles.</span>
 <span class="kw">fn</span> <span class="ident">get_intersect</span>((<span class="ident">atop</span>, <span class="ident">aleft</span>, <span class="ident">awidth</span>, <span class="ident">aheight</span>): (<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>), (<span class="ident">btop</span>, <span class="ident">bleft</span>, <span class="ident">bwidth</span>, <span class="ident">bheight</span>): (<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span> {
@@ -547,8 +583,14 @@
     <span class="doccomment">/// Redraw the zone where the buffer was when dropping it, to make sure it</span>
     <span class="doccomment">/// disappears.</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="kw">let</span> (<span class="ident">fullscreen_width</span>, <span class="ident">fullscreen_height</span>, <span class="ident">bpp</span>) <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">fb</span> <span class="op">=</span> <span class="ident">FRAMEBUFFER</span>.<span class="ident">lock</span>();
+            (<span class="ident">fb</span>.<span class="ident">width</span>(), <span class="ident">fb</span>.<span class="ident">height</span>(), <span class="ident">fb</span>.<span class="ident">bpp</span>())
+        };
+        <span class="comment">// create a fake Framebuffer that writes to BACKBUFFER_ARR,</span>
+        <span class="comment">// and copy it to actual screen only when we&#39;re done composing all layers in it.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">backbuffer_arr</span> <span class="op">=</span> <span class="ident">BACKBUFFER_ARR</span>.<span class="ident">lock</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="ident">Framebuffer</span>::<span class="ident">new_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">backbuffer_arr</span>, <span class="number">1280</span>, <span class="number">800</span>, <span class="number">32</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="ident">Framebuffer</span>::<span class="ident">new_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">backbuffer_arr</span>, <span class="ident">fullscreen_width</span>, <span class="ident">fullscreen_height</span>, <span class="ident">bpp</span>);
         <span class="kw">let</span> (<span class="ident">dtop</span>, <span class="ident">dleft</span>, <span class="ident">dwidth</span>, <span class="ident">dheight</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">get_real_bounds</span>(<span class="ident">framebuffer</span>.<span class="ident">width</span>() <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">framebuffer</span>.<span class="ident">height</span>() <span class="kw">as</span> <span class="ident">u32</span>);
         <span class="ident">framebuffer</span>.<span class="ident">clear_at</span>(<span class="ident">dleft</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">dtop</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">dwidth</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">dheight</span> <span class="kw">as</span> <span class="kw">_</span>);
         <span class="ident">BUFFERS</span>.<span class="ident">lock</span>().<span class="ident">retain</span>(<span class="op">|</span><span class="ident">buffer</span><span class="op">|</span> {
@@ -563,7 +605,9 @@
                 <span class="bool-val">false</span>
             }
         });
-        <span class="ident">FRAMEBUFFER</span>.<span class="ident">lock</span>().<span class="ident">get_fb</span>().<span class="ident">copy_from_slice</span>(<span class="ident">framebuffer</span>.<span class="ident">get_fb</span>());
+        <span class="comment">// BACKBUFFER_ARR is often bigger than our screen, take only the first pixels.</span>
+        <span class="kw">let</span> <span class="ident">screen_in_backbuffer</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">framebuffer</span>.<span class="ident">get_fb</span>()[<span class="number">0</span>..(<span class="ident">fullscreen_width</span> <span class="op">*</span> <span class="ident">fullscreen_height</span>)];
+        <span class="ident">FRAMEBUFFER</span>.<span class="ident">lock</span>().<span class="ident">get_fb</span>().<span class="ident">copy_from_slice</span>(<span class="ident">screen_in_backbuffer</span>);
     }
 }
 
@@ -573,8 +617,14 @@
         <span class="attribute">#[<span class="ident">cmdid</span>(<span class="number">0</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span>
         <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">fullscreen_width</span>, <span class="ident">fullscreen_height</span>, <span class="ident">bpp</span>) <span class="op">=</span> {
+                <span class="kw">let</span> <span class="ident">fb</span> <span class="op">=</span> <span class="ident">FRAMEBUFFER</span>.<span class="ident">lock</span>();
+                (<span class="ident">fb</span>.<span class="ident">width</span>(), <span class="ident">fb</span>.<span class="ident">height</span>(), <span class="ident">fb</span>.<span class="ident">bpp</span>())
+            };
+            <span class="comment">// create a fake Framebuffer that writes to BACKBUFFER_ARR,</span>
+            <span class="comment">// and copy it to actual screen only when we&#39;re done composing all layers in it.</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">backbuffer_arr</span> <span class="op">=</span> <span class="ident">BACKBUFFER_ARR</span>.<span class="ident">lock</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="ident">Framebuffer</span>::<span class="ident">new_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">backbuffer_arr</span>, <span class="number">1280</span>, <span class="number">800</span>, <span class="number">32</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="ident">Framebuffer</span>::<span class="ident">new_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">backbuffer_arr</span>, <span class="ident">fullscreen_width</span>, <span class="ident">fullscreen_height</span>, <span class="ident">bpp</span>);
             <span class="kw">let</span> (<span class="ident">dtop</span>, <span class="ident">dleft</span>, <span class="ident">dwidth</span>, <span class="ident">dheight</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">get_real_bounds</span>(<span class="ident">framebuffer</span>.<span class="ident">width</span>() <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">framebuffer</span>.<span class="ident">height</span>() <span class="kw">as</span> <span class="ident">u32</span>);
             <span class="ident">framebuffer</span>.<span class="ident">clear_at</span>(<span class="ident">dleft</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">dtop</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">dwidth</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">dheight</span> <span class="kw">as</span> <span class="kw">_</span>);
             <span class="ident">BUFFERS</span>.<span class="ident">lock</span>().<span class="ident">retain</span>(<span class="op">|</span><span class="ident">buffer</span><span class="op">|</span> {
@@ -585,7 +635,9 @@
                     <span class="bool-val">false</span>
                 }
             });
-            <span class="ident">FRAMEBUFFER</span>.<span class="ident">lock</span>().<span class="ident">get_fb</span>().<span class="ident">copy_from_slice</span>(<span class="ident">framebuffer</span>.<span class="ident">get_fb</span>());
+            <span class="comment">// BACKBUFFER_ARR is often bigger than our screen, take only the first pixels.</span>
+            <span class="kw">let</span> <span class="ident">screen_in_backbuffer</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">framebuffer</span>.<span class="ident">get_fb</span>()[<span class="number">0</span>..(<span class="ident">fullscreen_width</span> <span class="op">*</span> <span class="ident">fullscreen_height</span>)];
+            <span class="ident">FRAMEBUFFER</span>.<span class="ident">lock</span>().<span class="ident">get_fb</span>().<span class="ident">copy_from_slice</span>(<span class="ident">screen_in_backbuffer</span>);
             <span class="prelude-val">Ok</span>(())
         }
     }

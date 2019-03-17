@@ -145,7 +145,6 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
-<span id="148">148</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Window creation and drawing APIs</span>
 <span class="doccomment">//!</span>
@@ -201,7 +200,6 @@
     <span class="doccomment">/// Creates a window in the vi compositor.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">top</span>: <span class="ident">i32</span>, <span class="ident">left</span>: <span class="ident">i32</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Window</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vi</span> <span class="op">=</span> <span class="ident">ViInterface</span>::<span class="ident">raw_new</span>()<span class="question-mark">?</span>;
-
         <span class="kw">let</span> <span class="ident">bpp</span> <span class="op">=</span> <span class="number">32</span>;
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">*</span> <span class="ident">width</span> <span class="op">*</span> <span class="ident">bpp</span> <span class="op">/</span> <span class="number">8</span>;
 

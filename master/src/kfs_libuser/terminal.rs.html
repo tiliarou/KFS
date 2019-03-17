@@ -314,6 +314,7 @@
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">window</span>::{<span class="ident">Window</span>, <span class="ident">Color</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vi</span>::<span class="ident">ViInterface</span>;
 
 <span class="doccomment">/// Just an x and a y</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -384,14 +385,13 @@
 
         <span class="kw">let</span> <span class="ident">my_linespace</span> <span class="op">=</span> <span class="ident">my_descent</span> <span class="op">+</span> <span class="ident">my_ascent</span>;
 
-        <span class="comment">// TODO: Terminal - Get window size from vi</span>
-        <span class="comment">// BODY: Terminal defines a fullscreen size as 1280 * 800, but should</span>
-        <span class="comment">// BODY: really get it from vi instead. </span>
+        <span class="kw">let</span> (<span class="ident">fullscreen_width</span>, <span class="ident">fullscreen_height</span>) <span class="op">=</span> <span class="ident">ViInterface</span>::<span class="ident">raw_new</span>()<span class="question-mark">?</span>.<span class="ident">get_screen_resolution</span>()<span class="question-mark">?</span>;
+
         <span class="kw">let</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">size</span> {
-            <span class="ident">WindowSize</span>::<span class="ident">Fullscreen</span> <span class="op">=&gt;</span> <span class="ident">Window</span>::<span class="ident">new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1280</span>, <span class="number">800</span>)<span class="question-mark">?</span>,
+            <span class="ident">WindowSize</span>::<span class="ident">Fullscreen</span> <span class="op">=&gt;</span> <span class="ident">Window</span>::<span class="ident">new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="ident">fullscreen_width</span>, <span class="ident">fullscreen_height</span>)<span class="question-mark">?</span>,
             <span class="ident">WindowSize</span>::<span class="ident">FontLines</span>(<span class="ident">lines</span>, <span class="ident">is_bottom</span>) <span class="op">=&gt;</span> {
                 <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">lines</span> <span class="op">&lt;</span> <span class="number">0</span> {
-                    <span class="kw">let</span> <span class="ident">max_lines</span> <span class="op">=</span> <span class="number">800</span> <span class="op">/</span> <span class="ident">my_linespace</span>;
+                    <span class="kw">let</span> <span class="ident">max_lines</span> <span class="op">=</span> (<span class="ident">fullscreen_height</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">/</span> <span class="ident">my_linespace</span>;
                     <span class="ident">my_linespace</span> <span class="op">*</span> ((<span class="ident">max_lines</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="ident">lines</span>) <span class="kw">as</span> <span class="ident">usize</span>
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">lines</span> <span class="op">==</span> <span class="number">1</span> {
                     <span class="comment">// Orycterope&#39;s fault. Scrolling expects at least one line</span>
@@ -401,11 +401,11 @@
                     <span class="ident">my_linespace</span> <span class="op">*</span> <span class="ident">lines</span> <span class="kw">as</span> <span class="ident">usize</span>
                 };
                 <span class="kw">let</span> <span class="ident">top</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_bottom</span> {
-                    <span class="number">800</span> <span class="op">-</span> <span class="ident">height</span>
+                    (<span class="ident">fullscreen_height</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">-</span> <span class="ident">height</span>
                 } <span class="kw">else</span> {
                     <span class="number">0</span>
                 };
-                <span class="ident">Window</span>::<span class="ident">new</span>(<span class="ident">top</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="number">0</span>, <span class="number">1280</span>, <span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>)<span class="question-mark">?</span>
+                <span class="ident">Window</span>::<span class="ident">new</span>(<span class="ident">top</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="number">0</span>, <span class="ident">fullscreen_width</span>, <span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>)<span class="question-mark">?</span>
             }
             <span class="ident">WindowSize</span>::<span class="ident">Manual</span>(<span class="ident">top</span>, <span class="ident">left</span>, <span class="ident">width</span>, <span class="ident">height</span>) <span class="op">=&gt;</span> <span class="ident">Window</span>::<span class="ident">new</span>(<span class="ident">top</span>, <span class="ident">left</span>, <span class="ident">width</span>, <span class="ident">height</span>)<span class="question-mark">?</span>
         };
