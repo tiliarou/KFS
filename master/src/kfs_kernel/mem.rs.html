@@ -352,12 +352,12 @@
 
 <span class="kw">impl</span> <span class="ident">VirtualAddress</span>  {
     <span class="doccomment">/// Gets the address as a `usize`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addr</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="self">self</span>.<span class="number">0</span> }
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">addr</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="self">self</span>.<span class="number">0</span> }
 }
 
 <span class="kw">impl</span> <span class="ident">PhysicalAddress</span> {
     <span class="doccomment">/// Gets the address as a `usize`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addr</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="self">self</span>.<span class="number">0</span> }
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">addr</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span> { <span class="self">self</span>.<span class="number">0</span> }
 }
 
 <span class="kw">impl</span> ::<span class="ident">core</span>::<span class="ident">ops</span>::<span class="ident">Add</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VirtualAddress</span> {
