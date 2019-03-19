@@ -186,6 +186,10 @@
 <span id="186">186</span>
 <span id="187">187</span>
 <span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Error handling</span>
 <span class="doccomment">//!</span>
@@ -314,6 +318,10 @@
         <span class="ident">InvalidCopyHandleCount</span> <span class="op">=</span> <span class="number">3</span>,
         <span class="doccomment">/// Attempted to read PID from an IPC message containing none.</span>
         <span class="ident">PidMissing</span> <span class="op">=</span> <span class="number">4</span>,
+        <span class="doccomment">/// Not enough IPC buffers were passed to an IPC message.</span>
+        <span class="ident">InvalidIpcBufferCount</span> <span class="op">=</span> <span class="number">5</span>,
+        <span class="doccomment">/// Invalid IPCBuffer</span>
+        <span class="ident">InvalidIpcBuffer</span> <span class="op">=</span> <span class="number">6</span>,
     }
 }
 

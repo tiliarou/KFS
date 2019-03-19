@@ -132,6 +132,12 @@
 <span id="132">132</span>
 <span id="133">133</span>
 <span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! UserspaceError and KernelError</span>
 
@@ -230,6 +236,11 @@
         <span class="ident">kcap</span>: <span class="ident">u32</span>,
         <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>,
     },
+    <span class="comment">// TODO: Properly split this up.</span>
+    <span class="attribute">#[<span class="ident">fail</span>(<span class="ident">display</span> <span class="op">=</span> <span class="string">&quot;Error related to IPC&quot;</span>)]</span>
+    <span class="ident">IpcError</span> {
+        <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>,
+    },
     <span class="attribute">#[<span class="ident">fail</span>(<span class="ident">display</span> <span class="op">=</span> <span class="string">&quot;Value is reserved for future use.&quot;</span>)]</span>
     <span class="ident">ReservedValue</span> {
         <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>,
@@ -258,6 +269,7 @@
             <span class="ident">KernelError</span>::<span class="ident">InvalidCombination</span> { .. } <span class="op">=&gt;</span> <span class="ident">UserspaceError</span>::<span class="ident">InvalidCombination</span>,
             <span class="ident">KernelError</span>::<span class="ident">ExceedingMaximum</span> { .. } <span class="op">=&gt;</span> <span class="ident">UserspaceError</span>::<span class="ident">ExceedingMaximum</span>,
             <span class="ident">KernelError</span>::<span class="ident">InvalidKernelCaps</span> { .. } <span class="op">=&gt;</span> <span class="ident">UserspaceError</span>::<span class="ident">InvalidKernelCaps</span>,
+            <span class="ident">KernelError</span>::<span class="ident">IpcError</span> { .. } <span class="op">=&gt;</span> <span class="ident">UserspaceError</span>::<span class="ident">PortRemoteDead</span>,
             <span class="ident">KernelError</span>::<span class="ident">ReservedValue</span> { .. } <span class="op">=&gt;</span> <span class="ident">UserspaceError</span>::<span class="ident">ReservedValue</span>,
             <span class="comment">//KernelError::</span>
             <span class="ident">KernelError</span>::<span class="ident">ThisWillNeverHappenButPleaseDontMatchExhaustively</span> <span class="op">=&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),

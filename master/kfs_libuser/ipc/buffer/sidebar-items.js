@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["InBuffer","An incoming Buffer, also known as a Type-A Buffer."],["InPointer","An incoming Pointer buffer, also known as a Type-X Buffer."]]});

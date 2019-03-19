@@ -488,6 +488,144 @@
 <span id="488">488</span>
 <span id="489">489</span>
 <span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! IPC Sessions</span>
 <span class="doccomment">//!</span>
@@ -521,9 +659,11 @@
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">slice</span>;
 <span class="kw">use</span> <span class="ident">byteorder</span>::{<span class="ident">LE</span>, <span class="ident">ByteOrder</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">MappingAccessRights</span>, <span class="ident">mapping</span>::<span class="ident">MappingType</span>, <span class="ident">process_memory</span>::<span class="ident">ProcessMemory</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">MappingAccessRights</span>, <span class="ident">process_memory</span>::<span class="ident">ProcessMemory</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">UserSpacePtr</span>, <span class="ident">UserSpacePtrMut</span>, <span class="ident">VirtualAddress</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitField</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">checks</span>::<span class="ident">check_lower_than_usize</span>;
 
 <span class="doccomment">/// Wrapper around the currently active session and the incoming request list.</span>
 <span class="doccomment">/// They are kept together so they are locked together.</span>
@@ -682,7 +822,6 @@
     <span class="ident">answered</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">SpinLock</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;&gt;</span><span class="op">&gt;&gt;</span>,
 }
 
-<span class="comment">// TODO finish buf_map</span>
 <span class="doccomment">/// Send an IPC Buffer from the sender into the receiver.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// There are two &quot;families&quot; of IPC buffers:</span>
@@ -714,46 +853,38 @@
         .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">rest</span>.<span class="ident">get_bits</span>(<span class="number">24</span>..<span class="number">28</span>)));
 
     <span class="comment">// 64-bit address on a 32-bit kernel!</span>
-    <span class="kw">if</span> (<span class="ident">usize</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span> <span class="ident">addr</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>);
-    }
-
-    <span class="comment">// 64-bit size on a 32-bit kernel!</span>
-    <span class="kw">if</span> (<span class="ident">usize</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span> <span class="ident">size</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">InvalidSize</span>);
-    }
-
-    <span class="comment">// 64-bit address on a 32-bit kernel</span>
-    <span class="kw">if</span> (<span class="ident">usize</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span> <span class="ident">addr</span>.<span class="ident">saturating_add</span>(<span class="ident">size</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">InvalidSize</span>);
-    }
+    <span class="ident">check_lower_than_usize</span>(<span class="ident">addr</span>, <span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>;
+    <span class="ident">check_lower_than_usize</span>(<span class="ident">size</span>, <span class="ident">UserspaceError</span>::<span class="ident">InvalidSize</span>)<span class="question-mark">?</span>;
+    <span class="ident">check_lower_than_usize</span>(<span class="ident">addr</span>.<span class="ident">saturating_add</span>(<span class="ident">size</span>), <span class="ident">UserspaceError</span>::<span class="ident">InvalidSize</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span> <span class="kw">as</span> <span class="ident">usize</span>;
     <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>;
 
-    <span class="comment">// Map the descriptor in the other process.</span>
-    <span class="kw">let</span> <span class="ident">to_addr</span> : <span class="ident">VirtualAddress</span> <span class="op">=</span> <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;Needs the equivalent to find_available_virtual_space&quot;</span>);
-    <span class="comment">/*let to_addr = to_mem.find_available_virtual_space_runtime(size / paging::PAGE_SIZE)
-        .ok_or(UserspaceError::MemoryFull)?;*/</span>
+    <span class="kw">let</span> <span class="ident">to_addr</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="comment">// Null pointers shouldn&#39;t be mapped.</span>
+        <span class="number">0</span>
+    } <span class="kw">else</span> {
+        <span class="comment">// TODO: buf_map: Check that from_mem has the right permissions</span>
+        <span class="comment">// BODY: buf_map currently remaps without checking the permissions. This</span>
+        <span class="comment">// BODY: could allow a user to read non-user-accessible memory, or</span>
+        <span class="comment">// BODY: write to non-writable memory.</span>
+        <span class="comment">// BODY:</span>
+        <span class="comment">// BODY: Whatever mechanism we setup for UserSpacePtr, we should probably</span>
+        <span class="comment">// BODY: reuse it here.</span>
 
-    <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">from_mem</span>.<span class="ident">unmap</span>(<span class="ident">VirtualAddress</span>(<span class="ident">addr</span>), <span class="ident">size</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">flags</span>();
-    <span class="kw">let</span> <span class="ident">phys</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">mtype</span>() {
-        <span class="ident">MappingType</span>::<span class="ident">Available</span> <span class="op">|</span> <span class="ident">MappingType</span>::<span class="ident">Guarded</span> <span class="op">|</span> <span class="ident">MappingType</span>::<span class="ident">SystemReserved</span> <span class="op">=&gt;</span>
-            <span class="comment">// todo remap it D:</span>
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>),
-        <span class="ident">MappingType</span>::<span class="ident">Regular</span>(<span class="ident">vec</span>) <span class="comment">/*| MappingType::Stack(vec) */</span> <span class="op">=&gt;</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">vec</span>),
-        <span class="ident">MappingType</span>::<span class="ident">Shared</span>(<span class="ident">arc</span>) <span class="op">=&gt;</span> <span class="ident">arc</span>,
+        <span class="comment">// Map the descriptor in the other process.</span>
+        <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">from_mem</span>.<span class="ident">share_existing_mapping</span>(<span class="ident">VirtualAddress</span>(<span class="ident">addr</span>), <span class="ident">size</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">to_addr</span> <span class="op">=</span> <span class="ident">to_mem</span>.<span class="ident">find_available_space</span>(<span class="ident">size</span>)<span class="question-mark">?</span>;
+        <span class="ident">to_mem</span>.<span class="ident">map_shared_mapping</span>(<span class="ident">mapping</span>, <span class="ident">to_addr</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">u_rw</span>())<span class="question-mark">?</span>;
+        <span class="ident">to_addr</span>.<span class="ident">addr</span>()
     };
 
-    <span class="ident">from_mem</span>.<span class="ident">map_shared_mapping</span>(<span class="ident">phys</span>, <span class="ident">VirtualAddress</span>(<span class="ident">addr</span>), <span class="ident">flags</span>)<span class="question-mark">?</span>;
-
-    <span class="kw">let</span> <span class="ident">loweraddr</span> <span class="op">=</span> <span class="ident">to_addr</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">let</span> <span class="ident">loweraddr</span> <span class="op">=</span> <span class="ident">to_addr</span> <span class="kw">as</span> <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="kw-2">*</span><span class="number">0u32</span>
         .<span class="ident">set_bits</span>(<span class="number">0</span>..<span class="number">2</span>, <span class="ident">bufflags</span>)
-        .<span class="ident">set_bits</span>(<span class="number">2</span>..<span class="number">5</span>, (<span class="ident">to_addr</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">get_bits</span>(<span class="number">36</span>..<span class="number">39</span>) <span class="kw">as</span> <span class="ident">u32</span>)
+        .<span class="ident">set_bits</span>(<span class="number">2</span>..<span class="number">5</span>, (<span class="ident">to_addr</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">get_bits</span>(<span class="number">36</span>..<span class="number">39</span>) <span class="kw">as</span> <span class="ident">u32</span>)
         .<span class="ident">set_bits</span>(<span class="number">24</span>..<span class="number">28</span>, (<span class="ident">size</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">get_bits</span>(<span class="number">32</span>..<span class="number">36</span>) <span class="kw">as</span> <span class="ident">u32</span>)
-        .<span class="ident">set_bits</span>(<span class="number">28</span>..<span class="number">32</span>, (<span class="ident">to_addr</span>.<span class="ident">addr</span>() <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">get_bits</span>(<span class="number">32</span>..<span class="number">36</span>) <span class="kw">as</span> <span class="ident">u32</span>);
+        .<span class="ident">set_bits</span>(<span class="number">28</span>..<span class="number">32</span>, (<span class="ident">to_addr</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">get_bits</span>(<span class="number">32</span>..<span class="number">36</span>) <span class="kw">as</span> <span class="ident">u32</span>);
 
     <span class="ident">LE</span>::<span class="ident">write_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">to_buf</span>[<span class="kw-2">*</span><span class="ident">curoff</span> <span class="op">+</span> <span class="number">0</span>..<span class="kw-2">*</span><span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>], <span class="ident">lowersize</span>);
     <span class="ident">LE</span>::<span class="ident">write_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">to_buf</span>[<span class="kw-2">*</span><span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>..<span class="kw-2">*</span><span class="ident">curoff</span> <span class="op">+</span> <span class="number">8</span>], <span class="ident">loweraddr</span>);
@@ -775,8 +906,6 @@
     <span class="doccomment">/// take an arbitrary long time. We do not eagerly read the buffer - it will</span>
     <span class="doccomment">/// be read from when the server asks to receive a request.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_request</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buf</span>: <span class="ident">UserSpacePtrMut</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
-        <span class="comment">// TODO: Unmapping is out of the question. Ideally, I should just affect the bookkeeping</span>
-        <span class="comment">// in order to remap it in the kernel.</span>
         <span class="kw">let</span> <span class="ident">answered</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">SpinLock</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
 
         {
@@ -814,6 +943,60 @@
     }
 }
 
+<span class="doccomment">/// Efficiently finds C Descriptor in a message.</span>
+<span class="kw">fn</span> <span class="ident">find_c_descriptors</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CBufBehavior</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">curoff</span> <span class="op">=</span> <span class="number">0</span>;
+
+    <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">MsgPackedHdr</span>(<span class="ident">LE</span>::<span class="ident">read_u64</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[<span class="ident">curoff</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">8</span>]));
+    <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">8</span>;
+
+    <span class="kw">let</span> <span class="ident">cflag</span> <span class="op">=</span> <span class="ident">hdr</span>.<span class="ident">c_descriptor_flags</span>();
+
+    <span class="kw">match</span> <span class="ident">cflag</span> {
+        <span class="number">0</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">CBufBehavior</span>::<span class="ident">Disabled</span>),
+        <span class="number">1</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">CBufBehavior</span>::<span class="ident">Inlined</span>),
+        <span class="kw">_</span> <span class="op">=&gt;</span> ()
+    }
+
+    <span class="comment">// Go grab C descriptors</span>
+
+    <span class="kw">if</span> <span class="ident">hdr</span>.<span class="ident">enable_handle_descriptor</span>() {
+        <span class="kw">let</span> <span class="ident">descriptor</span> <span class="op">=</span> <span class="ident">HandleDescriptorHeader</span>(<span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[<span class="ident">curoff</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>]));
+        <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">4</span>;
+        <span class="kw">if</span> <span class="ident">descriptor</span>.<span class="ident">send_pid</span>() {
+            <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">8</span>;
+        }
+        <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">4</span> <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="ident">descriptor</span>.<span class="ident">num_copy_handles</span>() <span class="op">+</span> <span class="ident">descriptor</span>.<span class="ident">num_move_handles</span>());
+    }
+
+    <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">8</span> <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="ident">hdr</span>.<span class="ident">num_x_descriptors</span>());
+    <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">12</span> <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="ident">hdr</span>.<span class="ident">num_a_descriptors</span>() <span class="op">+</span> <span class="ident">hdr</span>.<span class="ident">num_b_descriptors</span>() <span class="op">+</span> <span class="ident">hdr</span>.<span class="ident">num_w_descriptors</span>());
+    <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">4</span> <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="ident">hdr</span>.<span class="ident">raw_section_size</span>());
+
+
+    <span class="kw">match</span> <span class="ident">hdr</span>.<span class="ident">c_descriptor_flags</span>() {
+        <span class="number">0</span> <span class="op">|</span> <span class="number">1</span> <span class="op">=&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+        <span class="number">2</span> <span class="op">=&gt;</span> {
+            <span class="kw">let</span> <span class="ident">word1</span> <span class="op">=</span> <span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[<span class="ident">curoff</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>]);
+            <span class="kw">let</span> <span class="ident">word2</span> <span class="op">=</span> <span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">8</span>]);
+            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word1</span>).<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">48</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word2</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">16</span>)));
+            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word2</span>.<span class="ident">get_bits</span>(<span class="number">16</span>..<span class="number">32</span>));
+            <span class="prelude-val">Ok</span>(<span class="ident">CBufBehavior</span>::<span class="ident">Single</span>(<span class="ident">addr</span>, <span class="ident">size</span>))
+        },
+        <span class="ident">x</span> <span class="op">=&gt;</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bufs</span> <span class="op">=</span> [(<span class="number">0</span>, <span class="number">0</span>); <span class="number">13</span>];
+            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">x</span> <span class="op">-</span> <span class="number">2</span> {
+                <span class="kw">let</span> <span class="ident">word1</span> <span class="op">=</span> <span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[<span class="ident">curoff</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>]);
+                <span class="kw">let</span> <span class="ident">word2</span> <span class="op">=</span> <span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>[<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">8</span>]);
+                <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word1</span>).<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">48</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word2</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">16</span>)));
+                <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word2</span>.<span class="ident">get_bits</span>(<span class="number">16</span>..<span class="number">32</span>));
+                <span class="ident">bufs</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> (<span class="ident">addr</span>, <span class="ident">size</span>);
+            }
+            <span class="prelude-val">Ok</span>(<span class="ident">CBufBehavior</span>::<span class="ident">Numbered</span>(<span class="ident">bufs</span>, (<span class="ident">x</span> <span class="op">-</span> <span class="number">2</span>) <span class="kw">as</span> <span class="ident">usize</span>))
+        }
+    }
+}
+
 <span class="kw">impl</span> <span class="ident">ServerSession</span> {
     <span class="doccomment">/// Receive an IPC request through the server pipe. Takes a userspace buffer</span>
     <span class="doccomment">/// containing an empty IPC message. The request may optionally contain a</span>
@@ -822,7 +1005,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function does **not** wait. It assumes an active_request has already</span>
     <span class="doccomment">/// been set by a prior call to wait.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">receive</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">buf</span>: <span class="ident">UserSpacePtrMut</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">receive</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">buf</span>: <span class="ident">UserSpacePtrMut</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">has_c_descriptors</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
         <span class="comment">// Read active session</span>
         <span class="kw">let</span> <span class="ident">internal</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">internal</span>.<span class="ident">lock</span>();
 
@@ -838,7 +1021,13 @@
             <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">mapping</span>.<span class="ident">addr</span>().<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">mapping</span>.<span class="ident">len</span>())
         };
 
-        <span class="ident">pass_message</span>(<span class="ident">sender_buf</span>, <span class="ident">active</span>.<span class="ident">sender</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">buf</span>, <span class="ident">scheduler</span>::<span class="ident">get_current_thread</span>())<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">c_bufs</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">has_c_descriptors</span> {
+            <span class="ident">find_c_descriptors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">buf</span>)<span class="question-mark">?</span>
+        } <span class="kw">else</span> {
+            <span class="ident">CBufBehavior</span>::<span class="ident">Disabled</span>
+        };
+
+        <span class="ident">pass_message</span>(<span class="ident">sender_buf</span>, <span class="ident">active</span>.<span class="ident">sender</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">buf</span>, <span class="ident">scheduler</span>::<span class="ident">get_current_thread</span>(), <span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">memlock</span>, <span class="ident">c_bufs</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -871,7 +1060,7 @@
             <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">mapping</span>.<span class="ident">addr</span>().<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">mapping</span>.<span class="ident">len</span>())
         };
 
-        <span class="ident">pass_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buf</span>, <span class="ident">scheduler</span>::<span class="ident">get_current_thread</span>(), <span class="ident">sender_buf</span>, <span class="ident">active</span>.<span class="ident">sender</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+        <span class="ident">pass_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buf</span>, <span class="ident">scheduler</span>::<span class="ident">get_current_thread</span>(), <span class="ident">sender_buf</span>, <span class="ident">active</span>.<span class="ident">sender</span>.<span class="ident">clone</span>(), <span class="bool-val">true</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">memlock</span>, <span class="ident">CBufBehavior</span>::<span class="ident">Disabled</span>)<span class="question-mark">?</span>;
 
         <span class="kw-2">*</span><span class="ident">active</span>.<span class="ident">answered</span>.<span class="ident">lock</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(()));
 
@@ -881,9 +1070,21 @@
     }
 }
 
-<span class="comment">// TODO: Kernel IPC: Implement X and C descriptor support in pass_message.</span>
-<span class="comment">// BODY: X and C descriptors are complicated and support for them is put off for</span>
-<span class="comment">// BODY: the time being. We&#39;ll likely want them when implementing FS though.</span>
+<span class="doccomment">/// Defines how to handle X Buffer descriptors based on the C Buffer flags.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">large_enum_variant</span>)]</span> <span class="comment">// Expected.</span>
+<span class="kw">enum</span> <span class="ident">CBufBehavior</span> {
+    <span class="doccomment">/// No C Buffers are available. Presence of X Buffers should cause an error.</span>
+    <span class="ident">Disabled</span>,
+    <span class="doccomment">/// X Buffers should be copied after the Raw Data.</span>
+    <span class="ident">Inlined</span>,
+    <span class="doccomment">/// X Buffers should be copied sequentially to the C Buffer represented by</span>
+    <span class="doccomment">/// the given address/size pair.</span>
+    <span class="ident">Single</span>(<span class="ident">u64</span>, <span class="ident">u64</span>),
+    <span class="doccomment">/// X Buffers should be copied to the appropriate C Buffer represented y</span>
+    <span class="doccomment">/// the given address/size pair, based on the counter.</span>
+    <span class="ident">Numbered</span>([(<span class="ident">u64</span>, <span class="ident">u64</span>); <span class="number">13</span>], <span class="ident">usize</span>)
+}
+
 <span class="doccomment">/// Send a message from the sender to the receiver. This is more or less a</span>
 <span class="doccomment">/// memcpy, with some special case done to satisfy the various commands of the</span>
 <span class="doccomment">/// CMIF structure:</span>
@@ -895,8 +1096,11 @@
 <span class="doccomment">///   rewritten to the receiver&#39;s.</span>
 <span class="doccomment">/// - Buffers are appropriately mapped through the [buf_map] function, and the</span>
 <span class="doccomment">///   address are rewritten to in the receiver&#39;s address space.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This function should always be called from the context of the receiver/</span>
+<span class="doccomment">/// server.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="kw">fn</span> <span class="ident">pass_message</span>(<span class="ident">from_buf</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">from_proc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>, <span class="ident">to_buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>], <span class="ident">to_proc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">pass_message</span>(<span class="ident">from_buf</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">from_proc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>, <span class="ident">to_buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>], <span class="ident">to_proc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ThreadStruct</span><span class="op">&gt;</span>, <span class="ident">is_reply</span>: <span class="ident">bool</span>, <span class="ident">other_memlock</span>: <span class="kw-2">&amp;</span><span class="ident">ProcessMemory</span>, <span class="ident">c_bufs</span>: <span class="ident">CBufBehavior</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserspaceError</span><span class="op">&gt;</span> {
     <span class="comment">// TODO: pass_message deadlocks when sending message to the same process.</span>
     <span class="comment">// BODY: If from_proc and to_proc are the same process, pass_message will</span>
     <span class="comment">// BODY: deadlock trying to acquire the locks to the handle table or the</span>
@@ -943,8 +1147,80 @@
         }
     }
 
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">hdr</span>.<span class="ident">num_x_descriptors</span>() {
-        <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;Let&#39;s figure this out another time&quot;</span>);
+    {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">coff</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">hdr</span>.<span class="ident">num_x_descriptors</span>() {
+            <span class="kw">let</span> <span class="ident">word1</span> <span class="op">=</span> <span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="kw-2">&amp;</span><span class="ident">from_buf</span>[<span class="ident">curoff</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>]);
+            <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="ident">word1</span>.<span class="ident">get_bits</span>(<span class="number">0</span>..<span class="number">6</span>); <span class="comment">// Counter can&#39;t go higher anyways.</span>
+
+            <span class="kw">let</span> <span class="ident">from_addr</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">LE</span>::<span class="ident">read_u32</span>(<span class="kw-2">&amp;</span><span class="ident">from_buf</span>[<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">8</span>]))
+                .<span class="ident">set_bits</span>(<span class="number">32</span>..<span class="number">36</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word1</span>.<span class="ident">get_bits</span>(<span class="number">12</span>..<span class="number">16</span>)))
+                .<span class="ident">set_bits</span>(<span class="number">36</span>..<span class="number">39</span>, <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word1</span>.<span class="ident">get_bits</span>(<span class="number">6</span>..<span class="number">9</span>)));
+            <span class="kw">let</span> <span class="ident">from_size</span> <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">word1</span>.<span class="ident">get_bits</span>(<span class="number">16</span>..<span class="number">32</span>));
+
+            <span class="kw">let</span> (<span class="ident">to_addr</span>, <span class="ident">to_size</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">c_bufs</span> {
+                <span class="ident">CBufBehavior</span>::<span class="ident">Disabled</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserspaceError</span>::<span class="ident">PortRemoteDead</span>),
+                <span class="ident">CBufBehavior</span>::<span class="ident">Inlined</span> <span class="op">=&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                <span class="ident">CBufBehavior</span>::<span class="ident">Single</span>(<span class="ident">addr</span>, <span class="ident">size</span>) <span class="op">=&gt;</span> {
+                    (<span class="ident">addr</span> <span class="op">+</span> <span class="ident">coff</span>, <span class="ident">size</span> <span class="op">-</span> <span class="ident">coff</span>)
+                },
+                <span class="ident">CBufBehavior</span>::<span class="ident">Numbered</span>(<span class="ident">bufs</span>, <span class="ident">count</span>) <span class="op">=&gt;</span> {
+                    <span class="comment">// TODO: IPC Type-X: Prevent multiple writes to a C-buffer?</span>
+                    <span class="comment">// BODY: Do I need to prevent multiple writes to the same</span>
+                    <span class="comment">// BODY: buffer ID? In theory, I could use coff as a bitmap</span>
+                    <span class="comment">// BODY: of used buffers, and prevent reuse this way, but I&#39;m</span>
+                    <span class="comment">// BODY: unsure of how the nintendo switch behaves here.</span>
+                    <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">size</span>) <span class="op">=</span> <span class="ident">bufs</span>[..<span class="ident">count</span>][<span class="ident">counter</span> <span class="kw">as</span> <span class="ident">usize</span>];
+                    (<span class="ident">addr</span>, <span class="ident">size</span>)
+                }
+            };
+
+            <span class="comment">// Check addresses fit in 32-bit kernel.</span>
+            <span class="ident">check_lower_than_usize</span>(<span class="ident">from_addr</span>, <span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>;
+            <span class="ident">check_lower_than_usize</span>(<span class="ident">from_size</span>, <span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>;
+            <span class="ident">check_lower_than_usize</span>(<span class="ident">from_addr</span>.<span class="ident">saturating_add</span>(<span class="ident">from_size</span>), <span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>;
+            <span class="ident">check_lower_than_usize</span>(<span class="ident">to_addr</span>, <span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>;
+            <span class="ident">check_lower_than_usize</span>(<span class="ident">to_size</span>, <span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>;
+            <span class="ident">check_lower_than_usize</span>(<span class="ident">to_addr</span>.<span class="ident">saturating_add</span>(<span class="ident">to_size</span>), <span class="ident">UserspaceError</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">let</span> (<span class="ident">mapping</span>, <span class="kw-2">mut</span> <span class="ident">uspaceptr</span>) <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">is_reply</span> {
+                <span class="comment">// We&#39;re receiving: C Buffers are in our address space, X buffers</span>
+                <span class="comment">// are in the other address space</span>
+                <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">other_memlock</span>.<span class="ident">mirror_mapping</span>(<span class="ident">VirtualAddress</span>(<span class="ident">from_addr</span> <span class="kw">as</span> <span class="ident">usize</span>), <span class="ident">from_size</span> <span class="kw">as</span> <span class="ident">usize</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">uspaceptr</span> <span class="op">=</span> <span class="ident">UserSpacePtrMut</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">to_addr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">to_size</span> <span class="kw">as</span> <span class="ident">usize</span>);
+                (<span class="ident">mapping</span>, <span class="ident">uspaceptr</span>)
+            } <span class="kw">else</span> {
+                <span class="comment">// We&#39;re receiving: C Buffers are in our address space, X buffers</span>
+                <span class="comment">// are in the other address space</span>
+                <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">other_memlock</span>.<span class="ident">mirror_mapping</span>(<span class="ident">VirtualAddress</span>(<span class="ident">to_addr</span> <span class="kw">as</span> <span class="ident">usize</span>), <span class="ident">to_size</span> <span class="kw">as</span> <span class="ident">usize</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">uspaceptr</span> <span class="op">=</span> <span class="ident">UserSpacePtrMut</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">from_addr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">from_size</span> <span class="kw">as</span> <span class="ident">usize</span>);
+                (<span class="ident">mapping</span>, <span class="ident">uspaceptr</span>)
+            };
+
+            <span class="kw">let</span> (<span class="ident">from</span>, <span class="ident">to</span>) <span class="op">=</span> {
+                <span class="kw">let</span> <span class="ident">ref_mapping</span> <span class="op">=</span> <span class="kw">unsafe</span> {
+                    <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">mapping</span>.<span class="ident">addr</span>().<span class="ident">addr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">mapping</span>.<span class="ident">len</span>())
+                };
+                <span class="kw">let</span> <span class="ident">ref_uspace</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">uspaceptr</span>;
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">is_reply</span> {
+                    (<span class="ident">ref_mapping</span>, <span class="ident">ref_uspace</span>)
+                } <span class="kw">else</span> {
+                    (<span class="ident">ref_uspace</span>, <span class="ident">ref_mapping</span>)
+                }
+            };
+
+            <span class="ident">to</span>[..<span class="ident">from</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="ident">from</span>);
+            <span class="ident">coff</span> <span class="op">+=</span> <span class="ident">from</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">counter</span> <span class="op">=</span> <span class="ident">counter</span>;
+            <span class="ident">LE</span>::<span class="ident">write_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">to_buf</span>[<span class="ident">curoff</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>], <span class="kw-2">*</span><span class="ident">counter</span>
+                .<span class="ident">set_bits</span>(<span class="number">6</span>..<span class="number">9</span>, <span class="ident">to_addr</span>.<span class="ident">get_bits</span>(<span class="number">36</span>..<span class="number">39</span>) <span class="kw">as</span> <span class="ident">u32</span>)
+                .<span class="ident">set_bits</span>(<span class="number">12</span>..<span class="number">16</span>, <span class="ident">to_addr</span>.<span class="ident">get_bits</span>(<span class="number">32</span>..<span class="number">36</span>) <span class="kw">as</span> <span class="ident">u32</span>)
+                .<span class="ident">set_bits</span>(<span class="number">16</span>..<span class="number">32</span>, <span class="ident">from_size</span> <span class="kw">as</span> <span class="ident">u32</span>));
+            <span class="ident">LE</span>::<span class="ident">write_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">to_buf</span>[<span class="ident">curoff</span> <span class="op">+</span> <span class="number">4</span>..<span class="ident">curoff</span> <span class="op">+</span> <span class="number">8</span>], <span class="ident">to_addr</span> <span class="kw">as</span> <span class="ident">u32</span>);
+
+            <span class="ident">curoff</span> <span class="op">+=</span> <span class="number">8</span>;
+        }
     }
 
     <span class="kw">if</span> <span class="ident">hdr</span>.<span class="ident">num_a_descriptors</span>() <span class="op">!=</span> <span class="number">0</span> <span class="op">||</span> <span class="ident">hdr</span>.<span class="ident">num_b_descriptors</span>() <span class="op">!=</span> <span class="number">0</span> {

@@ -1095,7 +1095,7 @@
     <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">wait_synchronization</span>(<span class="ident">handles</span>, <span class="ident">timeout</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">servsess</span> <span class="op">=</span> <span class="ident">proc</span>.<span class="ident">phandles</span>.<span class="ident">lock</span>().<span class="ident">get_handle</span>(<span class="ident">handles</span>[<span class="ident">idx</span>])<span class="question-mark">?</span>.<span class="ident">as_server_session</span>()<span class="question-mark">?</span>;
-    <span class="ident">servsess</span>.<span class="ident">receive</span>(<span class="ident">buf</span>)<span class="question-mark">?</span>;
+    <span class="ident">servsess</span>.<span class="ident">receive</span>(<span class="ident">buf</span>, <span class="ident">reply_target</span> <span class="op">==</span> <span class="number">0</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">idx</span>)
 }
 
