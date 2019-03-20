@@ -121,7 +121,7 @@
         <span class="kw">if</span> <span class="self">Self</span>::<span class="ident">contains_region</span>(<span class="ident">address</span>, <span class="ident">length</span>) {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
+            <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
         }
     }
 }

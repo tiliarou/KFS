@@ -554,6 +554,29 @@
 <span id="554">554</span>
 <span id="555">555</span>
 <span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The management of a process&#39; memory</span>
 <span class="doccomment">//!</span>
@@ -580,13 +603,12 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">bookkeeping</span>::<span class="ident">UserspaceBookkeeping</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mapping</span>::{<span class="ident">Mapping</span>, <span class="ident">MappingType</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">cross_process</span>::<span class="ident">CrossProcessMapping</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">MappingAccessRights</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::{<span class="ident">VirtualAddress</span>, <span class="ident">PhysicalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">FrameAllocatorTrait</span>, <span class="ident">PhysicalMemRegion</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">arch</span>::<span class="ident">Entry</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_size_aligned</span>, <span class="ident">check_nonzero_length</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">Splittable</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::{<span class="ident">vec</span>::<span class="ident">Vec</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
@@ -751,19 +773,19 @@
     <span class="doccomment">/// Maps a single physical regions to a given virtual address.</span>
     <span class="doccomment">/// Used to map mmio regions in UserSpace.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if length is not page aligned.</span>
-    <span class="doccomment">/// Returns a KernelError if length is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * there was already a mapping in the range.</span>
+    <span class="doccomment">///     * range does not fall in UserLand.</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_phys_region_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                               <span class="ident">phys</span>: <span class="ident">PhysicalMemRegion</span>,
                               <span class="ident">address</span>: <span class="ident">VirtualAddress</span>,
                               <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
                               <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">phys</span>.<span class="ident">size</span>();
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="ident">UserLand</span>::<span class="ident">check_contains_region</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">check_vacant</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="comment">// ok, everything seems good, from now on treat errors as unexpected</span>
@@ -778,14 +800,19 @@
 
     <span class="doccomment">/// Allocates the physical regions, and maps them to specified address.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if there was already a mapping in the range.</span>
-    <span class="doccomment">/// Returns a KernelError if address does not fall in UserLand.</span>
-    <span class="doccomment">/// Returns a KernelError if address or length is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * there was already a mapping in the range.</span>
+    <span class="doccomment">///     * range does not fall in UserLand.</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">/// * `InvalidSize` :</span>
+    <span class="doccomment">///     * `length` is not page aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
+    <span class="doccomment">/// * `PhysicalMemoryExhaustion`: Frames could not be allocated.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_regular_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="ident">UserLand</span>::<span class="ident">check_contains_region</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">check_vacant</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
@@ -802,21 +829,25 @@
 
     <span class="doccomment">/// Maps a previously created shared mapping to specified address.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if there was already a mapping in the range.</span>
-    <span class="doccomment">/// Returns a KernelError if address does not fall in UserLand.</span>
-    <span class="doccomment">/// Returns a KernelError if address or length is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * there was already a mapping in the range.</span>
+    <span class="doccomment">///     * range does not fall in UserLand.</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">/// * `InvalidSize` :</span>
+    <span class="doccomment">///     * `length` is not page aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_shared_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                               <span class="ident">shared_mapping</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span><span class="op">&gt;&gt;</span>,
                               <span class="ident">address</span>: <span class="ident">VirtualAddress</span>,
                               <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>)
                               <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="comment">// compute the length</span>
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">shared_mapping</span>.<span class="ident">iter</span>().<span class="ident">flatten</span>().<span class="ident">count</span>() <span class="op">*</span> <span class="ident">PAGE_SIZE</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">UserLand</span>::<span class="ident">check_contains_region</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">check_vacant</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="comment">// ok, everything seems good, from now on treat errors as unexpected</span>
@@ -838,8 +869,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if parameters do not span exactly the whole mapping.</span>
-    <span class="doccomment">/// Returns a KernelError if address falls in an available mapping.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address` does not correspond to the start of a mapping.</span>
+    <span class="doccomment">///     * `address` points to an Available/Guarded/SystemReserved mapping.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is not the size of the mapping at `address`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">share_existing_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span><span class="op">&gt;&gt;</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">remove_mapping</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">mtype_ref</span>() {
@@ -853,7 +887,7 @@
             <span class="kw">_</span> <span class="op">=&gt;</span> {
                 <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">add_mapping</span>(<span class="ident">mapping</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;add_mapping failed in shared_existing_mapping&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">InvalidMapping</span> { <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }));
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() });
             },
         };
 
@@ -881,11 +915,15 @@
 
     <span class="doccomment">/// Guards a range of addresses</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if there was already a mapping in the range.</span>
-    <span class="doccomment">/// Returns a KernelError if address does not fall in UserLand.</span>
-    <span class="doccomment">/// Returns a KernelError if address or length is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * there was already a mapping in the range.</span>
+    <span class="doccomment">///     * range does not fall in UserLand.</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">/// * `InvalidSize` :</span>
+    <span class="doccomment">///     * `length` is not page aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">guard</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span>{
         <span class="ident">UserLand</span>::<span class="ident">check_contains_region</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_guard</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
@@ -902,15 +940,16 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the range maps physical memory, it will be de-allocated.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if there was no mapping corresponding to the range.</span>
-    <span class="doccomment">/// Returns a KernelError if address does not fall in UserLand.</span>
-    <span class="doccomment">/// Returns a KernelError if address or length is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * there was no mapping starting at `address`.</span>
+    <span class="doccomment">///     * range does not fall in UserLand.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is not the size of the mapping at `address`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unmap</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">UserLand</span>::<span class="ident">check_contains_region</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
+        <span class="comment">// allow address and length to be unaligned, remove_mapping will just not find anything.</span>
         <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">remove_mapping</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">get_hierarchy</span>().<span class="ident">unmap</span>(<span class="ident">address</span>, <span class="ident">length</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="comment">/* leak the mapped frames here, we still have them in `mapping` */</span>
@@ -933,15 +972,21 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Because it is reference counted, a Shared mapping cannot be resized.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * WasAvailable if `address` does not match any existent mapping.</span>
-    <span class="doccomment">/// * InvalidSize if `new_size` &gt; previous mapping length.</span>
-    <span class="doccomment">/// * InvalidSize if `new_size` is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * No mapping was found starting at `address`.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `new_size` &gt; previous mapping length.</span>
+    <span class="doccomment">///     * `new_size` is not PAGE_SIZE aligned.</span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// * SharedMapping if `address` falls in a shared mapping.</span>
     <span class="doccomment">/// * InvalidMapping if `address` falls in a system reserved mapping.</span>
+    <span class="comment">// todo shrink_mapping seems extremely fishy</span>
+    <span class="comment">// body I should check everything is right with its return types and early returns.</span>
+    <span class="comment">// body It should at least check early for Shared and SystemReserved mappings.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shrink_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">new_size</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Mapping</span><span class="op">&gt;</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">new_size</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">new_size</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="comment">// 1. get the previous mapping&#39;s address and size.</span>
         <span class="kw">let</span> (<span class="ident">start_addr</span>, <span class="ident">old_size</span>) <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">old_mapping_ref</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">occupied_mapping_at</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
@@ -982,26 +1027,27 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Because it is reference counted, a Shared mapping cannot be resized.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * WasAvailable if `address` does not match any existent mapping.</span>
-    <span class="doccomment">/// * SharedMapping if `address` falls in a shared mapping.</span>
-    <span class="doccomment">/// * InvalidMapping if `address` falls in a system reserved mapping.</span>
-    <span class="doccomment">/// * InvalidSize if `new_size` &lt; previous mapping length.</span>
-    <span class="doccomment">/// * InvalidSize if `new_size` is not PAGE_SIZE aligned.</span>
-    <span class="doccomment">/// * InvalidSize if \[`address`..`new_size`\] does not fall in UserLand.</span>
-    <span class="doccomment">/// * WasOccupied if a mapping was already present in the expanding area.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * There was already a mapping in the range `address..(address + new_size)`.</span>
+    <span class="doccomment">///     * `address` does not match any existent mapping.</span>
+    <span class="doccomment">///     * `address` falls in a shared or system reserved mapping, which cannot be resized.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `address..(address + new_size)` does not fall in UserLand.</span>
+    <span class="doccomment">///     * `new_size` &lt; previous mapping length.</span>
+    <span class="doccomment">///     * `new_size` is not page aligned.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">new_size</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">new_size</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">new_size</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="comment">// 1. get the previous mapping&#39;s address and size.</span>
         <span class="kw">let</span> (<span class="ident">start_addr</span>, <span class="ident">old_size</span>) <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">old_mapping_ref</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">userspace_bookkeping</span>.<span class="ident">occupied_mapping_at</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
-            <span class="comment">// check it&#39;s not a shared mapping.</span>
+            <span class="comment">// check it&#39;s not a shared or system reserved mapping.</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">MappingType</span>::<span class="ident">Shared</span>(..) <span class="op">=</span> <span class="ident">old_mapping_ref</span>.<span class="ident">mtype_ref</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">SharedMapping</span> { <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }));
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() });
             }
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">MappingType</span>::<span class="ident">SystemReserved</span> <span class="op">=</span> <span class="ident">old_mapping_ref</span>.<span class="ident">mtype_ref</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">InvalidMapping</span> { <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }));
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() });
             }
             (<span class="ident">old_mapping_ref</span>.<span class="ident">address</span>(), <span class="ident">old_mapping_ref</span>.<span class="ident">length</span>())
         };

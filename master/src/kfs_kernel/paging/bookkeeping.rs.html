@@ -199,6 +199,15 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Bookkeeping of mappings in UserLand</span>
 
@@ -206,7 +215,6 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">lands</span>::{<span class="ident">KernelLand</span>, <span class="ident">RecursiveTablesLand</span>, <span class="ident">VirtualSpaceLand</span>};
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">collections</span>::<span class="ident">BTreeMap</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">check_nonzero_length</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mapping</span>::<span class="ident">Mapping</span>;
@@ -299,40 +307,47 @@
 
     <span class="doccomment">/// Returns the mapping `address` falls into.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// Fails if there is no occupied mapping at `address`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if mapping pointed to by address is vacant.</span>
+    <span class="doccomment">/// # Errors</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * mapping pointed to by address is vacant.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">occupied_mapping_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">mapping_at_or_preceding</span>(<span class="ident">address</span>) {
             <span class="comment">// check cannot overflow</span>
             <span class="prelude-val">Some</span>(<span class="ident">m</span>) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">length</span>() <span class="op">-</span> <span class="number">1</span> <span class="op">+</span> <span class="ident">m</span>.<span class="ident">address</span>() <span class="op">&gt;=</span> <span class="ident">address</span> <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">m</span>),
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">WasAvailable</span> { <span class="ident">address</span>, <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }))
+            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
         }
     }
 
     <span class="doccomment">/// Checks that a given range is unoccupied.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if address + length - 1 would overflow.</span>
-    <span class="doccomment">/// Returns an Error if length is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address + length - 1` would overflow</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_vacant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">end_addr</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">end_addr</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>()})<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">range</span>(<span class="ident">address</span>..=<span class="ident">end_addr</span>).<span class="ident">next</span>().<span class="ident">is_none</span>())
     }
 
     <span class="doccomment">/// Asserts that a given range is unoccupied</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if range is occupied.</span>
-    <span class="doccomment">/// Returns an Error if address + length - 1 would overflow.</span>
-    <span class="doccomment">/// Returns an Error if length is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * range is occupied.</span>
+    <span class="doccomment">///     * `address + length - 1` would overflow</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_vacant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_vacant</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(
-                <span class="ident">MmError</span>::<span class="ident">OccupiedMapping</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }))
+            <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(())
         }
@@ -340,9 +355,10 @@
 
     <span class="doccomment">/// Adds a mapping to the list of tracked mappings</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if the space was not vacant.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * range is not vacant.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mapping</span>: <span class="ident">Mapping</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_vacant</span>(<span class="ident">mapping</span>.<span class="ident">address</span>(), <span class="ident">mapping</span>.<span class="ident">length</span>())<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">insert</span>(<span class="ident">mapping</span>.<span class="ident">address</span>(), <span class="ident">mapping</span>);
@@ -353,15 +369,17 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function will never split an existing tracked mapping.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns a KernelError if parameters do not span exactly the whole mapping.</span>
-    <span class="doccomment">/// Returns a KernelError if address falls in an available mapping.</span>
+    <span class="doccomment">/// `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address` does not correspond to the start of a mapping.</span>
+    <span class="doccomment">/// `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is not the size of the mapping at `address`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>)
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">length</span>() <span class="op">==</span> <span class="ident">length</span>)
-            .<span class="ident">is_none</span>() {
-            <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">DoesNotSpanMapping</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }))
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })<span class="question-mark">?</span>
+        .<span class="ident">length</span>() <span class="op">!=</span> <span class="ident">length</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidSize</span> { <span class="ident">size</span>: <span class="ident">length</span>, <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>).<span class="ident">unwrap</span>())
         }

@@ -512,15 +512,35 @@
 <span id="512">512</span>
 <span id="513">513</span>
 <span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Mapping</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">VirtualAddress</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingAccessRights</span>, <span class="ident">error</span>::<span class="ident">MmError</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::{<span class="ident">PAGE_SIZE</span>, <span class="ident">MappingAccessRights</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">frame_allocator</span>::<span class="ident">PhysicalMemRegion</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::{<span class="ident">vec</span>::<span class="ident">Vec</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>, <span class="ident">Splittable</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_size_aligned</span>, <span class="ident">check_nonzero_length</span>, <span class="ident">Splittable</span>};
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Backtrace</span>;
 <span class="kw">use</span> <span class="ident">kfs_libkern</span>;
 
@@ -593,76 +613,94 @@
 <span class="kw">impl</span> <span class="ident">Mapping</span> {
     <span class="doccomment">/// Tries to construct a regular mapping.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if `address` + `frames`&#39;s length would overflow.</span>
-    <span class="doccomment">/// Returns an Error if `address` is not page aligned.</span>
-    <span class="doccomment">/// Returns an Error if `length` is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">///     * `address` + `frames`&#39;s length would overflow.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `frames` is empty.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_regular</span>(<span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">frames</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span><span class="op">&gt;</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">frames</span>.<span class="ident">iter</span>().<span class="ident">flatten</span>().<span class="ident">count</span>() <span class="op">*</span> <span class="ident">PAGE_SIZE</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>()})<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Mapping</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">mtype</span>: <span class="ident">MappingType</span>::<span class="ident">Regular</span>(<span class="ident">frames</span>), <span class="ident">flags</span> })
     }
 
     <span class="doccomment">/// Tries to construct a shared mapping.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if `address` + `frames`&#39;s length would overflow.</span>
-    <span class="doccomment">/// Returns an Error if `address` is not page aligned.</span>
-    <span class="doccomment">/// Returns an Error if `length` is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">///     * `address` + `frame`&#39;s length would overflow.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `frames` is empty.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_shared</span>(<span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">frames</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span><span class="op">&gt;&gt;</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">frames</span>.<span class="ident">iter</span>().<span class="ident">flatten</span>().<span class="ident">count</span>() <span class="op">*</span> <span class="ident">PAGE_SIZE</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>()})<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Mapping</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">mtype</span>: <span class="ident">MappingType</span>::<span class="ident">Shared</span>(<span class="ident">frames</span>), <span class="ident">flags</span> })
     }
 
     <span class="doccomment">/// Tries to construct a guarded mapping.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if `address` + `length` would overflow.</span>
-    <span class="doccomment">/// Returns an Error if `address` or `length` is not page aligned.</span>
-    <span class="doccomment">/// Returns an Error if `length` is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">///     * `address + length - 1` would overflow.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is not page aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_guard</span>(<span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>()})<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Mapping</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">mtype</span>: <span class="ident">MappingType</span>::<span class="ident">Guarded</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>::<span class="ident">empty</span>() })
     }
 
     <span class="doccomment">/// Tries to construct an available mapping.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if `address` + `length` would overflow.</span>
-    <span class="doccomment">/// Returns an Error if `address` or `length` is not page aligned.</span>
-    <span class="doccomment">/// Returns an Error if `length` is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">///     * `address + length - 1` would overflow.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is not page aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_available</span>(<span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>()})<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Mapping</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">mtype</span>: <span class="ident">MappingType</span>::<span class="ident">Available</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>::<span class="ident">empty</span>() })
     }
 
     <span class="doccomment">/// Tries to construct a system reserved mapping.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an Error if `address` + `length` would overflow.</span>
-    <span class="doccomment">/// Returns an Error if `address` or `length` is not page aligned.</span>
-    <span class="doccomment">/// Returns an Error if `length` is 0.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * `address` is not page aligned.</span>
+    <span class="doccomment">///     * `address + length - 1` would overflow.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is not page aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_system_reserved</span>(<span class="ident">address</span>: <span class="ident">VirtualAddress</span>, <span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Mapping</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">check_aligned_to</span>(<span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="ident">address</span>.<span class="ident">checked_add</span>(<span class="ident">length</span> <span class="op">-</span> <span class="number">1</span>)
+            .<span class="ident">ok_or_else</span>(<span class="op">||</span> <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>()})<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Mapping</span> { <span class="ident">address</span>, <span class="ident">length</span>, <span class="ident">mtype</span>: <span class="ident">MappingType</span>::<span class="ident">SystemReserved</span>, <span class="ident">flags</span>: <span class="ident">MappingAccessRights</span>::<span class="ident">empty</span>() })
     }
 
@@ -697,13 +735,16 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Because it is reference counted, a Shared mapping cannot be splitted.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * InvalidMapping if it&#39;s a shared or system reserved mapping.</span>
+    <span class="doccomment">/// * `InvalidAddress`:</span>
+    <span class="doccomment">///     * shared or system reserved mapping, which cannot be split.</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `offset` is not page aligned.</span>
     <span class="kw">fn</span> <span class="ident">split_at</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
-        <span class="ident">check_aligned</span>(<span class="ident">offset</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">offset</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">mtype_ref</span>() {
-            <span class="ident">MappingType</span>::<span class="ident">Shared</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">MappingType</span>::<span class="ident">SystemReserved</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">InvalidMapping</span> { <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() })),
+            <span class="ident">MappingType</span>::<span class="ident">Shared</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">MappingType</span>::<span class="ident">SystemReserved</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { <span class="ident">address</span>: <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">addr</span>(), <span class="ident">backtrace</span>: <span class="ident">Backtrace</span>::<span class="ident">new</span>() }),
             <span class="kw">_</span> <span class="op">=&gt;</span> ()
         }
 
@@ -738,7 +779,6 @@
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">Splittable</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">KernelError</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">paging</span>::<span class="ident">error</span>::<span class="ident">MmError</span>;
 
     <span class="doccomment">/// Applies the same tests to guard, available and system_reserved.</span>
     <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">test_empty_mapping</span> {
@@ -917,7 +957,7 @@
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>()];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_regular</span>(<span class="ident">VirtualAddress</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">k_r</span>()).<span class="ident">unwrap</span>();
         <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">split_at</span>(<span class="ident">PAGE_SIZE</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">unwrap_err</span>() {
-            <span class="ident">KernelError</span>::<span class="ident">AlignmentError</span> { .. } <span class="op">=&gt;</span> (),
+            <span class="ident">KernelError</span>::<span class="ident">InvalidSize</span> { .. } <span class="op">=&gt;</span> (),
             <span class="ident">unexpected_err</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;test failed, error {:?}&quot;</span>, <span class="ident">unexpected_err</span>)
         }
         <span class="comment">// check mapping was untouched</span>
@@ -937,7 +977,7 @@
         <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FrameAllocator</span>::<span class="ident">allocate_region</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>()]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_shared</span>(<span class="ident">VirtualAddress</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="ident">frames</span>, <span class="ident">MappingAccessRights</span>::<span class="ident">k_r</span>()).<span class="ident">unwrap</span>();
         <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">split_at</span>(<span class="number">0</span>).<span class="ident">unwrap_err</span>() {
-            <span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">InvalidMapping</span> { .. }) <span class="op">=&gt;</span> (),
+            <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { .. } <span class="op">=&gt;</span> (),
             <span class="ident">unexpected_err</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;test failed, error {:?}&quot;</span>, <span class="ident">unexpected_err</span>)
         }
         <span class="comment">// check mapping was untouched</span>
@@ -955,7 +995,7 @@
     <span class="kw">fn</span> <span class="ident">splittable_system_reserved</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">Mapping</span>::<span class="ident">new_system_reserved</span>(<span class="ident">VirtualAddress</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>), <span class="number">3</span> <span class="op">*</span> <span class="ident">PAGE_SIZE</span>).<span class="ident">unwrap</span>();
         <span class="kw">match</span> <span class="ident">mapping</span>.<span class="ident">split_at</span>(<span class="number">0</span>).<span class="ident">unwrap_err</span>() {
-            <span class="ident">KernelError</span>::<span class="ident">MmError</span>(<span class="ident">MmError</span>::<span class="ident">InvalidMapping</span> { .. }) <span class="op">=&gt;</span> (),
+            <span class="ident">KernelError</span>::<span class="ident">InvalidAddress</span> { .. } <span class="op">=&gt;</span> (),
             <span class="ident">unexpected_err</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;test failed, error {:?}&quot;</span>, <span class="ident">unexpected_err</span>)
         }
         <span class="comment">// check mapping was untouched</span>

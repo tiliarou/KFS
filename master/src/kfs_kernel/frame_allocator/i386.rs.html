@@ -709,6 +709,8 @@
 <span id="709">709</span>
 <span id="710">710</span>
 <span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! i386 implementation of the frame allocator.</span>
 <span class="doccomment">//!</span>
@@ -730,7 +732,7 @@
 <span class="kw">use</span> <span class="ident">multiboot2</span>::<span class="ident">BootInformation</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">SpinLock</span>;
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_aligned</span>, <span class="ident">check_nonzero_length</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::{<span class="ident">check_size_aligned</span>, <span class="ident">check_nonzero_length</span>};
 <span class="kw">use</span> <span class="ident">bit_field</span>::<span class="ident">BitArray</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">BitArrayExt</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mem</span>::<span class="ident">PhysicalAddress</span>;
@@ -885,18 +887,19 @@
     <span class="doccomment">/// Allocates a single [PhysicalMemRegion].</span>
     <span class="doccomment">/// Frames are physically consecutive.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * Error if `length` == 0.</span>
-    <span class="doccomment">/// * Error if `length` is not a multiple of [PAGE_SIZE].</span>
+    <span class="doccomment">/// * `InvalidSize`</span>
+    <span class="doccomment">///     * `length` is not page size aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panic</span>
+    <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * Panics if FRAME_ALLOCATOR was not initialized.</span>
+    <span class="doccomment">/// * Panics if [FRAME_ALLOCATOR] was not initialized.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">match_bool</span>)]</span>
     <span class="kw">fn</span> <span class="ident">allocate_region</span>(<span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">nr_frames</span> <span class="op">=</span> <span class="ident">length</span> <span class="op">/</span> <span class="ident">PAGE_SIZE</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">allocator</span>.<span class="ident">initialized</span>, <span class="string">&quot;The frame allocator was not initialized&quot;</span>);
@@ -935,17 +938,18 @@
 
     <span class="doccomment">/// Allocates physical frames, possibly fragmented across several physical regions.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Error</span>
+    <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * Error if `length` == 0.</span>
-    <span class="doccomment">/// * Error if `length` is not a multiple of [PAGE_SIZE].</span>
+    <span class="doccomment">/// * `InvalidSize`:</span>
+    <span class="doccomment">///     * `length` is not page size aligned.</span>
+    <span class="doccomment">///     * `length` is 0.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panic</span>
+    <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// * Panics if FRAME_ALLOCATOR was not initialized.</span>
     <span class="kw">fn</span> <span class="ident">allocate_frames_fragmented</span>(<span class="ident">length</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PhysicalMemRegion</span><span class="op">&gt;</span>, <span class="ident">KernelError</span><span class="op">&gt;</span> {
         <span class="ident">check_nonzero_length</span>(<span class="ident">length</span>)<span class="question-mark">?</span>;
-        <span class="ident">check_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_size_aligned</span>(<span class="ident">length</span>, <span class="ident">PAGE_SIZE</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">requested</span> <span class="op">=</span> <span class="ident">length</span> <span class="op">/</span> <span class="ident">PAGE_SIZE</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator_lock</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">lock</span>();

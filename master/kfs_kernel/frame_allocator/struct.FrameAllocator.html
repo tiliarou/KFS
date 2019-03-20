@@ -3,37 +3,45 @@
 <p>An allocation request returns a <a href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="PhysicalMemRegion">PhysicalMemRegion</a>, which represents a list of
 physically adjacent frames. When this returned <code>PhysicalMemRegion</code> is eventually dropped
 the frames are automatically freed and can be re-served by the FrameAllocator.</p>
-</div><h2 id='implementations' class='small-section-header'>Trait Implementations<a href='#implementations' class='anchor'></a></h2><div id='implementations-list'><h3 id='impl-FrameAllocatorTrait' class='impl'><code class='in-band'>impl <a class="trait" href="../../kfs_kernel/frame_allocator/trait.FrameAllocatorTrait.html" title="trait kfs_kernel::frame_allocator::FrameAllocatorTrait">FrameAllocatorTrait</a> for <a class="struct" href="../../kfs_kernel/frame_allocator/struct.FrameAllocator.html" title="struct kfs_kernel::frame_allocator::FrameAllocator">FrameAllocator</a></code><a href='#impl-FrameAllocatorTrait' class='anchor'></a><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#172-300' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.allocate_region' class="method"><code id='allocate_region.v'>fn <a href='../../kfs_kernel/frame_allocator/trait.FrameAllocatorTrait.html#tymethod.allocate_region' class='fnname'>allocate_region</a>(length: usize) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>, <a class="enum" href="../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#185-222' title='goto source code'>[src]</a></h4><div class='docblock'><p>Allocates a single <a href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="PhysicalMemRegion">PhysicalMemRegion</a>.
+</div><h2 id='implementations' class='small-section-header'>Trait Implementations<a href='#implementations' class='anchor'></a></h2><div id='implementations-list'><h3 id='impl-FrameAllocatorTrait' class='impl'><code class='in-band'>impl <a class="trait" href="../../kfs_kernel/frame_allocator/trait.FrameAllocatorTrait.html" title="trait kfs_kernel::frame_allocator::FrameAllocatorTrait">FrameAllocatorTrait</a> for <a class="struct" href="../../kfs_kernel/frame_allocator/struct.FrameAllocator.html" title="struct kfs_kernel::frame_allocator::FrameAllocator">FrameAllocator</a></code><a href='#impl-FrameAllocatorTrait' class='anchor'></a><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#172-302' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.allocate_region' class="method"><code id='allocate_region.v'>fn <a href='../../kfs_kernel/frame_allocator/trait.FrameAllocatorTrait.html#tymethod.allocate_region' class='fnname'>allocate_region</a>(length: usize) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>, <a class="enum" href="../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#186-223' title='goto source code'>[src]</a></h4><div class='docblock'><p>Allocates a single <a href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="PhysicalMemRegion">PhysicalMemRegion</a>.
 Frames are physically consecutive.</p>
-<h1 id="error" class="section-header"><a href="#error">Error</a></h1>
+<h1 id="errors" class="section-header"><a href="#errors">Errors</a></h1>
 <ul>
-<li>Error if <code>length</code> == 0.</li>
-<li>Error if <code>length</code> is not a multiple of <a href="../../kfs_kernel/paging/arch/i386/constant.PAGE_SIZE.html" title="PAGE_SIZE">PAGE_SIZE</a>.</li>
-</ul>
-<h1 id="panic" class="section-header"><a href="#panic">Panic</a></h1>
+<li><code>InvalidSize</code>
 <ul>
-<li>Panics if FRAME_ALLOCATOR was not initialized.</li>
+<li><code>length</code> is not page size aligned.</li>
+<li><code>length</code> is 0.</li>
 </ul>
-</div><h4 id='method.allocate_frames_fragmented' class="method"><code id='allocate_frames_fragmented.v'>fn <a href='../../kfs_kernel/frame_allocator/trait.FrameAllocatorTrait.html#tymethod.allocate_frames_fragmented' class='fnname'>allocate_frames_fragmented</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>&gt;, <a class="enum" href="../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#234-299' title='goto source code'>[src]</a></h4><div class='docblock'><p>Allocates physical frames, possibly fragmented across several physical regions.</p>
-<h1 id="error-1" class="section-header"><a href="#error-1">Error</a></h1>
+</li>
+</ul>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
 <ul>
-<li>Error if <code>length</code> == 0.</li>
-<li>Error if <code>length</code> is not a multiple of <a href="../../kfs_kernel/paging/arch/i386/constant.PAGE_SIZE.html" title="PAGE_SIZE">PAGE_SIZE</a>.</li>
+<li>Panics if <a href="../../kfs_kernel/frame_allocator/i386/static.FRAME_ALLOCATOR.html" title="FRAME_ALLOCATOR">FRAME_ALLOCATOR</a> was not initialized.</li>
 </ul>
-<h1 id="panic-1" class="section-header"><a href="#panic-1">Panic</a></h1>
+</div><h4 id='method.allocate_frames_fragmented' class="method"><code id='allocate_frames_fragmented.v'>fn <a href='../../kfs_kernel/frame_allocator/trait.FrameAllocatorTrait.html#tymethod.allocate_frames_fragmented' class='fnname'>allocate_frames_fragmented</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>&gt;, <a class="enum" href="../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#236-301' title='goto source code'>[src]</a></h4><div class='docblock'><p>Allocates physical frames, possibly fragmented across several physical regions.</p>
+<h1 id="errors-1" class="section-header"><a href="#errors-1">Errors</a></h1>
+<ul>
+<li><code>InvalidSize</code>:
+<ul>
+<li><code>length</code> is not page size aligned.</li>
+<li><code>length</code> is 0.</li>
+</ul>
+</li>
+</ul>
+<h1 id="panics-1" class="section-header"><a href="#panics-1">Panics</a></h1>
 <ul>
 <li>Panics if FRAME_ALLOCATOR was not initialized.</li>
 </ul>
 </div><h4 id='method.allocate_frame' class="method"><code id='allocate_frame.v'>fn <a href='../../kfs_kernel/frame_allocator/trait.FrameAllocatorTrait.html#method.allocate_frame' class='fnname'>allocate_frame</a>() -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>, <a class="enum" href="../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../src/kfs_kernel/frame_allocator/mod.rs.html#26-28' title='goto source code'>[src]</a></h4><div class='docblock'><p>Allocates a single physical frame.</p>
 </div></div><h3 id='impl-FrameAllocatorTraitPrivate' class='impl'><code class='in-band'>impl <a class="trait" href="../../kfs_kernel/frame_allocator/private/trait.FrameAllocatorTraitPrivate.html" title="trait kfs_kernel::frame_allocator::private::FrameAllocatorTraitPrivate">FrameAllocatorTraitPrivate</a> for <a class="struct" href="../../kfs_kernel/frame_allocator/struct.FrameAllocator.html" title="struct kfs_kernel::frame_allocator::FrameAllocator">FrameAllocator</a></code><a href='#impl-FrameAllocatorTraitPrivate' class='anchor'></a><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#119-170' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.free_region' class="method"><code id='free_region.v'>fn <a href='../../kfs_kernel/frame_allocator/private/trait.FrameAllocatorTraitPrivate.html#tymethod.free_region' class='fnname'>free_region</a>(region: &amp;<a class="struct" href="../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>)</code><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#126-139' title='goto source code'>[src]</a></h4><div class='docblock'><p>Frees an allocated physical region.</p>
-<h1 id="panic-2" class="section-header"><a href="#panic-2">Panic</a></h1>
+<h1 id="panic" class="section-header"><a href="#panic">Panic</a></h1>
 <ul>
 <li>Panics if the frame was not allocated.</li>
 <li>Panics if FRAME_ALLOCATOR was not initialized.</li>
 </ul>
 </div><h4 id='method.check_is_allocated' class="method"><code id='check_is_allocated.v'>fn <a href='../../kfs_kernel/frame_allocator/private/trait.FrameAllocatorTraitPrivate.html#tymethod.check_is_allocated' class='fnname'>check_is_allocated</a>(address: <a class="struct" href="../../kfs_kernel/mem/struct.PhysicalAddress.html" title="struct kfs_kernel::mem::PhysicalAddress">PhysicalAddress</a>, length: usize) -&gt; bool</code><a class='srclink' href='../../src/kfs_kernel/frame_allocator/i386.rs.html#148-155' title='goto source code'>[src]</a></h4><div class='docblock'><p>Checks that a physical region is marked allocated.</p>
 <p>Rounds address and length.</p>
-<h1 id="panic-3" class="section-header"><a href="#panic-3">Panic</a></h1>
+<h1 id="panic-1" class="section-header"><a href="#panic-1">Panic</a></h1>
 <ul>
 <li>Panics if FRAME_ALLOCATOR was not initialized.</li>
 </ul>
@@ -41,7 +49,7 @@ Frames are physically consecutive.</p>
 This implementation does not distinguish between allocated and reserved frames,
 so for us it's equivalent to <code>check_is_allocated</code>.</p>
 <p>Rounds address and length.</p>
-<h1 id="panic-4" class="section-header"><a href="#panic-4">Panic</a></h1>
+<h1 id="panic-2" class="section-header"><a href="#panic-2">Panic</a></h1>
 <ul>
 <li>Panics if FRAME_ALLOCATOR was not initialized.</li>
 </ul>

@@ -16,46 +16,108 @@ However we do not make any assumption on address + length, which falls outside o
 </div><span id="structfield.length" class="structfield small-section-header"><a href="#structfield.length" class="anchor field"></a><code id="length.v">length: usize</code></span><div class='docblock'><p>The length of this mapping.</p>
 </div><span id="structfield.mtype" class="structfield small-section-header"><a href="#structfield.mtype" class="anchor field"></a><code id="mtype.v">mtype: <a class="enum" href="../../../kfs_kernel/paging/mapping/enum.MappingType.html" title="enum kfs_kernel::paging::mapping::MappingType">MappingType</a></code></span><div class='docblock'><p>The type of this mapping, and frames it maps.</p>
 </div><span id="structfield.flags" class="structfield small-section-header"><a href="#structfield.flags" class="anchor field"></a><code id="flags.v">flags: <a class="struct" href="../../../kfs_kernel/paging/struct.MappingAccessRights.html" title="struct kfs_kernel::paging::MappingAccessRights">MappingAccessRights</a></code></span><div class='docblock'><p>The access rights of this mapping.</p>
-</div><h2 id='methods' class='small-section-header'>Methods<a href='#methods' class='anchor'></a></h2><h3 id='impl' class='impl'><code class='in-band'>impl <a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a></code><a href='#impl' class='anchor'></a><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#78-178' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.new_regular' class="method"><code id='new_regular.v'>pub fn <a href='#method.new_regular' class='fnname'>new_regular</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;frames: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="../../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;flags: <a class="struct" href="../../../kfs_kernel/paging/struct.MappingAccessRights.html" title="struct kfs_kernel::paging::MappingAccessRights">MappingAccessRights</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#86-92' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a regular mapping.</p>
-<h1 id="error" class="section-header"><a href="#error">Error</a></h1>
-<p>Returns an Error if <code>address</code> + <code>frames</code>'s length would overflow.
-Returns an Error if <code>address</code> is not page aligned.
-Returns an Error if <code>length</code> is 0.</p>
-</div><h4 id='method.new_shared' class="method"><code id='new_shared.v'>pub fn <a href='#method.new_shared' class='fnname'>new_shared</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;frames: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/sync/struct.Arc.html" title="struct alloc::sync::Arc">Arc</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="../../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>&gt;&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;flags: <a class="struct" href="../../../kfs_kernel/paging/struct.MappingAccessRights.html" title="struct kfs_kernel::paging::MappingAccessRights">MappingAccessRights</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#101-107' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a shared mapping.</p>
-<h1 id="error-1" class="section-header"><a href="#error-1">Error</a></h1>
-<p>Returns an Error if <code>address</code> + <code>frames</code>'s length would overflow.
-Returns an Error if <code>address</code> is not page aligned.
-Returns an Error if <code>length</code> is 0.</p>
-</div><h4 id='method.new_guard' class="method"><code id='new_guard.v'>pub fn <a href='#method.new_guard' class='fnname'>new_guard</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#116-122' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a guarded mapping.</p>
-<h1 id="error-2" class="section-header"><a href="#error-2">Error</a></h1>
-<p>Returns an Error if <code>address</code> + <code>length</code> would overflow.
-Returns an Error if <code>address</code> or <code>length</code> is not page aligned.
-Returns an Error if <code>length</code> is 0.</p>
-</div><h4 id='method.new_available' class="method"><code id='new_available.v'>pub fn <a href='#method.new_available' class='fnname'>new_available</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#131-137' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct an available mapping.</p>
-<h1 id="error-3" class="section-header"><a href="#error-3">Error</a></h1>
-<p>Returns an Error if <code>address</code> + <code>length</code> would overflow.
-Returns an Error if <code>address</code> or <code>length</code> is not page aligned.
-Returns an Error if <code>length</code> is 0.</p>
-</div><h4 id='method.new_system_reserved' class="method"><code id='new_system_reserved.v'>pub fn <a href='#method.new_system_reserved' class='fnname'>new_system_reserved</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#146-152' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a system reserved mapping.</p>
-<h1 id="error-4" class="section-header"><a href="#error-4">Error</a></h1>
-<p>Returns an Error if <code>address</code> + <code>length</code> would overflow.
-Returns an Error if <code>address</code> or <code>length</code> is not page aligned.
-Returns an Error if <code>length</code> is 0.</p>
-</div><h4 id='method.address' class="method"><code id='address.v-1'>pub fn <a href='#method.address' class='fnname'>address</a>(&amp;self) -&gt; <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#157' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the address of this mapping.</p>
-<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
-</div><h4 id='method.length' class="method"><code id='length.v-1'>pub fn <a href='#method.length' class='fnname'>length</a>(&amp;self) -&gt; usize</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#162' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the address of this mapping.</p>
-<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
-</div><h4 id='method.mtype_ref' class="method"><code id='mtype_ref.v'>pub fn <a href='#method.mtype_ref' class='fnname'>mtype_ref</a>(&amp;self) -&gt; &amp;<a class="enum" href="../../../kfs_kernel/paging/mapping/enum.MappingType.html" title="enum kfs_kernel::paging::mapping::MappingType">MappingType</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#167' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a reference to the type of this mapping.</p>
-<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
-</div><h4 id='method.mtype' class="method"><code id='mtype.v-1'>pub fn <a href='#method.mtype' class='fnname'>mtype</a>(self) -&gt; <a class="enum" href="../../../kfs_kernel/paging/mapping/enum.MappingType.html" title="enum kfs_kernel::paging::mapping::MappingType">MappingType</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#172' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the type of this mapping.</p>
-<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
-</div><h4 id='method.flags' class="method"><code id='flags.v-1'>pub fn <a href='#method.flags' class='fnname'>flags</a>(&amp;self) -&gt; <a class="struct" href="../../../kfs_kernel/paging/struct.MappingAccessRights.html" title="struct kfs_kernel::paging::MappingAccessRights">MappingAccessRights</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#177' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the type of this mapping.</p>
-<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
-</div></div><h2 id='implementations' class='small-section-header'>Trait Implementations<a href='#implementations' class='anchor'></a></h2><div id='implementations-list'><h3 id='impl-Splittable' class='impl'><code class='in-band'>impl <a class="trait" href="../../../kfs_kernel/utils/trait.Splittable.html" title="trait kfs_kernel::utils::Splittable">Splittable</a> for <a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a></code><a href='#impl-Splittable' class='anchor'></a><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#180-211' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.split_at' class="method"><code id='split_at.v'>fn <a href='../../../kfs_kernel/utils/trait.Splittable.html#tymethod.split_at' class='fnname'>split_at</a>(&amp;mut self, offset: usize) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Self&gt;, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#188-210' title='goto source code'>[src]</a></h4><div class='docblock'><p>Splits a mapping at a given offset.</p>
-<p>Because it is reference counted, a Shared mapping cannot be splitted.</p>
-<h1 id="error-5" class="section-header"><a href="#error-5">Error</a></h1>
+</div><h2 id='methods' class='small-section-header'>Methods<a href='#methods' class='anchor'></a></h2><h3 id='impl' class='impl'><code class='in-band'>impl <a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a></code><a href='#impl' class='anchor'></a><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#78-196' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.new_regular' class="method"><code id='new_regular.v'>pub fn <a href='#method.new_regular' class='fnname'>new_regular</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;frames: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="../../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;flags: <a class="struct" href="../../../kfs_kernel/paging/struct.MappingAccessRights.html" title="struct kfs_kernel::paging::MappingAccessRights">MappingAccessRights</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#88-95' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a regular mapping.</p>
+<h1 id="errors" class="section-header"><a href="#errors">Errors</a></h1>
 <ul>
-<li>InvalidMapping if it's a shared or system reserved mapping.</li>
+<li><code>InvalidAddress</code>:
+<ul>
+<li><code>address</code> is not page aligned.</li>
+<li><code>address</code> + <code>frames</code>'s length would overflow.</li>
+</ul>
+</li>
+<li><code>InvalidSize</code>:
+<ul>
+<li><code>frames</code> is empty.</li>
+</ul>
+</li>
+</ul>
+</div><h4 id='method.new_shared' class="method"><code id='new_shared.v'>pub fn <a href='#method.new_shared' class='fnname'>new_shared</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;frames: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/sync/struct.Arc.html" title="struct alloc::sync::Arc">Arc</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="../../../kfs_kernel/frame_allocator/physical_mem_region/struct.PhysicalMemRegion.html" title="struct kfs_kernel::frame_allocator::physical_mem_region::PhysicalMemRegion">PhysicalMemRegion</a>&gt;&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;flags: <a class="struct" href="../../../kfs_kernel/paging/struct.MappingAccessRights.html" title="struct kfs_kernel::paging::MappingAccessRights">MappingAccessRights</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#106-113' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a shared mapping.</p>
+<h1 id="errors-1" class="section-header"><a href="#errors-1">Errors</a></h1>
+<ul>
+<li><code>InvalidAddress</code>:
+<ul>
+<li><code>address</code> is not page aligned.</li>
+<li><code>address</code> + <code>frame</code>'s length would overflow.</li>
+</ul>
+</li>
+<li><code>InvalidSize</code>:
+<ul>
+<li><code>frames</code> is empty.</li>
+</ul>
+</li>
+</ul>
+</div><h4 id='method.new_guard' class="method"><code id='new_guard.v'>pub fn <a href='#method.new_guard' class='fnname'>new_guard</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#125-132' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a guarded mapping.</p>
+<h1 id="errors-2" class="section-header"><a href="#errors-2">Errors</a></h1>
+<ul>
+<li><code>InvalidAddress</code>:
+<ul>
+<li><code>address</code> is not page aligned.</li>
+<li><code>address + length - 1</code> would overflow.</li>
+</ul>
+</li>
+<li><code>InvalidSize</code>:
+<ul>
+<li><code>length</code> is not page aligned.</li>
+<li><code>length</code> is 0.</li>
+</ul>
+</li>
+</ul>
+</div><h4 id='method.new_available' class="method"><code id='new_available.v'>pub fn <a href='#method.new_available' class='fnname'>new_available</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#144-151' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct an available mapping.</p>
+<h1 id="errors-3" class="section-header"><a href="#errors-3">Errors</a></h1>
+<ul>
+<li><code>InvalidAddress</code>:
+<ul>
+<li><code>address</code> is not page aligned.</li>
+<li><code>address + length - 1</code> would overflow.</li>
+</ul>
+</li>
+<li><code>InvalidSize</code>:
+<ul>
+<li><code>length</code> is not page aligned.</li>
+<li><code>length</code> is 0.</li>
+</ul>
+</li>
+</ul>
+</div><h4 id='method.new_system_reserved' class="method"><code id='new_system_reserved.v'>pub fn <a href='#method.new_system_reserved' class='fnname'>new_system_reserved</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;address: <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;length: usize<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a>, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#163-170' title='goto source code'>[src]</a></h4><div class='docblock'><p>Tries to construct a system reserved mapping.</p>
+<h1 id="errors-4" class="section-header"><a href="#errors-4">Errors</a></h1>
+<ul>
+<li><code>InvalidAddress</code>:
+<ul>
+<li><code>address</code> is not page aligned.</li>
+<li><code>address + length - 1</code> would overflow.</li>
+</ul>
+</li>
+<li><code>InvalidSize</code>:
+<ul>
+<li><code>length</code> is not page aligned.</li>
+<li><code>length</code> is 0.</li>
+</ul>
+</li>
+</ul>
+</div><h4 id='method.address' class="method"><code id='address.v-1'>pub fn <a href='#method.address' class='fnname'>address</a>(&amp;self) -&gt; <a class="struct" href="../../../kfs_kernel/mem/struct.VirtualAddress.html" title="struct kfs_kernel::mem::VirtualAddress">VirtualAddress</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#175' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the address of this mapping.</p>
+<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
+</div><h4 id='method.length' class="method"><code id='length.v-1'>pub fn <a href='#method.length' class='fnname'>length</a>(&amp;self) -&gt; usize</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#180' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the address of this mapping.</p>
+<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
+</div><h4 id='method.mtype_ref' class="method"><code id='mtype_ref.v'>pub fn <a href='#method.mtype_ref' class='fnname'>mtype_ref</a>(&amp;self) -&gt; &amp;<a class="enum" href="../../../kfs_kernel/paging/mapping/enum.MappingType.html" title="enum kfs_kernel::paging::mapping::MappingType">MappingType</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#185' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a reference to the type of this mapping.</p>
+<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
+</div><h4 id='method.mtype' class="method"><code id='mtype.v-1'>pub fn <a href='#method.mtype' class='fnname'>mtype</a>(self) -&gt; <a class="enum" href="../../../kfs_kernel/paging/mapping/enum.MappingType.html" title="enum kfs_kernel::paging::mapping::MappingType">MappingType</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#190' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the type of this mapping.</p>
+<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
+</div><h4 id='method.flags' class="method"><code id='flags.v-1'>pub fn <a href='#method.flags' class='fnname'>flags</a>(&amp;self) -&gt; <a class="struct" href="../../../kfs_kernel/paging/struct.MappingAccessRights.html" title="struct kfs_kernel::paging::MappingAccessRights">MappingAccessRights</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#195' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the type of this mapping.</p>
+<p>Because we make guarantees about a mapping being always valid, this field cannot be public.</p>
+</div></div><h2 id='implementations' class='small-section-header'>Trait Implementations<a href='#implementations' class='anchor'></a></h2><div id='implementations-list'><h3 id='impl-Splittable' class='impl'><code class='in-band'>impl <a class="trait" href="../../../kfs_kernel/utils/trait.Splittable.html" title="trait kfs_kernel::utils::Splittable">Splittable</a> for <a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a></code><a href='#impl-Splittable' class='anchor'></a><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#198-232' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.split_at' class="method"><code id='split_at.v'>fn <a href='../../../kfs_kernel/utils/trait.Splittable.html#tymethod.split_at' class='fnname'>split_at</a>(&amp;mut self, offset: usize) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Self&gt;, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#209-231' title='goto source code'>[src]</a></h4><div class='docblock'><p>Splits a mapping at a given offset.</p>
+<p>Because it is reference counted, a Shared mapping cannot be splitted.</p>
+<h1 id="errors-5" class="section-header"><a href="#errors-5">Errors</a></h1>
+<ul>
+<li><code>InvalidAddress</code>:
+<ul>
+<li>shared or system reserved mapping, which cannot be split.</li>
+</ul>
+</li>
+<li><code>InvalidSize</code>:
+<ul>
+<li><code>offset</code> is not page aligned.</li>
+</ul>
+</li>
 </ul>
 </div><h4 id='method.right_split' class="method"><code id='right_split.v'>fn <a href='../../../kfs_kernel/utils/trait.Splittable.html#method.right_split' class='fnname'>right_split</a>(&amp;mut self, offset: usize) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Self&gt;, <a class="enum" href="../../../kfs_kernel/error/enum.KernelError.html" title="enum kfs_kernel::error::KernelError">KernelError</a>&gt;</code><a class='srclink' href='../../../src/kfs_kernel/utils.rs.html#26-36' title='goto source code'>[src]</a></h4><div class='docblock'><p>Splits the given object in two at the given offset. <a href="../../../kfs_kernel/utils/trait.Splittable.html#method.right_split">Read more</a></p>
 </div></div><h3 id='impl-Debug' class='impl'><code class='in-band'>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="struct" href="../../../kfs_kernel/paging/mapping/struct.Mapping.html" title="struct kfs_kernel::paging::mapping::Mapping">Mapping</a></code><a href='#impl-Debug' class='anchor'></a><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#23' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.fmt' class="method hidden"><code id='fmt.v'>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, f: &amp;mut <a class="struct" href="https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html" title="struct core::fmt::Formatter">Formatter</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/core/fmt/type.Result.html" title="type core::fmt::Result">Result</a></code><a class='srclink' href='../../../src/kfs_kernel/paging/mapping.rs.html#23' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Formats the value using the given formatter. <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt">Read more</a></p>

@@ -639,6 +639,8 @@
 <span id="639">639</span>
 <span id="640">640</span>
 <span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Arch-independent traits for architectures that implement paging as a hierarchy of page tables</span>
 
@@ -811,6 +813,8 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Should panic if called on a table which isn&#39;t a parent table.</span>
     <span class="doccomment">/// Should panic if entry was not available.</span>
+    <span class="comment">// todo: paging: return PhysicalMemoryExhaustion when allocating page table failed</span>
+    <span class="comment">// body: Right now we panic. This is terrible.</span>
     <span class="kw">fn</span> <span class="ident">create_child_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">SmartHierarchicalTable</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">ChildTableType</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Gets the child page table at given index, or creates it if it does not exist</span>
