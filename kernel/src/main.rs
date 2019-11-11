@@ -1,4 +1,8 @@
-//! KFS
+//! Sunrise kernel
+//!
+//! > Writing an Operating System is easy. Explaining how to write one isn't.
+//!
+//! - PoC||GTFO, 4:3.
 //!
 //! A small kernel written in rust for shit and giggles. Also, hopefully the
 //! last project I'll do before graduating from 42 >_>'.
@@ -6,7 +10,7 @@
 //! Currently doesn't do much, besides booting and printing Hello World on the
 //! screen. But hey, that's a start.
 
-#![feature(lang_items, start, asm, global_asm, compiler_builtins_lib, naked_functions, core_intrinsics, const_fn, abi_x86_interrupt, allocator_api, alloc, box_syntax, no_more_cas, const_vec_new, range_contains, step_trait, thread_local, nll, underscore_const_names)]
+#![feature(lang_items, start, asm, global_asm, compiler_builtins_lib, naked_functions, core_intrinsics, const_fn, abi_x86_interrupt, allocator_api, box_syntax, no_more_cas, const_vec_new, step_trait, thread_local, nll, doc_cfg, exclusive_range_pattern)]
 #![no_std]
 #![cfg_attr(target_os = "none", no_main)]
 #![recursion_limit = "1024"]
@@ -46,22 +50,22 @@ extern crate bitfield;
 extern crate mashup;
 
 use core::fmt::Write;
-use alloc::prelude::*;
 use crate::utils::io;
 
 pub mod paging;
 pub mod event;
 pub mod error;
 pub mod log_impl;
-#[cfg(any(target_arch = "x86", test))]
+#[cfg(any(target_arch = "x86", test, rustdoc))]
 #[macro_use]
 pub mod i386;
-pub mod interrupts;
+pub mod syscalls;
 pub mod frame_allocator;
 
 pub mod heap_allocator;
 pub mod devices;
 pub mod sync;
+pub mod timer;
 pub mod process;
 pub mod scheduler;
 pub mod mem;
@@ -69,6 +73,8 @@ pub mod ipc;
 pub mod elf_loader;
 pub mod utils;
 pub mod checks;
+pub mod cpu_locals;
+pub mod panic;
 
 #[cfg(target_os = "none")]
 // Make rust happy about rust_oom being no_mangle...
@@ -83,9 +89,11 @@ pub use crate::heap_allocator::rust_oom;
 static ALLOCATOR: heap_allocator::Allocator = heap_allocator::Allocator::new();
 
 use crate::i386::stack;
-use crate::paging::{PAGE_SIZE, MappingAccessRights};
+use crate::paging::PAGE_SIZE;
 use crate::mem::VirtualAddress;
-use crate::process::{ProcessStruct, ThreadStruct};
+use crate::process::ProcessStruct;
+use crate::cpu_locals::init_cpu_locals;
+use sunrise_libkern::process::*;
 
 /// Forces a double fault by stack overflowing.
 ///
@@ -132,23 +140,40 @@ fn main() {
         info!("Loading {}", module.name());
         let mapped_module = elf_loader::map_grub_module(module)
             .unwrap_or_else(|_| panic!("Unable to find available memory for module {}", module.name()));
-        let proc = ProcessStruct::new(String::from(module.name()), elf_loader::get_kacs(&mapped_module)).unwrap();
-        let (ep, sp) = {
-                let mut pmemlock = proc.pmemory.lock();
 
-                let ep = elf_loader::load_builtin(&mut pmemlock, &mapped_module);
+        let kip_header = elf_loader::get_kip_header(&mapped_module)
+            .unwrap_or_else(|| panic!("Unable to find KIP header for module {}", module.name()));
 
-                let stack = pmemlock.find_available_space(5 * PAGE_SIZE)
-                    .unwrap_or_else(|_| panic!("Cannot create a stack for process {:?}", proc));
-                pmemlock.guard(stack, PAGE_SIZE).unwrap();
-                pmemlock.create_regular_mapping(stack + PAGE_SIZE, 4 * PAGE_SIZE, MappingAccessRights::u_rw()).unwrap();
+        let mut flags = ProcInfoFlags(0);
+        flags.set_address_space_type(ProcInfoAddrSpace::AS32Bit);
+        flags.set_debug(true);
+        flags.set_pool_partition(PoolPartition::Sysmodule);
 
-                (VirtualAddress(ep), stack + 5 * PAGE_SIZE)
+        // TODO: ASLR
+        // BODY: We should generate a random aslr base.
+        let aslr_base = 0x400000;
+
+        let procinfo = ProcInfo {
+            name: kip_header.name,
+            process_category: kip_header.process_category,
+            title_id: kip_header.title_id,
+            code_addr: aslr_base as _,
+            // We don't need this, the kernel loader allocates multiple code
+            // pages.
+            code_num_pages: 0,
+            flags,
+            resource_limit_handle: None,
+            system_resource_num_pages: 0
         };
-        let thread = ThreadStruct::new(&proc, ep, sp, 0)
-            .expect("failed creating thread for service");
-        ThreadStruct::start(thread)
-            .expect("failed starting thread for service");
+
+        let proc = ProcessStruct::new(&procinfo, elf_loader::get_kacs(&mapped_module)).unwrap();
+        {
+                let mut pmemlock = proc.pmemory.lock();
+                elf_loader::load_builtin(&mut pmemlock, &mapped_module, aslr_base);
+        };
+
+        ProcessStruct::start(&proc, u32::from(kip_header.main_thread_priority), kip_header.stack_page_count as usize * PAGE_SIZE)
+            .expect("failed creating process");
     }
 
     let lock = sync::SpinLockIRQ::new(());
@@ -167,7 +192,7 @@ fn main() {
 /// * mapped grub's multiboot information structure in KernelLand (its address in $ebx),
 ///
 /// What we do is just bzero the .bss, and call a rust function, passing it the content of $ebx.
-#[cfg(target_os = "none")]
+#[cfg(any(target_os = "none", rustdoc))]
 #[no_mangle]
 pub unsafe extern fn start() -> ! {
     asm!("
@@ -189,7 +214,7 @@ pub unsafe extern fn start() -> ! {
 /// CRT0 starts here.
 ///
 /// This function takes care of initializing the kernel, before calling the main function.
-#[cfg(target_os = "none")]
+#[cfg(any(target_os = "none", rustdoc))]
 #[no_mangle]
 pub extern "C" fn common_start(multiboot_info_addr: usize) -> ! {
     use crate::devices::rs232::{SerialAttributes, SerialColor};
@@ -199,7 +224,7 @@ pub extern "C" fn common_start(multiboot_info_addr: usize) -> ! {
 
     let log = &mut devices::rs232::SerialLogger;
     // Say hello to the world
-    let _ = writeln!(log, "\n# Welcome to {}KFS{}!\n",
+    let _ = writeln!(log, "\n# Welcome to {}SunriseOS{}!\n",
         SerialAttributes::fg(SerialColor::LightCyan),
         SerialAttributes::default());
 
@@ -220,11 +245,16 @@ pub extern "C" fn common_start(multiboot_info_addr: usize) -> ! {
 
     log_impl::init();
 
-    unsafe { devices::pit::init_channel_0() };
-    info!("Initialized PIT");
+    info!("Start ACPI detection");
+    unsafe { i386::acpi::init(); }
+
+    info!("Allocating cpu_locals");
+    init_cpu_locals(1);
 
     info!("Enabling interrupts");
-    unsafe { interrupts::init(); }
+    unsafe { i386::interrupt_service_routines::init(); }
+
+    devices::init_timer();
 
     //info!("Disable timer interrupt");
     //devices::pic::get().mask(0);
@@ -249,97 +279,13 @@ pub extern "C" fn common_start(multiboot_info_addr: usize) -> ! {
 #[cfg(target_os = "none")]
 #[lang = "eh_personality"] #[no_mangle] pub extern fn eh_personality() {}
 
-/// The kernel panic function.
-///
-/// Executed on a `panic!`, but can also be called directly.
-/// Will print some useful debugging information, and never return.
-///
-/// This function will print a stack dump, from `stackdump_source`.
-/// If `None` is passed, it will dump the current KernelStack instead, this is the default for a panic!.
-/// It is usefull being able to debug another stack that our own, especially when we double-faulted.
-///
-/// # Safety
-///
-/// When a `stackdump_source` is passed, this function cannot check the requirements of
-/// [dump_stack], it is the caller's job to do it.
-///
-/// Note that if `None` is passed, this function is safe.
-///
-/// [dump_stack]: crate::stack::dump_stack
-unsafe fn do_panic(msg: core::fmt::Arguments<'_>, stackdump_source: Option<stack::StackDumpSource>) -> ! {
-
-    // Disable interrupts forever!
-    unsafe { sync::permanently_disable_interrupts(); }
-    // Don't deadlock in the logger
-    unsafe { SerialLogger.force_unlock(); }
-
-    //todo: force unlock the KernelMemory lock
-    //      and also the process memory lock for userspace stack dumping (only if panic-on-excetpion ?).
-
-    use crate::devices::rs232::SerialLogger;
-
-    let _ = writeln!(SerialLogger, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\
-                                    ! Panic! at the disco\n\
-                                    ! {}\n\
-                                    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
-                     msg);
-
-    // Parse the ELF to get the symbol table.
-    // We must not fail, so this means a lot of Option checking :/
-    use xmas_elf::symbol_table::Entry32;
-    use xmas_elf::sections::SectionData;
-    use xmas_elf::ElfFile;
-    use crate::elf_loader::MappedGrubModule;
-
-    let mapped_kernel_elf = i386::multiboot::try_get_boot_information()
-        .and_then(|info| info.module_tags().nth(0))
-        .and_then(|module| elf_loader::map_grub_module(module).ok());
-
-    /// Gets the symbol table of a mapped module.
-    fn get_symbols<'a>(mapped_kernel_elf: &'a Option<MappedGrubModule<'_>>) -> Option<(&'a ElfFile<'a>, &'a[Entry32])> {
-        let module = mapped_kernel_elf.as_ref()?;
-        let elf = module.elf.as_ref().ok()?;
-        let data = elf.find_section_by_name(".symtab")?
-            .get_data(elf).ok()?;
-        let st = match data {
-            SectionData::SymbolTable32(st) => st,
-            _ => return None
-        };
-        Some((elf, st))
-    }
-
-    let elf_and_st = get_symbols(&mapped_kernel_elf);
-
-    if elf_and_st.is_none() {
-        let _ = writeln!(SerialLogger, "Panic handler: Failed to get kernel elf symbols");
-    }
-
-    // Then print the stack
-    if let Some(sds) = stackdump_source {
-        unsafe {
-            // this is unsafe, caller must check safety
-            crate::stack::dump_stack(&sds, elf_and_st)
-        }
-    } else {
-        crate::stack::KernelStack::dump_current_stack(elf_and_st)
-    }
-
-    let _ = writeln!(SerialLogger, "Thread : {:#x?}", scheduler::try_get_current_thread());
-
-    let _ = writeln!(SerialLogger, "!!!!!!!!!!!!!!!END PANIC!!!!!!!!!!!!!!");
-
-    loop { unsafe { asm!("HLT"); } }
-}
-
 /// Function called on `panic!` invocation.
 ///
 /// Kernel panics.
 #[cfg(target_os = "none")]
 #[panic_handler] #[no_mangle]
 pub extern fn panic_fmt(p: &::core::panic::PanicInfo<'_>) -> ! {
-    unsafe {
-        // safe: we're not passing a stackdump_source
-        //       so it will use our current stack, which is safe.
-        do_panic(format_args!("{}", p), None);
-    }
+    panic::kernel_panic(&panic::PanicOrigin::KernelAssert {
+        panic_message: format_args!("{}", p)
+    });
 }

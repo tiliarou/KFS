@@ -53,11 +53,11 @@ const FRAME_BASE_MASK:   usize = !FRAME_OFFSET_MASK;
 const FRAME_BASE_LOG: usize = 12;
 
 /// The size of the frames_bitmap (~128ko)
-#[cfg(not(test))]
+#[cfg(not(any(test, rustdoc)))]
 const FRAMES_BITMAP_SIZE: usize = usize::max_value() / PAGE_SIZE / 8 + 1;
 
 /// For unit tests we use a much smaller array.
-#[cfg(test)]
+#[cfg(any(test, rustdoc))]
 const FRAMES_BITMAP_SIZE: usize = 32 / 8;
 
 /// Gets the frame number from a physical address
@@ -313,9 +313,17 @@ pub fn init(boot_info: &BootInformation) {
         if memarea.start_address() > u64::from(u32::max_value()) || memarea.end_address() > u64::from(u32::max_value()) {
             continue;
         }
-        mark_area_free(&mut allocator.memory_bitmap,
-                                       memarea.start_address() as usize,
-                                       memarea.end_address() as usize);
+
+        if memarea.memory_type() == 1 {
+            mark_area_free(&mut allocator.memory_bitmap,
+                                        memarea.start_address() as usize,
+                                        memarea.end_address() as usize);
+        } else {
+            mark_area_reserved(&mut allocator.memory_bitmap,
+                                        memarea.start_address() as usize,
+                                        memarea.end_address() as usize);
+        }
+
     }
 
     // Reserve everything mapped in KernelLand

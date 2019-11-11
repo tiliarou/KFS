@@ -14,8 +14,8 @@
 use multiboot2::BootInformation;
 use spin::Mutex;
 use bit_field::BitArray;
-use kfs_libutils::BitArrayExt;
-use kfs_libutils::{bit_array_first_one, bit_array_first_count_one};
+use sunrise_libutils::BitArrayExt;
+use sunrise_libutils::{bit_array_first_one, bit_array_first_count_one};
 use crate::paging::PAGE_SIZE;
 use crate::address::PhysicalAddress;
 use crate::bootstrap_logging::Serial;
@@ -30,11 +30,11 @@ const FRAME_BASE_MASK:   usize = !FRAME_OFFSET_MASK; // The base part in a frame
 const FRAME_BASE_LOG: usize = 12; // frame_number = addr >> 12
 
 /// The size of the frames_bitmap (~128ko)
-#[cfg(not(test))]
+#[cfg(not(any(rustdoc, test)))]
 const FRAMES_BITMAP_SIZE: usize = usize::max_value() / MEMORY_FRAME_SIZE / 8 + 1;
 
 /// When testing we use a much smaller array.
-#[cfg(test)]
+#[cfg(any(rustdoc, test))]
 const FRAMES_BITMAP_SIZE: usize = 64;
 
 /// Gets the frame number from a physical address
@@ -160,9 +160,12 @@ impl FrameAllocator {
             if memarea.start_address() > u32::max_value() as u64 || memarea.end_address() > u32::max_value() as u64 {
                 continue;
             }
-            FrameAllocator::mark_area_free(&mut frames_bitmap.memory_bitmap,
-                                               memarea.start_address() as usize,
-                                               memarea.end_address() as usize);
+            if memarea.memory_type() == 1 {
+                FrameAllocator::mark_area_free(&mut frames_bitmap.memory_bitmap,
+                                                memarea.start_address() as usize,
+                                                memarea.end_address() as usize);
+            }
+
         }
         let elf_sections_tag = boot_info.elf_sections_tag()
             .expect("GRUB, you're drunk. Give us our elf_sections_tag.");
@@ -188,7 +191,6 @@ impl FrameAllocator {
         FrameAllocator::mark_area_reserved(&mut frames_bitmap.memory_bitmap,
                                             0x00000000,
                                             0x00000001);
-
 
         /* if log_enabled!(::log::Level::Info) {
             let mut cur = None;

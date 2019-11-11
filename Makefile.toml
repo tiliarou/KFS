@@ -1,289 +1,426 @@
 [config]
 skip_core_tasks = true
+min_version = "0.22.0"
+default_to_workspace = false
 
 [env]
-RUST_TARGET_PATH = "${PWD}"
+RUST_TARGET_PATH = "${CARGO_MAKE_WORKING_DIRECTORY}"
+XARGO_RUST_SRC = "${CARGO_MAKE_WORKING_DIRECTORY}/rust/src"
 GDB_PORT = { script = ["echo ${GDB_PORT:-9090}"] }
 VNC_PORT = { script = ["echo ${VNC_PORT:-:0}"] }
+CLIPPY_RULES = """
+-A clippy::redundant_field_names \
+-A clippy::unreadable_literal \
+-A clippy::identity_op \
+-A clippy::zero_prefixed_literal \
+-A clippy::redundant_closure \
+-W clippy::cast_possible_wrap \
+-W clippy::cast_sign_loss \
+-W clippy::default_trait_access \
+-W clippy::explicit_into_iter_loop \
+-W clippy::explicit_iter_loop \
+-W clippy::missing_docs_in_private_items \
+-W clippy::mut_mut \
+-W clippy::replace_consts \
+-W clippy::used_underscore_binding \
+-W clippy::wildcard_dependencies \
+-W clippy::wrong_pub_self_convention"""
+QEMU_COMMON_FLAGS = """\
+    -boot d \
+    -cdrom os.iso \
+    -serial mon:stdio \
+    -vnc ${VNC_PORT} \
+    -no-reboot \
+    -drive id=diskA,file=DISK.img,format=raw,if=none -device ahci,id=ahci \
+    -device ide-drive,drive=diskA,bus=ahci.0 \
+    -machine q35 \
+    -m 512M"""
+
+#### Profile-specific flags
+# Which subfolder of target will rustc put its files into. Target is
+# automatically prepended if necessary.
+PROFILE_NAME = "debug"
+# Flags to pass to cargo when building any project.
+COMPILER_FLAGS = ""
+# Extra flags to pass when building the kernel. Appended to COMPILER_FLAGS.
+KERNEL_FLAGS = ""
+# Extra flags to pass to qemu.
+QEMU_PROFILE_FLAGS = ""
+
+[env.development]
+PROFILE_NAME = "debug"
+COMPILER_FLAGS = ""
+KERNEL_FLAGS = "-Z package-features --features=panic-on-exception"
+QEMU_EXTRA_FLAGS = "-d cpu_reset"
+
+[env.production]
+PROFILE_NAME = "release"
+COMPILER_FLAGS = "--release"
+KERNEL_FLAGS = ""
+QEMU_EXTRA_FLAGS = ""
 
 [tasks.bootstrap-linker]
-workspace = false
+script_runner = "@shell"
 script = ["cp linker-scripts/bootstrap.ld link.T"]
 
 [tasks.kernel-linker]
-workspace = false
+script_runner = "@shell"
 script = ["cp linker-scripts/kernel.ld    link.T"]
-
-[tasks.userspace-linker]
-workspace = false
-script = ["cp linker-scripts/userspace.ld    link.T"]
 
 [tasks.install-rust-src]
 install_crate = { rustup_component_name = "rust-src" }
 
 [tasks.install-mkisofs-rs]
-install_crate = { crate_name = "mkisofs-rs", binary = "mkisofs-rs", test_arg = "--help" }
+install_crate = { crate_name = "mkisofs-rs", binary = "mkisofs-rs", test_arg = "--help", min_version = "0.1.1" }
+
+[tasks.install-xargo]
+dependencies = ["install-rust-src"]
+install_crate = { crate_name = "xargo", binary = "xargo", test_arg = "--version", min_version = "0.3.16" }
 
 [tasks.bootstrap]
-workspace = false
-description = "Compiles the i386 bootstrap for debug"
-dependencies = ["bootstrap-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-bootstrap" ]
-
-[tasks.bootstrap-release]
-workspace = false
-description = "Compiles the i386 bootstrap for release"
-dependencies = ["bootstrap-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-bootstrap", "--release" ]
+description = "Compiles the i386 bootstrap"
+dependencies = ["bootstrap-linker", "install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-none", "--package=sunrise-bootstrap", "@@split(COMPILER_FLAGS, )" ]
 
 [tasks.kernel]
-workspace = false
-description = "Compiles the kernel for debug"
-dependencies = ["kernel-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-kernel", "-Z", "package-features", "--features=panic-on-exception"]
-
-[tasks.kernel-release]
-workspace = false
-description = "Compiles the kernel for release"
-dependencies = ["kernel-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-kernel", "--release" ]
+description = "Compiles the kernel"
+dependencies = ["kernel-linker", "install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-none", "--package=sunrise-kernel", "@@split(COMPILER_FLAGS, )", "@@split(KERNEL_FLAGS, )"]
 
 [tasks.vi]
-workspace = false
-description = "Compiles kfs-vi"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-vi"]
-
-[tasks.vi-release]
-workspace = false
-description = "Compiles kfs-vi"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-vi", "--release"]
+description = "Compiles sunrise-vi"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-vi", "@@split(COMPILER_FLAGS, )"]
 
 [tasks.sm]
-workspace = false
-description = "Compiles kfs-sm"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-sm"]
-
-[tasks.sm-release]
-workspace = false
-description = "Compiles kfs-sm"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-sm", "--release"]
+description = "Compiles sunrise-sm"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-sm", "@@split(COMPILER_FLAGS, )"]
 
 [tasks.shell]
-workspace = false
-description = "Compiles kfs-shell"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-shell"]
+description = "Compiles sunrise-shell"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-shell", "@@split(COMPILER_FLAGS, )"]
 
-[tasks.shell-release]
-workspace = false
-description = "Compiles kfs-shell"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-shell", "--release"]
-
-[tasks.clock]
-workspace = false
-description = "Compiles kfs-clock"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-clock"]
-
-[tasks.clock-release]
-workspace = false
-description = "Compiles kfs-clock"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-clock", "--release"]
+[tasks.wall-clock]
+description = "Compiles sunrise-wall-clock"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-wall-clock", "@@split(COMPILER_FLAGS, )"]
 
 [tasks.ahci]
-workspace = false
-description = "Compiles kfs-ahci"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-ahci"]
+description = "Compiles sunrise-ahci"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-ahci", "@@split(COMPILER_FLAGS, )"]
 
-[tasks.ahci-release]
-workspace = false
-description = "Compiles kfs-ahci"
-dependencies = ["userspace-linker", "install-rust-src"]
-command = "cargo"
-args = ["xbuild", "--target=i386-unknown-none", "--package=kfs-ahci", "--release"]
+[tasks.time]
+description = "Compiles sunrise-time"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-time", "@@split(COMPILER_FLAGS, )"]
 
-[tasks.userspace]
-workspace = false
-description = "Compiles userspace apps"
-dependencies = ["shell", "clock", "sm", "vi", "ahci"]
+[tasks.fs]
+description = "Compiles sunrise-fs"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-fs", "@@split(COMPILER_FLAGS, )"]
 
-[tasks.userspace-release]
-workspace = false
-description = "Compiles userspace apps"
-dependencies = ["shell-release", "clock-release", "sm-release", "vi-release", "ahci-release"]
+[tasks.loader]
+description = "Compiles sunrise-loader"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-loader", "@@split(COMPILER_FLAGS, )"]
 
-[tasks.iso]
-workspace = false
-description = "Creates a bootable ISO containing the kernel and grub."
-dependencies = ["bootstrap", "kernel", "userspace", "install-mkisofs-rs"]
-script = [
-'''
-cp target/i386-unknown-none/debug/kfs-bootstrap isofiles/boot/
-cp target/i386-unknown-none/debug/kfs-kernel    isofiles/boot/
-cp target/i386-unknown-none/debug/kfs-shell     isofiles/boot/
-cp target/i386-unknown-none/debug/kfs-clock     isofiles/boot/
-cp target/i386-unknown-none/debug/kfs-sm        isofiles/boot/
-cp target/i386-unknown-none/debug/kfs-vi        isofiles/boot/
-cp target/i386-unknown-none/debug/kfs-ahci      isofiles/boot/
-mkisofs-rs external/grub/isofiles isofiles -o os.iso -b boot/grub/i386-pc/eltorito.img --no-emul-boot --boot-info-table --embedded-boot external/grub/embedded.img
-'''
+[tasks.keyboard]
+description = "Compiles sunrise-keyboard"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-keyboard", "@@split(COMPILER_FLAGS, )"]
+
+[tasks.twili]
+description = "Compiles sunrise-twili"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=sunrise-twili", "@@split(COMPILER_FLAGS, )"]
+
+[tasks.std_hello_world]
+description = "Compiles std_hello_world"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=std_hello_world", "@@split(COMPILER_FLAGS, )"]
+
+[tasks.df]
+description = "Compiles df"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=df", "@@split(COMPILER_FLAGS, )"]
+
+[tasks.uutils]
+description = "Compiles uutils (coreutils)"
+dependencies = ["install-xargo"]
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "--package=uutils", "-Z", "package-features", "--features=sunrise", "--no-default-features", "@@split(COMPILER_FLAGS, )"]
+
+[tasks.userspace-nostd]
+internal = true
+command = "xargo"
+args = ["build", "--target=i386-unknown-sunrise-user", "@@split(COMPILER_FLAGS, )",
+    "-p", "sunrise-shell", "-p", "sunrise-wall-clock", "-p", "sunrise-sm",
+    "-p", "sunrise-vi", "-p", "sunrise-ahci", "-p", "sunrise-time",
+    "-p", "sunrise-fs", "-p", "sunrise-loader", "-p", "sunrise-keyboard",
+    "-p", "sunrise-twili"
 ]
 
-[tasks.iso-release]
-workspace = false
+[tasks.userspace]
+description = "Compiles userspace apps"
+dependencies = ["userspace-nostd", "std_hello_world", "uutils", "df"]
+
+[tasks.iso]
 description = "Creates a bootable ISO containing the kernel and grub."
-dependencies = ["bootstrap-release", "kernel-release", "userspace-release", "install-mkisofs-rs"]
+dependencies = ["bootstrap", "kernel", "userspace", "install-mkisofs-rs"]
+script_runner = "@shell"
 script = [
 '''
-cp target/i386-unknown-none/release/kfs-bootstrap isofiles/boot/
-cp target/i386-unknown-none/release/kfs-kernel    isofiles/boot/
-cp target/i386-unknown-none/release/kfs-shell     isofiles/boot/
-cp target/i386-unknown-none/release/kfs-clock     isofiles/boot/
-cp target/i386-unknown-none/release/kfs-sm        isofiles/boot/
-cp target/i386-unknown-none/release/kfs-vi        isofiles/boot/
-cp target/i386-unknown-none/release/kfs-ahci      isofiles/boot/
+cp target/i386-unknown-none/$PROFILE_NAME/sunrise-bootstrap           isofiles/boot/
+cp target/i386-unknown-none/$PROFILE_NAME/sunrise-kernel              isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-shell          isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-time           isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-wall-clock     isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-sm             isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-vi             isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-ahci           isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-fs             isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-loader         isofiles/boot/
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-keyboard       isofiles/boot/
 mkisofs-rs external/grub/isofiles isofiles -o os.iso -b boot/grub/i386-pc/eltorito.img --no-emul-boot --boot-info-table --embedded-boot external/grub/embedded.img
 '''
 ]
 
 [tasks.disk]
-workspace = false
 description = "Creates an empty disk image."
-command = "dd"
-args = [ "if=/dev/zero", "of=DISK.img", "count=8M", "iflag=count_bytes" ]
+script = [
+'''
+mkdir -p external/filesystem/disk_template/bin/wall-clock/flags
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-wall-clock external/filesystem/disk_template/bin/wall-clock/main
 
-# because we can't have a dependency on a file ರ_ರ
-[tasks.create-disk-if-not-exist]
-workspace = false
-description = "Invokes the task `disk` if DISK.img does not already exist."
-condition_script = [ "[ ! -e DISK.img ]" ]
-run_task = "disk"
+# TODO: https://github.com/sagiegurari/shell2batch/issues/9
+touch external/filesystem/disk_template/bin/wall-clock/flags/boot.flag
+
+mkdir -p external/filesystem/disk_template/bin/std_hello_world/flags
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/std_hello_world external/filesystem/disk_template/bin/std_hello_world/main
+
+mkdir -p external/filesystem/disk_template/bin/twili/flags
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/sunrise-twili external/filesystem/disk_template/bin/twili/main
+touch external/filesystem/disk_template/bin/twili/flags/boot.flag
+
+mkdir -p external/filesystem/disk_template/bin/uutils
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/uutils external/filesystem/disk_template/bin/uutils/main
+
+mkdir -p external/filesystem/disk_template/bin/df
+cp target/i386-unknown-sunrise-user/$PROFILE_NAME/df external/filesystem/disk_template/bin/df/main
+
+cargo run --manifest-path disk-initializer/Cargo.toml -- DISK.img 157286400 external/filesystem/disk_template/
+'''
+]
 
 [tasks.qemu]
-workspace = false
 description = "Runs the bootable ISO in qemu."
-dependencies = ["iso-release", "create-disk-if-not-exist"]
+dependencies = ["iso", "disk"]
 command = "qemu-system-i386"
 args = [
-    "-cdrom", "os.iso",
-    "-serial", "stdio",
-    "-vnc", "${VNC_PORT}",
-    "-no-reboot",
-    "-enable-kvm",
-    "-drive", "id=diskA,file=DISK.img,format=raw,if=none", "-device", "ahci,id=ahci", "-device", "ide-drive,drive=diskA,bus=ahci.0",
-    ]
+    "@@split(QEMU_COMMON_FLAGS, )", "@@split(QEMU_EXTRA_FLAGS, )"
+]
 
-[tasks.qemu-debug]
-workspace = false
-description = "Runs the bootable ISO in qemu with gdb support"
-dependencies = ["iso", "create-disk-if-not-exist"]
+[tasks.qemu-gdb]
+description = "Runs the bootable ISO in qemu."
+dependencies = ["iso", "disk"]
 command = "qemu-system-i386"
 args = [
-    "-cdrom", "os.iso",
-    "-serial", "stdio",
-    "-vnc", "${VNC_PORT}",
-    "-no-reboot",
-    "-gdb", "tcp::${GDB_PORT}", "-S",
-    "-d", "cpu_reset",
-    "-drive", "id=diskA,file=DISK.img,format=raw,if=none", "-device", "ahci,id=ahci", "-device", "ide-drive,drive=diskA,bus=ahci.0",
-    ]
+    "@@split(QEMU_COMMON_FLAGS, )", "@@split(QEMU_EXTRA_FLAGS, )",
+    "-gdb", "tcp::${GDB_PORT}", "-S"
+]
 
 [tasks.doc]
-workspace = false
 description = "Generate the project's documentation"
-env = { "RUSTFLAGS" = "--sysroot=${PWD}/target/sysroot",  "RUSTDOCFLAGS" = "--sysroot=${PWD}/target/sysroot"}
+env = { "RUSTDOCFLAGS" = "-Z unstable-options --enable-index-page" }
 command = "cargo"
-args = ["doc", "--target=i386-unknown-none", "--no-deps" ]
+args = ["doc", "--no-deps"]
 
 [tasks.doc-full]
-workspace = false
 description = "Generate the project's documentation, including private items"
-env = { "RUSTFLAGS" = "--sysroot=${PWD}/target/sysroot",  "RUSTDOCFLAGS" = "--sysroot=${PWD}/target/sysroot -Z unstable-options --enable-index-page"}
+env = { "RUSTDOCFLAGS" = "-Z unstable-options --enable-index-page" }
 command = "cargo"
-args = ["doc", "--target=i386-unknown-none", "--no-deps", "--document-private-items"]
+args = ["doc", "--no-deps", "--document-private-items",
+    "-p", "docs",
+    "-p", "sunrise-bootstrap",
+    "-p", "sunrise-kernel",
+    "-p", "sunrise-shell",
+    "-p", "sunrise-time",
+    "-p", "sunrise-libuser",
+    "-p", "sunrise-wall-clock",
+    "-p", "sunrise-sm",
+    "-p", "sunrise-vi",
+    "-p", "sunrise-ahci",
+    "-p", "sunrise-fs",
+    "-p", "sunrise-libutils",
+    "-p", "sunrise-libkern",
+    "-p", "sunrise-libtimezone",
+    "-p", "sunrise-loader",
+    "-p", "sunrise-keyboard",
+    "-p", "swipc-gen",
+    "-p", "swipc-parser",
+    "-p", "disk-initializer",
+]
 
 [tasks.deploy-doc]
-workspace = false
-install_crate = { crate_name = "cargo-travis", binary = "cargo", test_arg = "doc-upload --help" }
+install_crate = { crate_name = "cargo-travis", binary = "cargo", test_arg = ["doc-upload", "--help"] }
 install_crate_args = ["--git", "https://github.com/roblabla/cargo-travis", "--rev", "doc-upload-target"]
 description = "Upload this project's documentation on github pages. Should only run on CI."
 command = "cargo"
-args = ["doc-upload", "--target=i386-unknown-none", "--clobber-index"]
+args = ["doc-upload", "--clobber-index"]
 
-[tasks.test]
-workspace = false
+[tasks.testdoc]
+# We don't set the target because of https://github.com/rust-lang/cargo/issues/6460
+# See #226
+description = "Run the doctests - doesn't set the target"
+command = "cargo"
+args = ["test", "--doc",
+    "-p", "docs",
+    "-p", "sunrise-bootstrap",
+    "-p", "sunrise-kernel",
+    "-p", "sunrise-shell",
+    "-p", "sunrise-time",
+    "-p", "sunrise-libuser",
+    "-p", "sunrise-wall-clock",
+    "-p", "sunrise-sm",
+    "-p", "sunrise-vi",
+    "-p", "sunrise-ahci",
+    "-p", "sunrise-fs",
+    "-p", "sunrise-libutils",
+    "-p", "sunrise-libkern",
+    "-p", "sunrise-libtimezone",
+    "-p", "sunrise-loader",
+    "-p", "sunrise-keyboard",
+    "-p", "swipc-gen",
+    "-p", "swipc-parser",
+    "-p", "disk-initializer",
+]
+
+[tasks.testinner]
 description = "Run the tests in 32bit mode"
 command = "cargo"
-args = ["test", "--target=i686-unknown-linux-gnu"]
+args = ["test", "--target=i686-unknown-linux-gnu",
+    "-p", "docs",
+    "-p", "sunrise-bootstrap",
+    "-p", "sunrise-kernel",
+    "-p", "sunrise-shell",
+    "-p", "sunrise-time",
+    "-p", "sunrise-libuser",
+    "-p", "sunrise-wall-clock",
+    "-p", "sunrise-sm",
+    "-p", "sunrise-vi",
+    "-p", "sunrise-ahci",
+    "-p", "sunrise-fs",
+    "-p", "sunrise-libutils",
+    "-p", "sunrise-libkern",
+    "-p", "sunrise-libtimezone",
+    "-p", "sunrise-loader",
+    "-p", "sunrise-keyboard",
+    "-p", "swipc-gen",
+    "-p", "swipc-parser",
+    "-p", "disk-initializer",
+]
+
+[tasks.test]
+description = "Run all the tests."
+dependencies = ["testdoc", "testinner"]
+
+[tasks.refresh-crates]
+description = "Make cargo-clippy work..."
+command = "touch"
+args = ["-c", "kernel/src/main.rs", "bootstrap/src/main.rs",
+	"shell/src/main.rs", "libuser/src/lib.rs", "wall-clock/src/main.rs",
+	"sm/src/main.rs", "vi/src/main.rs", "ahci/src/main.rs",
+	"libutils/src/lib.rs", "libkern/src/lib.rs", "swipc-gen/src/lib.rs",
+	"swipc-parser/src/lib.rs", "time/src/main.rs", "libtimezone/src/lib.rs",
+	"loader/src/main.rs", "keyboard/src/main.rs", "twili/src/main.rs"
+]
+
+[tasks.clippy-sunrise-kernel-target]
+description = "Run clippy on sunrise kernel and bootstrap"
+dependencies = ["install-xargo", "refresh-crates"]
+install_crate = { rustup_component_name = "clippy" }
+command = "xargo"
+args = ["clippy", "--target=i386-unknown-none",
+    "-p", "sunrise-kernel",
+    "-p", "sunrise-bootstrap",
+	"--",
+	"@@split(CLIPPY_RULES, )",
+	"${@}",
+	]
+
+[tasks.clippy-sunrise-userspace-target-nostd]
+description = "Run clippy on sunrise userspace (no std)"
+dependencies = ["install-xargo", "refresh-crates"]
+install_crate = { rustup_component_name = "clippy" }
+command = "xargo"
+args = ["clippy", "--target=i386-unknown-sunrise-user",
+    "-p", "sunrise-shell",
+    "-p", "sunrise-time",
+    "-p", "sunrise-libuser",
+    "-p", "sunrise-wall-clock",
+    "-p", "sunrise-sm",
+    "-p", "sunrise-vi",
+    "-p", "sunrise-ahci",
+    "-p", "sunrise-fs",
+    "-p", "sunrise-libutils",
+    "-p", "sunrise-libkern",
+    "-p", "sunrise-libtimezone",
+    "-p", "sunrise-loader",
+    "-p", "sunrise-keyboard",
+	"--",
+	"@@split(CLIPPY_RULES, )",
+	"${@}",
+	]
+
+[tasks.clippy-sunrise-userspace-target-std]
+description = "Run clippy on sunrise userspace (std)"
+dependencies = ["install-xargo", "refresh-crates"]
+install_crate = { rustup_component_name = "clippy" }
+command = "xargo"
+args = ["clippy", "--target=i386-unknown-sunrise-user",
+    "-p", "std_hello_world",
+    "-p", "df",
+	"--",
+	"@@split(CLIPPY_RULES, )",
+	"${@}",
+	]
+
+[tasks.clippy-host-target]
+description = "Run clippy on host components (relying on std)"
+dependencies = ["refresh-crates"]
+install_crate = { rustup_component_name = "clippy" }
+command = "cargo"
+args = ["clippy",
+	"-p", "swipc-gen", "-p", "swipc-parser", "-p", "docs", "-p", "disk-initializer",
+	"--",
+	"@@split(CLIPPY_RULES, )",
+	"${@}",
+	]
 
 [tasks.clippy]
-workspace = false
-dependencies = ["install-rust-src"]
-install_crate = { rustup_component_name = "clippy" }
-description = "Run clippy"
-command = "cargo"
-args = ["xclippy", "--target=i386-unknown-none", "--",
-	"-A", "clippy::redundant_field_names",
-	"-A", "clippy::unreadable_literal",
-	"-A", "clippy::identity_op",
-	"-A", "clippy::zero_prefixed_literal",
-	"-A", "clippy::redundant_closure",
-	"-W", "clippy::cast_possible_wrap",
-	"-W", "clippy::cast_sign_loss",
-	"-W", "clippy::default_trait_access",
-	"-W", "clippy::explicit_into_iter_loop",
-	"-W", "clippy::explicit_iter_loop",
-	"-W", "clippy::missing_docs_in_private_items",
-	"-W", "clippy::mut_mut",
-	"-W", "clippy::replace_consts",
-	"-W", "clippy::used_underscore_binding",
-	"-W", "clippy::wildcard_dependencies",
-	"-W", "clippy::wrong_pub_self_convention",
-	]
+dependencies = ["clippy-host-target", "clippy-sunrise-kernel-target", "clippy-sunrise-userspace-target-nostd", "clippy-sunrise-userspace-target-std"]
 
-[tasks.clippy-ci]
-workspace = false
-dependencies = ["install-rust-src"]
-install_crate = { rustup_component_name = "clippy" }
-description = "Run clippy"
+[tasks.swipc-gen]
+description = "Get the output of running gen_ipc on an ipcdef file"
 command = "cargo"
-args = ["xclippy", "--target=i386-unknown-none", "--",
-	"-A", "clippy::redundant_field_names",
-	"-A", "clippy::unreadable_literal",
-	"-A", "clippy::identity_op",
-	"-A", "clippy::zero_prefixed_literal",
-	"-A", "clippy::redundant_closure",
-	"-W", "clippy::cast_possible_wrap",
-	"-W", "clippy::cast_sign_loss",
-	"-W", "clippy::default_trait_access",
-	"-W", "clippy::explicit_into_iter_loop",
-	"-W", "clippy::explicit_iter_loop",
-	"-W", "clippy::missing_docs_in_private_items",
-	"-W", "clippy::mut_mut",
-	"-W", "clippy::replace_consts",
-	"-W", "clippy::used_underscore_binding",
-	"-W", "clippy::wildcard_dependencies",
-	"-W", "clippy::wrong_pub_self_convention",
-	"-D", "warnings"
-	]
+args = ["run", "--manifest-path", "swipc-gen/Cargo.toml", "--features=binaries", "--", "${@}"]
 
+[tasks.default]
+run_task = "qemu"

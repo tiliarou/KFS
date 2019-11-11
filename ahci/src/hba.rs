@@ -5,16 +5,16 @@
 //!
 //! [Serial ATA AHCI: Specification, Rev. 1.3.1]: http://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/serial-ata-ahci-spec-rev1-3-1.pdf
 
-use kfs_libuser::io::{Io, Mmio};
-use kfs_libuser::syscalls::{sleep_thread, query_physical_address};
-use kfs_libuser::mem::{map_mmio, virt_to_phys};
-use kfs_libuser::error::{Error, AhciError};
-use kfs_libuser::zero_box::*;
+use sunrise_libuser::io::{Io, Mmio};
+use sunrise_libuser::syscalls::{sleep_thread, query_physical_address};
+use sunrise_libuser::mem::{map_mmio, virt_to_phys};
+use sunrise_libuser::error::{Error, AhciError};
+use sunrise_libuser::zero_box::*;
 use core::fmt::{self, Debug, Formatter};
 use core::mem::size_of;
 use core::cmp::min;
 use core::time::Duration;
-use alloc::prelude::*;
+use alloc::vec::Vec;
 use crate::fis::*;
 use crate::disk::Disk;
 use static_assertions::assert_eq_size;
@@ -783,7 +783,7 @@ impl Px {
     #[allow(clippy::too_many_arguments)] // heh
     #[allow(clippy::missing_docs_in_private_items)]
     pub unsafe fn read_dma(
-        buffer: *mut u8,
+        buffer: *const u8,
         buffer_len: usize,
         lba: u64,
         sector_count: u64,
@@ -826,7 +826,7 @@ impl Px {
             // 48 bits
             fis.command.write(ATA_CMD_READ_DMA_EXT);
             fis.countl.write(sector_count as u8); // 0000h means 65536 sectors
-            fis.counth.write((sector_count << 8) as u8);
+            fis.counth.write((sector_count >> 8) as u8);
             fis.lba0.write(lba as u8);
             fis.lba1.write((lba >> 8) as u8);
             fis.lba2.write((lba >> 16) as u8);
@@ -883,7 +883,7 @@ impl Px {
     #[allow(clippy::too_many_arguments)] // heh
     #[allow(clippy::missing_docs_in_private_items)]
     pub unsafe fn write_dma(
-        buffer: *mut u8,
+        buffer: *const u8,
         buffer_len: usize,
         lba: u64,
         sector_count: u64,
@@ -926,7 +926,7 @@ impl Px {
             // 48 bits
             fis.command.write(ATA_CMD_WRITE_DMA_EXT);
             fis.countl.write(sector_count as u8); // 0000h means 65536 sectors
-            fis.counth.write((sector_count << 8) as u8);
+            fis.counth.write((sector_count >> 8) as u8);
             fis.lba0.write(lba as u8);
             fis.lba1.write((lba >> 8) as u8);
             fis.lba2.write((lba >> 16) as u8);
@@ -1133,12 +1133,16 @@ impl CmdTable {
     ///
     /// * length must be even.
     /// * `buffer[0]` must be the very start of the mapping.
-    pub unsafe fn fill_prdt(&mut self, buffer: *mut u8, mut length: usize, header: &mut CmdHeader) -> Result<(), Error> {
+    pub unsafe fn fill_prdt(&mut self, buffer: *const u8, mut length: usize, header: &mut CmdHeader) -> Result<(), Error> {
         assert_eq!(length % 2, 0, "fill_prdt: length is odd.");
         assert_eq!(buffer as usize % 2, 0, "fill_prdt: buffer is not word aligned.");
+
+        let mut temp_buffer_addr = buffer as usize;
         let mut index = 0;
         while length > 0 {
-            let (mut phys_addr, _, mut phys_len, phys_off) = query_physical_address(buffer as _)?;
+            let (mut phys_addr, base_addr, mut phys_len) = query_physical_address(temp_buffer_addr)?;
+            let phys_off = temp_buffer_addr as usize - base_addr;
+            temp_buffer_addr = base_addr + phys_len;
             phys_addr += phys_off;
             phys_len -= phys_off;
             // divide into 4M regions.

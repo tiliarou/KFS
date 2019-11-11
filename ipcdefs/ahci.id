@@ -1,0 +1,53 @@
+# A block (or sector) used by AHCI I/O operations.
+type sunrise_libuser::ahci::Block = bytes<512>;
+
+# Main ahci interface.
+#
+# Can communicate the number of discovered devices,
+# and get an interface to a specific device.
+interface sunrise_libuser::ahci::AhciInterface is ahci: {
+    # Asks to the ahci service how many disks it has discovered.
+    #
+    # [get_disk] accepts disk ids in `0..discovered_disks_count()`.
+    #
+    # [get_disk]: AhciInterface::get_disk
+    [0] discovered_disks_count() -> u32;
+    # Gets the interface to a disk.
+    #
+    # This creates a session connected to an [IDisk].
+    #
+    # `disk_id` should be in `0..discovered_disk_count()`.
+    [1] get_disk(u32 disk_id) -> object<sunrise_libuser::ahci::IDisk>;
+}
+
+# Interface to an AHCI device.
+#
+# It can:
+#
+# - get the number of addressable 512-octet sectors on this disk,
+# - read a range of consecutive sectors.
+# - write a range of consecutive sectors.
+interface sunrise_libuser::ahci::IDisk {
+    # Retrieves the number of addressable 512-octet sectors on this disk.
+    [0] sector_count() -> u64 sectors;
+
+    # Reads sectors from the disk.
+    #
+    # This IPC call will invoke the AHCI driver and make it copy `sector_count` sectors from the disk
+    # to the memory pointed to by the output buffer.
+    #
+    # # Error
+    #
+    # - `address..address+sector_count` should be in the range `0..IDisk.sector_count()`.
+    [1] read_dma(u64 address) -> array<sunrise_libuser::ahci::Block, 0x6>;
+
+    # Writes sectors to the disk.
+    #
+    # This IPC call will invoke the AHCI driver and make it copy `sector_count` sectors to the disk
+    # from the memory pointed to by the input buffer.
+    #
+    # # Error
+    #
+    # - `address..address+sector_count` should be in the range `0..IDisk.sector_count()`.
+    [2] write_dma(u64 address, array<sunrise_libuser::ahci::Block, 0x5> blocks);
+}

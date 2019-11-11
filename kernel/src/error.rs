@@ -1,8 +1,10 @@
 //! UserspaceError and KernelError
 
 use failure::Backtrace;
+use crate::mem::VirtualAddress;
 
-pub use kfs_libkern::error::KernelError as UserspaceError;
+pub use sunrise_libkern::error::KernelError as UserspaceError;
+use sunrise_libkern::MemoryType;
 
 /// Kernel Error.
 ///
@@ -14,6 +16,11 @@ pub use kfs_libkern::error::KernelError as UserspaceError;
 #[derive(Debug, Fail)]
 #[allow(missing_docs, clippy::missing_docs_in_private_items)]
 pub enum KernelError {
+    #[fail(display = "This function is not implemented: {}", msg)]
+    NotImplemented {
+        msg: &'static str,
+        backtrace: Backtrace
+    },
     #[fail(display = "Frame allocation error: physical address space exhausted")]
     PhysicalMemoryExhaustion {
         backtrace: Backtrace
@@ -36,8 +43,8 @@ pub enum KernelError {
     ProcessKilled {
         backtrace: Backtrace,
     },
-    #[fail(display = "Thread was already started")]
-    ThreadAlreadyStarted {
+    #[fail(display = "Handle was in invalid state for this operation.")]
+    InvalidState {
         backtrace: Backtrace,
     },
     #[fail(display = "Invalid combination of values passed.")]
@@ -60,10 +67,22 @@ pub enum KernelError {
     IpcError {
         backtrace: Backtrace,
     },
+    #[fail(display = "Cannot map those frames for this MemoryType")]
+    WrongMappingFramesForTy {
+        ty: MemoryType,
+        backtrace: Backtrace,
+    },
+    #[fail(display = "Invalid memory state for operation.")]
+    InvalidMemState {
+        address: VirtualAddress,
+        ty: MemoryType,
+        backtrace: Backtrace,
+    },
     #[fail(display = "Value is reserved for future use.")]
     ReservedValue {
         backtrace: Backtrace,
     },
+
 }
 
 impl From<KernelError> for UserspaceError {
@@ -71,7 +90,7 @@ impl From<KernelError> for UserspaceError {
         match err {
             KernelError::PhysicalMemoryExhaustion { .. } => UserspaceError::MemoryFull,
             KernelError::VirtualMemoryExhaustion { .. } => UserspaceError::MemoryFull,
-            KernelError::ThreadAlreadyStarted { .. } => UserspaceError::ProcessAlreadyStarted,
+            KernelError::InvalidState { .. } => UserspaceError::InvalidState,
             KernelError::InvalidAddress { .. } => UserspaceError::InvalidAddress,
             KernelError::InvalidSize { .. } => UserspaceError::InvalidSize,
             KernelError::InvalidCombination { .. } => UserspaceError::InvalidCombination,
@@ -80,6 +99,9 @@ impl From<KernelError> for UserspaceError {
             KernelError::IpcError { .. } => UserspaceError::PortRemoteDead,
             KernelError::ReservedValue { .. } => UserspaceError::ReservedValue,
             KernelError::ProcessKilled { .. } => UserspaceError::InvalidHandle, // process is dying, consider the handle invalid, only a bit early.
+            KernelError::NotImplemented { .. } => UserspaceError::NotImplemented,
+            KernelError::WrongMappingFramesForTy { .. } => UserspaceError::InvalidCombination,
+            KernelError::InvalidMemState { .. } => UserspaceError::InvalidMemState,
         }
     }
 }

@@ -29,7 +29,7 @@ use super::MappingAccessRights;
 use crate::mem::{VirtualAddress, PhysicalAddress};
 use crate::frame_allocator::{PhysicalMemRegion, FrameAllocator, FrameAllocatorTrait,
                       mark_frame_bootstrap_allocated};
-use crate::sync::{Mutex, MutexGuard};
+use crate::sync::{SpinLockIRQ, SpinLockIRQGuard};
 use crate::error::KernelError;
 use failure::Backtrace;
 
@@ -52,10 +52,10 @@ pub struct KernelMemory {
 /// This mutex is independent from the one protecting
 /// UserLand memory, and both lands can be modified concurrently thanks to each manager
 /// not observing the other lands.
-pub static KERNEL_MEMORY: Mutex<KernelMemory> = Mutex::new(KernelMemory { tables: ActiveHierarchy });
+pub static KERNEL_MEMORY: SpinLockIRQ<KernelMemory> = SpinLockIRQ::new(KernelMemory { tables: ActiveHierarchy });
 
 /// Locks the KERNEL_MEMORY
-pub fn get_kernel_memory() -> MutexGuard<'static, KernelMemory> { KERNEL_MEMORY.lock() }
+pub fn get_kernel_memory() -> SpinLockIRQGuard<'static, KernelMemory> { KERNEL_MEMORY.lock() }
 
 impl KernelMemory {
 
@@ -145,6 +145,9 @@ impl KernelMemory {
     where I: Iterator<Item=PhysicalAddress> + Clone
     {
         let length = iterator.clone().count() * PAGE_SIZE;
+        // TODO: Don't unwrap on OOM in map_frame_iterator.
+        // BODY: map_frame_iterator should return an error on OOM instead of
+        // BODY: making the whole kernel panic...
         let va = self.find_virtual_space(length).unwrap();
         self.tables.map_to_from_iterator(iterator, va, flags);
         va

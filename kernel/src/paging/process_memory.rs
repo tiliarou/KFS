@@ -21,7 +21,8 @@ use super::hierarchical_table::*;
 use super::arch::{PAGE_SIZE, InactiveHierarchy, ActiveHierarchy};
 use super::lands::{UserLand, VirtualSpaceLand};
 use super::bookkeeping::UserspaceBookkeeping;
-use super::mapping::{Mapping, MappingType};
+use super::mapping::{Mapping, MappingFrames};
+use sunrise_libkern::{MemoryType, MemoryState, MemoryAttributes, MemoryPermissions};
 use super::cross_process::CrossProcessMapping;
 use super::MappingAccessRights;
 use crate::mem::{VirtualAddress, PhysicalAddress};
@@ -29,7 +30,7 @@ use crate::frame_allocator::{FrameAllocator, FrameAllocatorTrait, PhysicalMemReg
 use crate::paging::arch::Entry;
 use crate::error::KernelError;
 use crate::utils::{check_size_aligned, check_nonzero_length};
-use crate::utils::Splittable;
+use crate::sync::SpinRwLock;
 use alloc::{vec::Vec, sync::Arc};
 use failure::Backtrace;
 
@@ -50,7 +51,7 @@ pub struct ProcessMemory {
     ///
     /// The location of each process's heap should be random, to implement ASLR.
     ///
-    /// [set_heap_size]: crate::interrupts::syscalls::set_heap_size
+    /// [set_heap_size]: crate::syscalls::set_heap_size
     heap_base_address: VirtualAddress,
 }
 
@@ -149,33 +150,15 @@ impl Default for ProcessMemory {
         // we don't have ASRL yet :(
         let heap_base_address = VirtualAddress(0x80000000);
 
-        let mut ret = ProcessMemory {
+        ProcessMemory {
             userspace_bookkeping: UserspaceBookkeeping::new(),
             table_hierarchy: InactiveHierarchy::new(),
             heap_base_address,
-        };
-        // unconditionally guard the very first page, for NULL pointers.
-        ret.guard(VirtualAddress(0x00000000), PAGE_SIZE)
-            .expect("Cannot guard first page of ProcessMemory");
-        ret
+        }
     }
 }
 
 impl ProcessMemory {
-    /// Creates a ProcessMemory referencing the current page tables.
-    /// Used only when becoming the first process for creating the first ProcessMemory.
-    ///
-    /// # Unsafety
-    ///
-    /// Having multiple ProcessMemory pointing to the same table hierarchy is unsafe.
-    pub unsafe fn from_active_page_tables() -> Self {
-        ProcessMemory {
-            userspace_bookkeping: UserspaceBookkeeping::new(),
-            table_hierarchy: InactiveHierarchy::from_currently_active(),
-            heap_base_address: VirtualAddress(0x55555555), // just a dummy value, the first process
-                                                           // should never use its process's heap !
-        }
-    }
 
     /// If these tables are the one currently in use, we return them as an ActiveHierarchy instead.
     fn get_hierarchy(&mut self) -> DynamicHierarchy<'_> {
@@ -202,6 +185,7 @@ impl ProcessMemory {
     pub fn map_phys_region_to(&mut self,
                               phys: PhysicalMemRegion,
                               address: VirtualAddress,
+                              ty: MemoryType,
                               flags: MappingAccessRights)
                               -> Result<(), KernelError> {
         address.check_aligned_to(PAGE_SIZE)?;
@@ -211,7 +195,7 @@ impl ProcessMemory {
         // ok, everything seems good, from now on treat errors as unexpected
 
         self.get_hierarchy().map_to_from_iterator(phys.into_iter(), address, flags);
-        let mapping = Mapping::new_regular(address, vec![phys], flags)
+        let mapping = Mapping::new(address, MappingFrames::Owned(vec![phys]), 0, length, ty, flags)
             .expect("We checked everything, but bookkeeping refuses to create the mapping");
         self.userspace_bookkeping.add_mapping(mapping)
             .expect("We checked everything, but bookkeeping refuses to add the mapping");
@@ -230,7 +214,7 @@ impl ProcessMemory {
     ///     * `length` is not page aligned.
     ///     * `length` is 0.
     /// * `PhysicalMemoryExhaustion`: Frames could not be allocated.
-    pub fn create_regular_mapping(&mut self, address: VirtualAddress, length: usize, flags: MappingAccessRights) -> Result<(), KernelError> {
+    pub fn create_regular_mapping(&mut self, address: VirtualAddress, length: usize, ty: MemoryType, flags: MappingAccessRights) -> Result<(), KernelError> {
         address.check_aligned_to(PAGE_SIZE)?;
         check_size_aligned(length, PAGE_SIZE)?;
         check_nonzero_length(length)?;
@@ -240,7 +224,13 @@ impl ProcessMemory {
         // ok, everything seems good, from now on treat errors as unexpected
 
         self.get_hierarchy().map_to_from_iterator(frames.iter().flatten(), address, flags);
-        let mapping = Mapping::new_regular(address, frames, flags)
+        let frames = if ty.get_memory_state().contains(MemoryState::IS_REFERENCE_COUNTED) {
+            MappingFrames::Shared(Arc::new(SpinRwLock::new(frames)))
+        } else {
+            MappingFrames::Owned(frames)
+        };
+
+        let mapping = Mapping::new(address, frames, 0, length, ty, flags)
             .expect("We checked everything, but bookkeeping refuses to create the mapping");
         self.userspace_bookkeping.add_mapping(mapping)
             .expect("We checked everything, but bookkeeping refuses to add the mapping");
@@ -258,79 +248,31 @@ impl ProcessMemory {
     /// * `InvalidSize` :
     ///     * `length` is not page aligned.
     ///     * `length` is 0.
-    pub fn map_shared_mapping(&mut self,
-                              shared_mapping: Arc<Vec<PhysicalMemRegion>>,
-                              address: VirtualAddress,
-                              flags: MappingAccessRights)
-                              -> Result<(), KernelError> {
+    pub fn map_partial_shared_mapping(&mut self,
+                                      shared_mapping: Arc<SpinRwLock<Vec<PhysicalMemRegion>>>,
+                                      address: VirtualAddress,
+                                      phys_offset: usize,
+                                      length: usize,
+                                      ty: MemoryType,
+                                      flags: MappingAccessRights)
+                                     -> Result<(), KernelError> {
         address.check_aligned_to(PAGE_SIZE)?;
-        // compute the length
-        let length = shared_mapping.iter().flatten().count() * PAGE_SIZE;
         check_nonzero_length(length)?;
         check_size_aligned(length, PAGE_SIZE)?;
+        let max_length = shared_mapping.read().iter().flatten().count() * PAGE_SIZE - phys_offset;
+        if max_length < length {
+            return Err(KernelError::InvalidSize { size: length, backtrace: Backtrace::new() })
+        }
         UserLand::check_contains_region(address, length)?;
         self.userspace_bookkeping.check_vacant(address, length)?;
         // ok, everything seems good, from now on treat errors as unexpected
 
-        self.get_hierarchy().map_to_from_iterator(shared_mapping.iter().flatten(), address, flags);
-        let mapping = Mapping::new_shared(address, shared_mapping, flags)
+        let mapping = Mapping::new(address, MappingFrames::Shared(shared_mapping), phys_offset, length, ty, flags)
             .expect("We checked everything, but bookkeeping refuses to create the mapping");
+        self.get_hierarchy().map_to_from_iterator(mapping.frames_it(), address, flags);
         self.userspace_bookkeping.add_mapping(mapping)
             .expect("We checked everything, but bookkeeping refuses to add the mapping");
         Ok(())
-    }
-
-    /// Turns an existing mapping at the specified address into a shared mapping.
-    /// Returns the underlying PhysicalMemRegion Arc.
-    ///
-    /// This method does not touch the page tables - as such, it is safe to use
-    /// in an SMP environment while other threads are potentially running and
-    /// accessing the shared mapping.
-    ///
-    /// # Errors
-    ///
-    /// * `InvalidAddress`:
-    ///     * `address` does not correspond to the start of a mapping.
-    ///     * `address` points to an Available/Guarded/SystemReserved mapping.
-    /// * `InvalidSize`:
-    ///     * `length` is not the size of the mapping at `address`.
-    pub fn share_existing_mapping(&mut self, address: VirtualAddress, length: usize) -> Result<Arc<Vec<PhysicalMemRegion>>, KernelError> {
-        let mapping = self.userspace_bookkeping.remove_mapping(address, length)?;
-        match mapping.mtype_ref() {
-            MappingType::Regular(_region) => (),
-            MappingType::Shared(region) => {
-                let region = region.clone();
-                self.userspace_bookkeping.add_mapping(mapping)
-                    .expect("add_mapping failed in shared_existing_mapping");
-                return Ok(region)
-            },
-            _ => {
-                self.userspace_bookkeping.add_mapping(mapping)
-                    .expect("add_mapping failed in shared_existing_mapping");
-                return Err(KernelError::InvalidAddress { address: address.addr(), backtrace: Backtrace::new() });
-            },
-        };
-
-        let addr = mapping.address();
-        let flags = mapping.flags();
-
-        if let MappingType::Regular(region) = mapping.mtype() {
-            let shared_region = Arc::new(region);
-            let mapping = Mapping::new_shared(addr, shared_region.clone(), flags)
-                .expect("Turning a known valid region into a shared mapping cannot fail");
-
-            // This cannot fail. We are the sole owners of the UserspaceBookkeeping
-            // (protected by a lock). We removed the mapping earlier, and nobody
-            // should have had a chance to put a mapping back in its place. If
-            // add_mapping fails here, it means either a lock is failing to lock
-            // properly, or remove_mapping is broken.
-            self.userspace_bookkeping.add_mapping(mapping)
-                .expect("Add_mapping failed in shared_existing_mapping");
-
-            Ok(shared_region)
-        } else {
-            unreachable!("Case handled in the earlier match")
-        }
     }
 
     /// Guards a range of addresses
@@ -344,9 +286,9 @@ impl ProcessMemory {
     /// * `InvalidSize` :
     ///     * `length` is not page aligned.
     ///     * `length` is 0.
-    pub fn guard(&mut self, address: VirtualAddress, length: usize) -> Result<(), KernelError>{
+    pub fn guard(&mut self, address: VirtualAddress, length: usize, ty: MemoryType) -> Result<(), KernelError>{
         UserLand::check_contains_region(address, length)?;
-        let mapping = Mapping::new_guard(address, length)?;
+        let mapping = Mapping::new(address, MappingFrames::None, 0, length, ty, MappingAccessRights::empty())?;
         self.userspace_bookkeping.add_mapping(mapping)?;
 
         // everything is ok, actually map the guard
@@ -382,7 +324,7 @@ impl ProcessMemory {
         self.userspace_bookkeping.mapping_at(address)
     }
 
-    /// Shrink the mapping at `address` to `new_size`.
+    /*/// Shrink the mapping at `address` to `new_size`.
     ///
     /// If `new_size` == 0, the mapping is unmapped entirely.
     ///
@@ -437,15 +379,13 @@ impl ProcessMemory {
             /* leak the mapped frames here, we still have them in `mapping` */
         });
         Ok(Some(spill))
-    }
+    }*/
 
-    /// Expand the mapping at `address` to `new_size`.
+    /// Expand the Heap at `address` to `new_size`.
     ///
-    /// If the mapping used to map physical memory, new frames are allocated to match `new_size`.
+    /// New frames are allocated to match `new_size`.
     ///
     /// If `new_size` is equal to old size, nothing is done.
-    ///
-    /// Because it is reference counted, a Shared mapping cannot be resized.
     ///
     /// # Errors
     ///
@@ -457,20 +397,25 @@ impl ProcessMemory {
     ///     * `address..(address + new_size)` does not fall in UserLand.
     ///     * `new_size` < previous mapping length.
     ///     * `new_size` is not page aligned.
+    /// * `InvalidMemState`:
+    ///     * `address` does not point to a Heap memory mapping.
     pub fn expand_mapping(&mut self, address: VirtualAddress, new_size: usize) -> Result<(), KernelError> {
         check_size_aligned(new_size, PAGE_SIZE)?;
         // 1. get the previous mapping's address and size.
+        let old_mapping_ref = self.userspace_bookkeping.occupied_mapping_at(address)?;
         let (start_addr, old_size) = {
-            let old_mapping_ref = self.userspace_bookkeping.occupied_mapping_at(address)?;
-            // check it's not a shared or system reserved mapping.
-            if let MappingType::Shared(..) = old_mapping_ref.mtype_ref() {
-                return Err(KernelError::InvalidAddress { address: address.addr(), backtrace: Backtrace::new() });
+            // Check we're resizing the heap.
+            if old_mapping_ref.state().ty() != MemoryType::Heap {
+                return Err(KernelError::InvalidMemState { address: address, ty: old_mapping_ref.state().ty(), backtrace: Backtrace::new() });
             }
-            if let MappingType::SystemReserved = old_mapping_ref.mtype_ref() {
+            // check it's not a system reserved or regular mapping.
+            if let MappingFrames::Owned(..) | MappingFrames::None = old_mapping_ref.frames() {
                 return Err(KernelError::InvalidAddress { address: address.addr(), backtrace: Backtrace::new() });
             }
             (old_mapping_ref.address(), old_mapping_ref.length())
         };
+
+        // 2. Check the area we're extending to is available.
         UserLand::check_contains_region(start_addr, new_size)?;
         if new_size < old_size {
             return Err(KernelError::InvalidSize { size: new_size, backtrace: Backtrace::new() });
@@ -480,30 +425,25 @@ impl ProcessMemory {
         }
         let added_length = new_size - old_size;
         self.userspace_bookkeping.check_vacant(start_addr + old_size, added_length)?;
-        // 2. remove it from the bookkeeping.
+
+        // 3. allocate the new frames.
+        let mut new_frames = FrameAllocator::allocate_frames_fragmented(added_length)?;
+
+        // 4. remove old mapping from the bookkeeping.
         let old_mapping = self.userspace_bookkeping.remove_mapping(start_addr, old_size)
             .expect("expand_mapping: removing the mapping failed.");
         let flags = old_mapping.flags();
-        // 3. construct a new bigger mapping, with the same type and flags.
-        // 4. map the added part accordingly.
-        let new_mapping = match old_mapping.mtype() {
-            MappingType::Available | MappingType::Shared(..) | MappingType::SystemReserved => unreachable!(),
-            MappingType::Guarded => {
-                // guard the added part in the page tables.
-                self.get_hierarchy().guard(start_addr + old_size, added_length);
-                Mapping::new_guard(start_addr, new_size)
-                    .expect("expand_mapping: couldn't recreate mapping")
-            },
-            MappingType::Regular(mut frames) => {
-                // allocate the new frames.
-                let mut new_frames = FrameAllocator::allocate_frames_fragmented(added_length)?;
-                // map them.
-                self.get_hierarchy().map_to_from_iterator(new_frames.iter().flatten(), start_addr + old_size, flags);
-                // create a mapping from the two parts.
-                frames.append(&mut new_frames);
-                Mapping::new_regular(start_addr, frames, flags)
-                    .expect("expand_mapping: couldn't recreate mapping")
-            },
+
+        // 5. construct a new bigger mapping, with the same type and flags.
+        let new_mapping = if let MappingFrames::Shared(frames) = old_mapping.frames() {
+            // 6. map the added part accordingly.
+            self.get_hierarchy().map_to_from_iterator(new_frames.iter().flatten(), start_addr + old_size, flags);
+            // create a mapping from the freshly allocated frames and the flags.
+            frames.write().append(&mut new_frames);
+            Mapping::new(start_addr, MappingFrames::Shared(frames.clone()), 0, new_size, MemoryType::Heap, flags)
+                .expect("expand_mapping: couldn't recreate mapping")
+        } else {
+            unreachable!("We checked we could only get a MappingFrames earlier.");
         };
         self.userspace_bookkeping.add_mapping(new_mapping)
             .expect("expand_mapping: failed re-adding the mapping to the bookkeeping");
@@ -520,13 +460,13 @@ impl ProcessMemory {
         self.userspace_bookkeping.find_available_space(length)
     }
 
-    /// Retrieves the mapping that `address` falls into, and mirror it in KernelLand
+    /// Retrieves the mapping that `address` falls into, and mirror it in KernelLand.
+    /// The mapping will be kept alive until the `CrossProcessMapping` is dropped.
     ///
     /// # Error
     ///
-    /// Returns an Error if the mapping is Available/Guarded/SystemReserved, as there would be
-    /// no point to remap it, and dereferencing the pointer would cause the kernel to page-fault.
-    pub fn mirror_mapping(&self, address: VirtualAddress, length: usize) -> Result<CrossProcessMapping<'_>, KernelError> {
+    /// Returns an Error if the mapping is not RefCounted.
+    pub fn mirror_mapping(&self, address: VirtualAddress, length: usize) -> Result<CrossProcessMapping, KernelError> {
         UserLand::check_contains_address(address)?;
         let mapping = self.userspace_bookkeping.occupied_mapping_at(address)?;
         let offset = address - mapping.address();
@@ -555,7 +495,7 @@ impl ProcessMemory {
         let previous_heap_state = {
             let query = self.userspace_bookkeping.mapping_at(self.heap_base_address);
             let heap = query.mapping();
-            if let MappingType::Available = heap.mtype_ref() {
+            if let MemoryType::Unmapped = heap.state().ty() {
                 HeapState::NoHeap
             } else {
                 HeapState::Heap(heap.length())
@@ -564,8 +504,10 @@ impl ProcessMemory {
         let heap_base_address = self.heap_base_address;
         match previous_heap_state {
             HeapState::NoHeap if new_size == 0 => (), // don't do anything
-            HeapState::NoHeap => self.create_regular_mapping(heap_base_address, new_size, MappingAccessRights::u_rw())?,
-            HeapState::Heap(old_size) if new_size < old_size => { self.shrink_mapping(heap_base_address, new_size)?; },
+            HeapState::NoHeap => self.create_regular_mapping(heap_base_address, new_size, MemoryType::Heap, MappingAccessRights::u_rw())?,
+            // TODO: Shrink mapping
+            HeapState::Heap(old_size) if new_size < old_size => (),
+            //HeapState::Heap(old_size) if new_size < old_size => { self.shrink_mapping(heap_base_address, new_size)?; },
             HeapState::Heap(_) => self.expand_mapping(heap_base_address, new_size)?
         }
         Ok(self.heap_base_address)
@@ -574,6 +516,74 @@ impl ProcessMemory {
     /// Switches to this process memory
     pub fn switch_to(&mut self) {
         self.table_hierarchy.switch_to();
+    }
+
+    /// Checks that the given memory range is homogenous (that is, all blocks
+    /// within the range have the same permissions and state), and that it has
+    /// an expected set of state, permissions and attributes.
+    ///
+    /// # Errors
+    ///
+    /// - `InvalidMemState`
+    ///   - The state of a subsection of the memory region is not in the
+    ///     expected state.
+    ///   - The perms of a subsection of the memory region is not in the
+    ///     expected state.
+    ///   - The attrs of a subsection of the memory region is not in the
+    ///     expected state.
+    ///   - The range does not have homogenous state or perms. All mappings in
+    ///     a region should have the same perms and state.
+    #[allow(clippy::too_many_arguments)]
+    pub fn check_range(&self, addr: VirtualAddress, size: usize,
+        state_mask: MemoryState, state_expected: MemoryState,
+        perms_mask: MemoryPermissions, perms_expected: MemoryPermissions,
+        _attrs_mask: MemoryAttributes, _attrs_expected: MemoryAttributes,
+        _attrs_ignore_mask: MemoryAttributes) -> Result<(MemoryState, MemoryPermissions, MemoryAttributes), KernelError>
+    {
+        let addr_end = addr + size;
+        let mut cur_addr = addr;
+        let mut first_block_state = None;
+        let mut first_block_perms: Option<MemoryPermissions> = None;
+        loop {
+            let mem = self.query_memory(cur_addr);
+            let mapping_perms = mem.mapping().flags().into();
+
+            // First check for coherence: Blocks after the first must have the
+            // same state and permissions.
+            if *first_block_state.get_or_insert(mem.mapping().state()) != mem.mapping().state() {
+                return Err(KernelError::InvalidMemState {
+                    address: cur_addr,
+                    ty: mem.mapping().state().ty(),
+                    backtrace: Backtrace::new()
+                })
+            }
+            if *first_block_perms.get_or_insert(mapping_perms) != mapping_perms {
+                return Err(KernelError::InvalidMemState {
+                    address: cur_addr,
+                    ty: mem.mapping().state().ty(),
+                    backtrace: Backtrace::new()
+                })
+            }
+
+            // If the blocks are coherent, (or if this is the first block) we
+            // should check that the state, permissions and attributes are all
+            // in the expected state.
+            if mem.mapping().state() & state_mask != state_expected ||
+                // mem.mapping().attributes() & attrs_mask != attrs_expected ||
+                mapping_perms & perms_mask != perms_expected
+            {
+                return Err(KernelError::InvalidMemState {
+                    address: cur_addr,
+                    ty: mem.mapping().state().ty(),
+                    backtrace: Backtrace::new()
+                });
+            }
+
+            cur_addr = mem.mapping().address() + mem.mapping().length();
+            if cur_addr >= addr_end {
+                return Ok((mem.mapping().state(), mem.mapping().flags().into(), MemoryAttributes::empty()))
+            }
+        }
     }
 }
 

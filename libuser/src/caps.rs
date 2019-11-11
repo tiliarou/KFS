@@ -1,11 +1,11 @@
 //! Kernel Capabilities declaration
 //!
-//! Every program loaded by KFS has to declare the kernel capabilities it wishes
+//! Every program loaded by Sunrise has to declare the kernel capabilities it wishes
 //! to use. Upon doing a privileged action (such as using a syscall, or creating
 //! an event for an IRQ), the kernel will check that the process was allowed to
 //! take this action.
 //!
-//! The main use-case is to make privilege escalation more complicated. In KFS,
+//! The main use-case is to make privilege escalation more complicated. In Sunrise,
 //! an exploit only grants the capabilities of the process that was vulnerable,
 //! requiring more pivoting in order to gain better accesses. For instance,
 //! a vulnerability in the browser does not give rights to access the filesystem.
@@ -19,11 +19,29 @@
 //! numbers, and the second contains a list of raw capabilities. Syscalls are
 //! handled specially in order to make them easier to declare.
 //!
+//! In addition, programs are expected to provide a `KipHeader`, telling the
+//! kernel various information about how to start the process - such as how much
+//! memory it should allocate for the stack, or what the default priority of the
+//! process is. Those are provided by the `kip_header` macro.
+//!
 //! # Example
 //!
 //! ```
-//! extern crate kfs_libuser;
-//! use kfs_libuser::{syscalls, caps};
+//! extern crate sunrise_libuser;
+//! use sunrise_libuser::{syscalls, caps, capabilities, kip_header};
+//! use sunrise_libuser::caps::ProcessCategory;
+//! kip_header!(HEADER = caps::KipHeader {
+//!     magic: *b"KIP1",
+//!     name: *b"test\0\0\0\0\0\0\0\0",
+//!     title_id: 0x0200000000001000,
+//!     process_category: ProcessCategory::KernelBuiltin,
+//!     main_thread_priority: 0,
+//!     default_cpu_core: 0,
+//!     reserved: 0,
+//!     flags: 0,
+//!     stack_page_count: 16,
+//! });
+//!
 //! capabilities!(CAPABILITIES = Capabilities {
 //!     svcs: [
 //!         syscalls::nr::SetHeapSize,
@@ -44,15 +62,15 @@
 //!         syscalls::nr::SleepThread
 //!     ],
 //!     raw_caps: [caps::ioport(0x60), caps::ioport(0x64), caps::irq_pair(1, 0x3FF)],
-//! },
+//! });
 //! ```
 
 /// Define the capabilities array in the .kernel_caps section. Has the following
 /// syntax:
 ///
 /// ```no_run
-/// extern crate kfs_libuser;
-/// use kfs_libuser::{syscalls, caps};
+/// extern crate sunrise_libuser;
+/// use sunrise_libuser::{syscalls, caps, capabilities};
 /// capabilities!(CAPABILITIES = Capabilities {
 ///     svcs: [
 ///         // Array of syscall numbers.
@@ -113,6 +131,38 @@ macro_rules! capabilities {
     (@count_elems $val:expr, $($vals:expr,)*) => {
         1 + capabilities!(@count_elems $($vals,)*)
     };
+}
+
+pub use sunrise_libkern::process::{KipHeader, ProcessCategory};
+
+/// Define the kernel built-ins in the .kip_header section. Has the following
+/// syntax:
+///
+/// ```no_run
+/// extern crate sunrise_libuser;
+/// use sunrise_libuser::{caps, kip_header};
+/// use sunrise_libuser::caps::ProcessCategory;
+/// kip_header!(HEADER = caps::KipHeader {
+///     magic: *b"KIP1",
+///     name: *b"test\0\0\0\0\0\0\0\0",
+///     title_id: 0x0200000000001000,
+///     process_category: ProcessCategory::KernelBuiltin,
+///     main_thread_priority: 0,
+///     default_cpu_core: 0,
+///     flags: 0,
+///     reserved: 0,
+///     stack_page_count: 16,
+/// });
+/// ```
+///
+/// Order of the fields does not matter. Every value is configurable.
+#[macro_export]
+macro_rules! kip_header {
+    ($header:ident = $expr:expr) => {
+        #[cfg_attr(not(test), link_section = ".kip_header")]
+        #[used]
+        static $header: $crate::caps::KipHeader = $expr;
+    }
 }
 
 // TODO: Libuser: capability declaration functions should use type-safe integers.

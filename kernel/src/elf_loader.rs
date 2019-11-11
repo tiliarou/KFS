@@ -19,9 +19,12 @@ use xmas_elf::ElfFile;
 use xmas_elf::program::{ProgramHeader, Type::Load, SegmentData};
 use crate::mem::{VirtualAddress, PhysicalAddress};
 use crate::paging::{PAGE_SIZE, MappingAccessRights, process_memory::ProcessMemory, kernel_memory::get_kernel_memory};
+use sunrise_libkern::MemoryType;
 use crate::frame_allocator::PhysicalMemRegion;
 use crate::utils::{self, align_up};
 use crate::error::KernelError;
+use sunrise_libkern::process::KipHeader;
+use plain::Plain;
 
 /// Represents a grub module once mapped in kernel memory
 #[derive(Debug)]
@@ -39,7 +42,7 @@ pub struct MappedGrubModule<'a> {
 /// Maps a grub module, which already lives in reserved physical memory, into the KernelLand.
 ///
 /// # Error:
-/// 
+///
 /// * VirtualMemoryExhaustion: cannot find virtual memory where to map it.
 pub fn map_grub_module(module: &ModuleTag) -> Result<MappedGrubModule<'_>, KernelError> {
     let start_address_aligned = PhysicalAddress(utils::align_down(module.start_address() as usize, PAGE_SIZE));
@@ -94,20 +97,40 @@ pub fn get_kacs<'a>(module: &'a MappedGrubModule<'_>) -> Option<&'a [u8]> {
         .map(|section| section.raw_data(&elf))
 }
 
+/// Gets the KIP Header of the provided module, found in the .kip_header
+/// section of the ELF.
+#[allow(clippy::cast_ptr_alignment)]
+pub fn get_kip_header(module: &MappedGrubModule<'_>) -> Option<KipHeader> {
+    let elf = module.elf.as_ref().expect("Failed parsing multiboot module as elf");
+
+    let section = elf.find_section_by_name(".kip_header")?;
+
+    let data = section.raw_data(&elf);
+
+    if data.len() < core::mem::size_of::<KipHeader>() {
+        return None;
+    }
+
+    let mut header = KipHeader::default();
+    header.copy_from_bytes(data).unwrap();
+    Some(header)
+}
+
 /// Loads the given kernel built-in into the given page table.
 /// Returns address of entry point
-pub fn load_builtin(process_memory: &mut ProcessMemory, module: &MappedGrubModule<'_>) -> usize {
+pub fn load_builtin(process_memory: &mut ProcessMemory, module: &MappedGrubModule<'_>, base: usize) -> usize {
     let elf = module.elf.as_ref().expect("Failed parsing multiboot module as elf");
 
     // load all segments into the page_table we had above
     for ph in elf.program_iter().filter(|ph|
         ph.get_type().expect("Failed to get type of elf program header") == Load)
     {
-        load_segment(process_memory, ph, &elf);
+        load_segment(process_memory, ph, &elf, base);
     }
 
     // return the entry point
-    let entry_point = elf.header.pt2.entry_point();
+    let entry_point = base + elf.header.pt2.entry_point() as usize;
+    assert_eq!(entry_point, base);
     info!("Entry point : {:#x?}", entry_point);
 
     entry_point as usize
@@ -117,25 +140,29 @@ pub fn load_builtin(process_memory: &mut ProcessMemory, module: &MappedGrubModul
 /// and filling remaining with 0s.
 /// This is used by NOBITS sections (.bss), this way we initialize them to 0.
 #[allow(clippy::match_bool)] // more readable
-fn load_segment(process_memory: &mut ProcessMemory, segment: ProgramHeader<'_>, elf_file: &ElfFile) {
+fn load_segment(process_memory: &mut ProcessMemory, segment: ProgramHeader<'_>, elf_file: &ElfFile, base: usize) {
     // Map the segment memory in KernelLand
     let mem_size_total = align_up(segment.mem_size() as usize, PAGE_SIZE);
 
     // Map as readonly if specified
     let mut flags = MappingAccessRights::USER_ACCESSIBLE;
+    let mut ty = MemoryType::CodeStatic;
     if segment.flags().is_read() {
         flags |= MappingAccessRights::READABLE
     };
     if segment.flags().is_write() {
+        ty = MemoryType::CodeMutable;
         flags |= MappingAccessRights::WRITABLE
     };
     if segment.flags().is_execute() {
         flags |= MappingAccessRights::EXECUTABLE
     }
 
+    let virtual_addr = base + segment.virtual_addr() as usize;
+
     // Create the mapping in UserLand
-    let userspace_addr = VirtualAddress(segment.virtual_addr() as usize);
-    process_memory.create_regular_mapping(userspace_addr, mem_size_total, flags)
+    let userspace_addr = VirtualAddress(virtual_addr);
+    process_memory.create_regular_mapping(userspace_addr, mem_size_total, ty, flags)
         .expect("Cannot load segment");
 
     // Mirror it in KernelLand
@@ -164,7 +191,7 @@ fn load_segment(process_memory: &mut ProcessMemory, segment: ProgramHeader<'_>, 
     }
 
     info!("Loaded segment - VirtAddr {:#010x}, FileSize {:#010x}, MemSize {:#010x} {}{}{}",
-        segment.virtual_addr(), segment.file_size(), segment.mem_size(),
+        virtual_addr, segment.file_size(), segment.mem_size(),
         match segment.flags().is_read()    { true => 'R', false => ' '},
         match segment.flags().is_write()   { true => 'W', false => ' '},
         match segment.flags().is_execute() { true => 'X', false => ' '},

@@ -6,11 +6,11 @@ use log::{self, Log, Metadata, Record, LevelFilter};
 use crate::devices::rs232::SerialLogger;
 use core::fmt::Write;
 use crate::i386::multiboot::get_boot_information;
-use crate::sync::{RwLock, Once};
+use crate::sync::{SpinRwLock, Once};
 use crate::scheduler;
 
 struct Logger {
-    filter: RwLock<filter::Filter>
+    filter: SpinRwLock<filter::Filter>
 }
 
 #[allow(unused_must_use)]
@@ -20,11 +20,19 @@ impl Log for Logger {
     }
 
     fn log(&self, record: &Record<'_>) {
+        use crate::devices::rs232::{SerialAttributes, SerialColor};
+        let color = SerialAttributes::fg(match record.level() {
+            log::Level::Error => SerialColor::Red,
+            log::Level::Warn  => SerialColor::Yellow,
+            log::Level::Info  => SerialColor::Green,
+            log::Level::Debug => SerialColor::Cyan,
+            log::Level::Trace => SerialColor::White,
+        });
         if self.filter.read().matches(record) {
             if let Some(thread) = scheduler::try_get_current_thread() {
-                writeln!(SerialLogger, "[{}] - {} - {} - {}", record.level(), record.target(), thread.process.name, record.args());
+                writeln!(SerialLogger, "[{}{}{}] - {} - {} - {}", color, record.level(), SerialAttributes::default(), record.target(), thread.process.name, record.args());
             } else {
-                writeln!(SerialLogger, "[{}] - {} - {}", record.level(), record.target(), record.args());
+                writeln!(SerialLogger, "[{}{}{}] - {} - {}", color, record.level(), SerialAttributes::default(), record.target(), record.args());
             }
         }
     }
@@ -39,7 +47,7 @@ pub fn early_init() {
     let filter = filter::Builder::new()
         .filter(None, LevelFilter::Info)
         .build();
-    log::set_logger(LOGGER.call_once(|| Logger { filter: RwLock::new(filter) } ))
+    log::set_logger(LOGGER.call_once(|| Logger { filter: SpinRwLock::new(filter) } ))
         .expect("log_impl::init to be called before logger is initialized");
     log::set_max_level(LevelFilter::Trace);
     info!("Logging enabled");

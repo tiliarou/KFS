@@ -2,14 +2,16 @@
 
 use core::slice;
 use crate::types::*;
-pub use kfs_libkern::nr;
-pub use kfs_libkern::{MemoryInfo, MemoryPermissions};
+pub use sunrise_libkern::nr;
+pub use sunrise_libkern::{MemoryInfo, MemoryPermissions};
+pub use sunrise_libkern::process::*;
 use crate::error::KernelError;
 
 // Assembly blob can't get documented, but clippy requires it.
 #[allow(clippy::missing_docs_in_private_items)]
+
 mod syscall_inner {
-    #[cfg(all(target_arch = "x86", not(test)))]
+    #[cfg(all(target_arch = "x86", target_os = "sunrise", not(test), not(feature = "build-for-std-app")))]
     global_asm!("
 .intel_syntax noprefix
 .global syscall_inner
@@ -53,6 +55,13 @@ syscall_inner:
     pop ebp
     ret
 ");
+
+    // Should only be used for rustdocs!!!
+    #[cfg(not(target_os = "sunrise"))]
+    #[no_mangle]
+    extern fn syscall_inner(regs: &mut super::Registers) {
+        regs.eax = crate::error::KernelError::NotImplemented.make_ret() as usize;
+    }
 }
 
 /// Register backup structure. The syscall_inner will pop the registers from this
@@ -137,7 +146,7 @@ pub fn exit_process() -> ! {
     unsafe {
         match syscall(nr::ExitProcess, 0, 0, 0, 0, 0, 0) {
             Ok(_) => (),
-            Err(err) => { let _ = output_debug_string(&format!("Failed to exit: {}", err)); },
+            Err(err) => { let _ = output_debug_string(&format!("Failed to exit: {}", err), 10, "sunrise_libuser::syscalls::exit_process"); },
         }
         #[allow(clippy::empty_loop)]
         loop {} // unreachable, but we can't panic, as panic! calls exit_process
@@ -145,7 +154,11 @@ pub fn exit_process() -> ! {
 }
 
 /// Creates a thread in the current process.
-pub fn create_thread(ip: extern fn() -> !, arg: usize, sp: *const u8, priority: u32, processor_id: u32) -> Result<Thread, KernelError> {
+///
+/// # Unsafety
+///
+/// `sp` must a valid pointer to a stack that is uniquely owned, as the thread will write to it.
+pub unsafe fn create_thread(ip: extern "fastcall" fn(usize) -> !, arg: usize, sp: *const u8, priority: u32, processor_id: u32) -> Result<Thread, KernelError> {
     unsafe {
         let (out_handle, ..) = syscall(nr::CreateThread, ip as usize, arg, sp as _, priority as _, processor_id as _, 0)?;
         Ok(Thread(Handle::new(out_handle as _)))
@@ -173,6 +186,37 @@ pub fn exit_thread() -> ! {
 pub fn sleep_thread(nanos: usize) -> Result<(), KernelError> {
     unsafe {
         syscall(nr::SleepThread, nanos, 0, 0, 0, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Sets the "signaled" state of an event. Calling this on an unsignalled event
+/// will cause any thread waiting on this event through [wait_synchronization()]
+/// to wake up. Any future calls to [wait_synchronization()] with this handle
+/// will immediately return - the user has to clear the "signaled" state through
+/// [clear_event()].
+///
+/// Takes either a [ReadableEvent] or a [WritableEvent].
+pub fn signal_event(event: &WritableEvent) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::SignalEvent, (event.0).0.get() as _, 0, 0, 0, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Clear the "signaled" state of an event. After calling this on a signaled
+/// event, [wait_synchronization()] on this handle will wait until
+/// [signal_event()] is called once again.
+///
+/// Takes either a [ReadableEvent] or a [WritableEvent].
+///
+/// # Errors
+///
+/// - `InvalidState`
+///   - The event wasn't signaled.
+pub(crate) fn clear_event(event: HandleRef) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::ClearEvent, event.inner.get() as _, 0, 0, 0, 0, 0)?;
         Ok(())
     }
 }
@@ -214,15 +258,19 @@ pub fn map_shared_memory(handle: &SharedMemory, addr: usize, size: usize, perm: 
 ///
 /// Unmaps a shared memory mapping at the given address.
 ///
+/// # Safety
+///
+/// This function unmaps the memory, invalidating any pointer to the given
+/// region. The user must take care that no pointers point to this region before
+/// calling this function.
+///
 /// # Errors:
 ///
 /// - addr must point to a mapping backed by the given handle
 /// - Size must be equal to the size of the backing shared memory handle.
-pub fn unmap_shared_memory(handle: &SharedMemory, addr: usize, size: usize) -> Result<(), KernelError> {
-    unsafe {
-        syscall(nr::UnmapSharedMemory, (handle.0).0.get() as _, addr, size, 0, 0, 0)?;
-        Ok(())
-    }
+pub unsafe fn unmap_shared_memory(handle: &SharedMemory, addr: usize, size: usize) -> Result<(), KernelError> {
+    syscall(nr::UnmapSharedMemory, (handle.0).0.get() as _, addr, size, 0, 0, 0)?;
+    Ok(())
 }
 
 // Not totally public because it's not safe to use directly
@@ -239,10 +287,12 @@ pub(crate) fn close_handle(handle: u32) -> Result<(), KernelError> {
 /// When zero handles are passed, this will wait forever until either timeout or
 /// cancellation occurs.
 ///
+/// If a timeout of 0 is passed, this function is guaranteed not to reschedule.
+///
 /// Does not accept 0xFFFF8001 or 0xFFFF8000 meta-handles.
 ///
 /// # Object types
-/// 
+///
 /// - KDebug: signals when there is a new DebugEvent (retrievable via
 ///   GetDebugEvent).
 /// - KClientPort: signals when the number of sessions is less than the maximum
@@ -258,11 +308,12 @@ pub(crate) fn close_handle(handle: u32) -> Result<(), KernelError> {
 /// - KThread: signals when the thread has exited.
 ///
 /// # Result codes
-/// 
+///
 /// - 0x0000: Success. One of the objects was signaled before the timeout
 ///   expired, or one of the objects is a Session with a closed remote. Handle
 ///   index is updated to indicate which object signaled.
-/// - 0x7601: Thread termination requested. Handle index is not updated.
+/// - 0x7601: Thread termination requested. Handle index is not updated. Cannot
+///   happen when timeout is 0.
 /// - 0xe401: Invalid handle. Returned when one of the handles passed is invalid.
 ///   Handle index is not updated.
 /// - 0xe601: Invalid address. Returned when the handles pointer is not a
@@ -271,9 +322,9 @@ pub(crate) fn close_handle(handle: u32) -> Result<(), KernelError> {
 ///   timeout. Handle index is not updated.
 /// - 0xec01: Interrupted. Returned when another thread uses
 ///   svcCancelSynchronization to cancel this thread. Handle index is not
-///   updated.
+///   updated. Cannot happen when timeout is 0.
 /// - 0xee01: Too many handles. Returned when the number of handles passed is
-///   >0x40. Note: KFS currently does not return this error. It is perfectly able
+///   >0x40. Note: Sunrise kernel currently does not return this error. It is perfectly able
 ///   to wait on more than 0x40 handles.
 pub fn wait_synchronization(handles: &[HandleRef<'_>], timeout_ns: Option<usize>) -> Result<usize, KernelError> {
     unsafe {
@@ -303,9 +354,9 @@ pub fn send_sync_request_with_user_buffer(buf: &mut [u8], handle: &ClientSession
 /// Print the given string to the kernel's debug output.
 ///
 /// Currently, this prints the string to the serial port.
-pub fn output_debug_string(s: &str) -> Result<(), KernelError> {
+pub fn output_debug_string(s: &str, level: usize, target: &str) -> Result<(), KernelError> {
     unsafe {
-        syscall(nr::OutputDebugString, s.as_ptr() as _, s.len(), 0, 0, 0, 0)?;
+        syscall(nr::OutputDebugString, s.as_ptr() as _, s.len(), level, target.as_ptr() as _, target.len(), 0)?;
         Ok(())
     }
 }
@@ -355,6 +406,14 @@ pub fn reply_and_receive_with_user_buffer(buf: &mut [u8], handles: &[HandleRef<'
     }
 }
 
+/// Create a [ReadableEvent]/[WritableEvent] pair.
+pub fn create_event() -> Result<(WritableEvent, ReadableEvent), KernelError> {
+    unsafe {
+        let (wevent, revent, ..) = syscall(nr::CreateEvent, 0, 0, 0, 0, 0, 0)?;
+        Ok((WritableEvent(Handle::new(wevent as _)), ReadableEvent(Handle::new(revent as _))))
+    }
+}
+
 /// Create a waitable object for the given IRQ number.
 ///
 /// Note that the process needs to be authorized to listen for the given IRQ.
@@ -373,24 +432,21 @@ pub fn create_interrupt_event(irqnum: usize, flag: u32) -> Result<ReadableEvent,
 /// # Return
 ///
 /// 0. The start address of the physical region.
-/// 1. 0x00000000 (On Horizon it contains the KernelSpace virtual address of this mapping,
-///    but I don't see any use for it).
-/// 2. The length of the physical region.
-// kfs extension
-/// 3. The offset in the region of the given virtual address.
+/// 1. The start address of the virtual region.
+/// 2. The length of the region.
 ///
 /// # Error
 ///
 /// - InvalidAddress: This address does not map physical memory.
-pub fn query_physical_address(virtual_address: usize) -> Result<(usize, usize, usize, usize), KernelError> {
+pub fn query_physical_address(virtual_address: usize) -> Result<(usize, usize, usize), KernelError> {
     unsafe {
-        let (phys_addr, kernel_addr, phys_len, offset, ..) = syscall(nr::QueryPhysicalAddress, virtual_address, 0, 0, 0, 0, 0)?;
-        Ok((phys_addr, kernel_addr, phys_len, offset))
+        let (phys_addr, base_addr, phys_len, ..) = syscall(nr::QueryPhysicalAddress, virtual_address, 0, 0, 0, 0, 0)?;
+        Ok((phys_addr, base_addr, phys_len))
     }
 }
 
 /// Creates an anonymous port.
-pub fn create_port(max_sessions: u32, is_light: bool, name_ptr: &str) -> Result<(ClientPort, ServerPort), KernelError> {
+pub fn create_port(max_sessions: u32, is_light: bool, name_ptr: &[u8]) -> Result<(ClientPort, ServerPort), KernelError> {
     unsafe {
         let (out_client_handle, out_server_handle, ..) = syscall(nr::CreatePort, max_sessions as _, is_light as _, name_ptr.as_ptr() as _, 0, 0, 0)?;
         Ok((ClientPort(Handle::new(out_client_handle as _)), ServerPort(Handle::new(out_server_handle as _))))
@@ -437,5 +493,267 @@ pub fn map_mmio_region(physical_address: usize, size: usize, virtual_address: us
     unsafe {
         syscall(nr::MapMmioRegion, physical_address, size, virtual_address, writable as usize, 0, 0)?;
         Ok(())
+    }
+}
+
+/// Set thread local area pointer.
+///
+/// Akin to `set_thread_area` on Linux, this syscall sets the `gs` segment selector's base address
+/// to the address passed as argument.
+///
+/// The user will likely want to make it point to its elf thread local storage, as `gs:0` is expected
+/// to contain the thread pointer `tp`.
+///
+/// Unlike linux, you only have **one** user controlled segment, found in `gs`, and you can only set its address.
+///
+/// The limit will always be set to `0xFFFFFFFF`, and adding this offset to a non-zero base address
+/// means that the resulting address will "wrap around" the address space, and end-up **under**
+/// the base address.
+/// You can use this property to implement thread local storage variant II - gnu model,
+/// as thread local variable are expected to be found "below" `gs:0`, with "negative" offset such as
+/// `gs:0xFFFFFFFC`.
+///
+/// ## x86_64
+///
+/// ![same, but different, but still same](https://media.giphy.com/media/C6JQPEUsZUyVq/giphy.gif)
+///
+/// `fs` is used instead of `gs`, because reasons.
+///
+/// # Safety
+///
+/// `address` should point to a valid TLS image, unique to the current thread.
+/// Setting `gs` to random data, malformed image, or shared image is UB.
+///
+/// # Errors
+///
+/// * The whole initial design of TLS on x86 should be considered an error.
+/// * No returned error otherwise.
+pub unsafe fn set_thread_area(address: usize) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::SetThreadArea, address, 0, 0, 0, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Change permission of a page-aligned memory region. Acceptable permissions
+/// are ---, r-- and rw-. In other words, it is not allowed to set the
+/// executable bit, nor is it acceptable to use write-only permissions.
+///
+/// This can only be used on memory regions with the
+/// [`process_permission_change_allowed`] state.
+///
+/// # Errors
+///
+/// - `InvalidAddress`
+///   - Supplied address is not page-aligned.
+/// - `InvalidSize`
+///    - Supplied size is zero or not page-aligned.
+/// - `InvalidMemState`
+///    - Supplied memory range is not contained within the target process
+///      address space.
+///    - Supplied memory range does not have the [`process_permission_change_allowed`]
+///      state.
+///
+/// [`process_permission_change_allowed`]: sunrise_libkern::MemoryState::PROCESS_PERMISSION_CHANGE_ALLOWED
+pub fn set_process_memory_permission(proc_hnd: &Process, addr: usize, size: usize, perms: MemoryPermissions) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::SetProcessMemoryPermission, (proc_hnd.0).0.get() as _, addr, size, perms.bits() as _, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Maps the given src memory range from a remote process into the current
+/// process as RW-. This is used by the Loader to load binaries into the memory
+/// region allocated by the kernel in [`create_process`](create_process).
+///
+/// The src region should have the MAP_PROCESS state, which is only available on
+/// CodeStatic/CodeMutable and ModuleCodeStatic/ModuleCodeMutable.
+///
+/// # Errors
+///
+/// - `InvalidAddress`
+///    - src_addr or dst_addr is not aligned to 0x1000.
+/// - `InvalidSize`
+///    - size is 0
+///    - size is not aligned to 0x1000.
+/// - `InvalidMemState`
+///    - `src_addr + size` overflows
+///    - `dst_addr + size` overflows
+///    - The src region is outside of the UserLand address space.
+///    - The dst region is outside of the UserLand address space, or within the
+///      heap or map memory region.
+///    - The src memory pages does not have the MAP_PROCESS state.
+///    - The dst memory pages is not of the Unmapped type.
+/// - `InvalidHandle`
+///    - The handle passed as an argument does not exist or is not a Process
+///      handle.
+pub fn map_process_memory(dstaddr: usize, proc_handle: &Process, srcaddr: usize, size: usize) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::MapProcessMemory, dstaddr, (proc_handle.0).0.get() as _, srcaddr, size, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Unmaps a memory range mapped with [map_process_memory()]. `dst_addr` is an
+/// address in the current address space, while `src_addr` is the address in the
+/// remote address space that was previously mapped.
+///
+/// It is possible to partially unmap a ProcessMemory.
+///
+/// # Safety
+///
+/// This function unmaps the memory, invalidating any pointer to the given
+/// region. The user must take care that no pointers point to this region before
+/// calling this function.
+///
+/// # Errors
+///
+/// - `InvalidAddress`
+///    - src_addr or dst_addr is not aligned to 0x1000.
+/// - `InvalidSize`
+///    - size is 0
+///    - size is not aligned to 0x1000.
+/// - `InvalidMemState`
+///    - `src_addr + size` overflows
+///    - `dst_addr + size` overflows
+///    - The src region is outside of the UserLand address space.
+///    - The dst region is outside of the UserLand address space, or within the
+///      heap or map memory region.
+///    - The src memory pages does not have the MAP_PROCESS state.
+///    - The src memory pages is not of the ProcessMemory type.
+/// - `InvalidMemRange`
+///    - The given source range does not map the same pages as the given dst
+///      range.
+/// - `InvalidHandle`
+///    - The handle passed as an argument does not exist or is not a Process
+///      handle.
+pub unsafe fn unmap_process_memory(dstaddr: usize, proc_handle: &Process, srcaddr: usize, size: usize) -> Result<(), KernelError> {
+    syscall(nr::UnmapProcessMemory, dstaddr, (proc_handle.0).0.get() as _, srcaddr, size, 0, 0)?;
+    Ok(())
+}
+
+/// Creates a new process with the given parameters.
+///
+/// Note that you probably don't want to use this! Look instead for
+/// ProcessMana's `LaunchTitle` function.
+pub fn create_process(procinfo: &ProcInfo, caps: &[u8]) -> Result<Process, KernelError> {
+    unsafe {
+        let (hnd, ..) = syscall(nr::CreateProcess, procinfo as *const _ as usize, caps.as_ptr() as usize, caps.len() / 4, 0, 0, 0)?;
+        Ok(Process(Handle::new(hnd as _)))
+    }
+}
+
+/// Start the given process on the provided CPU with the provided scheduler
+/// priority.
+///
+/// A stack of the given size will be allocated using the process' memory
+/// resource limit and memory pool.
+///
+/// The entrypoint is assumed to be the first address of the `code_addr` region
+/// provided in [create_process()]. It takes two parameters: the first is the
+/// usermode exception handling context, and should always be NULL. The second
+/// is a handle to the main thread.
+///
+/// # Errors
+///
+/// - `InvalidProcessorId`
+///   - Attempted to start the process on a processor that doesn't exist on the
+///     current machine, or a processor that the process is not allowed to use.
+/// - `InvalidThreadPriority`
+///   - Attempted to use a priority above 0x3F, or a priority that the created
+///     process is not allowed to use.
+/// - `MemoryFull`
+///   - Provided stack size is bigger than available vmem space.
+pub fn start_process(process_handle: &Process, main_thread_prio: u32, default_cpuid: u32, main_thread_stacksz: u32) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::StartProcess, (process_handle.0).0.get() as usize, main_thread_prio as _, default_cpuid as _, main_thread_stacksz as _, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Extract information from a process.
+///
+/// Info Type        | Description
+/// -----------------|--------------------------
+/// ProcessState = 0 | The state the current process is in. Returns an instance
+///                  | of [sunrise_libkern::process::ProcessState].
+///
+/// # Errors
+///
+/// - `InvalidHandle`
+///   - The passed handle is invalid or not a process.
+/// - `InvalidEnum`
+///   - The passed info_type is unknown.
+pub fn get_process_info(process_handle: &Process, ty: ProcessInfoType) -> Result<u32, KernelError> {
+    unsafe {
+        let (info, ..) = syscall(nr::GetProcessInfo, (process_handle.0).0.get() as usize, ty.0 as usize, 0, 0, 0, 0)?;
+        Ok(info as _)
+    }
+}
+
+/// Clear the "signaled" state of a readable event or process. After calling
+/// this on a signaled event, [wait_synchronization()] on this handle will wait
+/// until the handle is signaled again.
+///
+/// Takes either a [ReadableEvent] or a [Process].
+///
+/// Note that once a Process enters the Exited state, it is permanently signaled
+/// and cannot be reset. Calling ResetSignal will return an InvalidState error.
+///
+/// # Errors
+///
+/// - `InvalidState`
+///   - The event wasn't signaled.
+///   - The process was in Exited state.
+pub(crate) fn reset_signal(event: HandleRef) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::ResetSignal, event.inner.get() as _, 0, 0, 0, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Gets the PID of the given Process handle. Alias handles (0xFFFF8000 and
+/// 0xFFFF8001) are not allowed here. PIDs are global, unique identifiers for a
+/// given process. PIDs are never reused, and can be passed over IPC safely (the
+/// kernel ensures the correct pid is passed when a process does a request),
+/// making them the best way for sysmodule to identify a calling process.
+///
+/// # Errors
+///
+/// - `InvalidHandle`
+///   - The given handle is invalid or not a process.
+pub fn get_process_id(process_handle: &Process) -> Result<u64, KernelError> {
+    unsafe {
+        let (pid, ..) = syscall(nr::GetProcessId, (process_handle.0).0.get() as usize, 0, 0, 0, 0, 0)?;
+        Ok(pid as _)
+    }
+}
+
+/// Kills the given process, terminating the execution of all of its thread and
+/// putting its state to Exiting/Exited.
+///
+/// Returns an error if used on a process that wasn't started.
+///
+/// # Errors
+///
+/// - `InvalidState`
+///   - The process wasn't started (it is in Created or CreatedAttached state).
+pub fn terminate_process(process_handle: &Process) -> Result<(), KernelError> {
+    unsafe {
+        syscall(nr::TerminateProcess, (process_handle.0).0.get() as usize, 0, 0, 0, 0, 0)?;
+        Ok(())
+    }
+}
+
+/// Fills the provided array with the pids of currently living processes. A
+/// process "lives" so long as it is currently running or a handle to it still
+/// exists.
+///
+/// It returns the total number of processes currently alive. If this number is
+/// bigger than the size of PidBuffer, the user won't have all the pids.
+pub fn get_process_list(list: &mut [u64]) -> Result<usize, KernelError> {
+    unsafe {
+        let (read, ..) = syscall(nr::GetProcessList, list.as_ptr() as usize, list.len(), 0, 0, 0, 0)?;
+        Ok(read)
     }
 }

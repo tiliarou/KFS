@@ -5,13 +5,14 @@ use core::fmt::{self, Debug, Formatter};
 
 use spin::Mutex;
 
-use kfs_libuser::error::{Error, AhciError};
-use kfs_libuser::types::SharedMemory;
-use kfs_libuser::syscalls::MemoryPermissions;
-use kfs_libuser::types::Handle;
-use kfs_libuser::zero_box::ZeroBox;
+use sunrise_libuser::error::{Error, AhciError};
+use sunrise_libuser::ahci::IDisk as IDiskInterface;
+use sunrise_libuser::futures::WorkQueue;
+use sunrise_libuser::zero_box::ZeroBox;
+use sunrise_libuser::ahci::Block;
 
 use crate::hba::*;
+
 
 /// An AHCI Disk
 ///
@@ -62,6 +63,10 @@ impl Disk {
     /// Reads `sector_count` sectors starting from `lba`.
     #[inline(never)]
     fn read_dma(&mut self, buffer: *mut u8, buffer_len: usize, lba: u64, sector_count: u64) -> Result<(), Error> {
+        if ((buffer as usize) % 2) != 0 {
+            return Err(AhciError::InvalidArg.into());
+        }
+
         if (buffer_len as u64) < sector_count * 512 {
             return Err(AhciError::InvalidArg.into());
         }
@@ -75,26 +80,34 @@ impl Disk {
         // body: If we want to make a multi-threaded implementation,
         // body: we will have to implement some logic to choose the slot.
         let command_slot_index = 0;
-        unsafe {
-            // safe: - we just mapped buffer, so it is valid memory,
-            //         and buffer_len is its length
-            //         otherwise mapping it would have failed.
-            //       - buffer[0..buffer_len] falls in a single mapping,
-            //         we just mapped it.
-            //       - command_slot_index is 0, which is always implemented (spec),
-            //         and we give the cmd_header and cmd_table of this index.
-            //       - px is initialised.
-            Px::read_dma(
-                buffer,
-                buffer_len,
-                lba,
-                sector_count,
-                self.px,
-                &mut self.cmd_list.slots[command_slot_index],
-                self.cmd_tables[command_slot_index].as_mut().unwrap(),
-                command_slot_index,
-                self.supports_48_bit
-            )?
+        let step = if !self.supports_48_bit {
+            256
+        } else {
+            65536
+        };
+
+        for sector_step in (0..sector_count).step_by(step) {
+            unsafe {
+                // safe: - we just mapped buffer, so it is valid memory,
+                //         and buffer_len is its length
+                //         otherwise mapping it would have failed.
+                //       - buffer[0..buffer_len] falls in a single mapping,
+                //         we just mapped it.
+                //       - command_slot_index is 0, which is always implemented (spec),
+                //         and we give the cmd_header and cmd_table of this index.
+                //       - px is initialised.
+                Px::read_dma(
+                    buffer.add(sector_step as usize * 512),
+                    buffer_len - sector_step as usize * 512,
+                    lba + sector_step,
+                    core::cmp::min(sector_count - sector_step, step as u64),
+                    self.px,
+                    &mut self.cmd_list.slots[command_slot_index],
+                    self.cmd_tables[command_slot_index].as_mut().unwrap(),
+                    command_slot_index,
+                    self.supports_48_bit
+                )?
+            }
         }
         Ok(())
     }
@@ -103,7 +116,11 @@ impl Disk {
     ///
     /// Writes `sector_count` sectors starting from `lba`.
     #[inline(never)]
-    fn write_dma(&mut self, buffer: *mut u8, buffer_len: usize, lba: u64, sector_count: u64) -> Result<(), Error> {
+    fn write_dma(&mut self, buffer: *const u8, buffer_len: usize, lba: u64, sector_count: u64) -> Result<(), Error> {
+        if ((buffer as usize) % 2) != 0 {
+            return Err(AhciError::InvalidArg.into());
+        }
+
         if (buffer_len as u64) < sector_count * 512 {
             return Err(AhciError::InvalidArg.into());
         }
@@ -164,62 +181,47 @@ impl IDisk {
     }
 }
 
-object! {
-    impl IDisk {
-        /// Returns the number of addressable 512-octet sectors for this disk.
-        #[cmdid(0)]
-        fn sector_count(&mut self,) -> Result<(u64,), Error> {
-            Ok((self.0.lock().sectors,))
-        }
+impl IDiskInterface for IDisk {
+    /// Returns the number of addressable 512-octet sectors for this disk.
+    fn sector_count(&mut self, _work_queue: WorkQueue<'static>) -> Result<u64, Error> {
+        Ok(self.0.lock().sectors)
+    }
 
-        /// Reads sectors from disk.
-        ///
-        /// Reads `sector_count` sectors starting from `lba`.
-        ///
-        /// # Error
-        ///
-        /// - InvalidArg:
-        ///     - `mapping_size` does not reflect the passed handle's size, or mapping it failed,
-        ///     - `lba`, `sector_count`, or `lba + sector_count` is higher than the number of
-        ///        addressable sectors on this disk,
-        ///     - `sector_count` == 0.
-        /// - BufferTooScattered:
-        ///     - The passed handle points to memory that is so physically scattered it overflows
-        ///       the PRDT. This can only happen for read/writes of 1985 sectors or more.
-        ///       You should consider retrying with a smaller `sector_count`.
-        #[cmdid(1)]
-        fn read_dma(&mut self, handle: Handle<copy>, mapping_size: u64, lba: u64, sector_count: u64,) -> Result<(), Error> {
-            let sharedmem = SharedMemory(handle);
-            let addr = kfs_libuser::mem::find_free_address(mapping_size as _, 0x1000)?;
-            let mapped = sharedmem.map(addr, mapping_size as _, MemoryPermissions::empty())
-            // no need for permission, only the disk will dma to it.
-                .map_err(|_| AhciError::InvalidArg)?;
-            self.0.lock().read_dma(mapped.as_mut_ptr(), mapped.len(), lba, sector_count)
-        }
+    /// Reads sectors from disk.
+    ///
+    /// Reads `sector_count` sectors starting from `lba`.
+    ///
+    /// # Error
+    ///
+    /// - InvalidArg:
+    ///     - `mapping_size` does not reflect the passed handle's size, or mapping it failed,
+    ///     - `lba`, `sector_count`, or `lba + sector_count` is higher than the number of
+    ///        addressable sectors on this disk,
+    ///     - `sector_count` == 0.
+    /// - BufferTooScattered:
+    ///     - The passed handle points to memory that is so physically scattered it overflows
+    ///       the PRDT. This can only happen for read/writes of 1985 sectors or more.
+    ///       You should consider retrying with a smaller `sector_count`.
+    fn read_dma(&mut self, _manager: WorkQueue<'static>, address: u64, out_blocks: &mut [sunrise_libuser::ahci::Block]) -> Result<(), Error> {
+        self.0.lock().read_dma(out_blocks.as_mut_ptr() as *mut u8, out_blocks.len() * core::mem::size_of::<Block>(), address, out_blocks.len() as u64)
+    }
 
-        /// Writes sectors to disk.
-        ///
-        /// Writes `sector_count` sectors starting from `lba`.
-        ///
-        /// # Error
-        ///
-        /// - InvalidArg:
-        ///     - `mapping_size` does not reflect the passed handle's size, or mapping it failed,
-        ///     - `lba`, `sector_count`, or `lba + sector_count` is higher than the number of
-        ///        addressable sectors on this disk,
-        ///     - `sector_count` == 0.
-        /// - BufferTooScattered:
-        ///     - The passed handle points to memory that is so physically scattered it overflows
-        ///       the PRDT. This can only happen for read/writes of 1985 sectors or more.
-        ///       You should consider retrying with a smaller `sector_count`.
-        #[cmdid(2)]
-        fn write_dma(&mut self, handle: Handle<copy>, mapping_size: u64, lba: u64, sector_count: u64,) -> Result<(), Error> {
-            let sharedmem = SharedMemory(handle);
-            let addr = kfs_libuser::mem::find_free_address(mapping_size as _, 0x1000)?;
-            let mapped = sharedmem.map(addr, mapping_size as _, MemoryPermissions::empty())
-            // no need for permission, only the disk will dma to it.
-                .map_err(|_| AhciError::InvalidArg)?;
-            self.0.lock().write_dma(mapped.as_mut_ptr(), mapped.len(), lba, sector_count)
-        }
+    /// Writes sectors to disk.
+    ///
+    /// Writes `sector_count` sectors starting from `lba`.
+    ///
+    /// # Error
+    ///
+    /// - InvalidArg:
+    ///     - `mapping_size` does not reflect the passed handle's size, or mapping it failed,
+    ///     - `lba`, `sector_count`, or `lba + sector_count` is higher than the number of
+    ///        addressable sectors on this disk,
+    ///     - `sector_count` == 0.
+    /// - BufferTooScattered:
+    ///     - The passed handle points to memory that is so physically scattered it overflows
+    ///       the PRDT. This can only happen for read/writes of 1985 sectors or more.
+    ///       You should consider retrying with a smaller `sector_count`.
+    fn write_dma(&mut self, _manager: WorkQueue<'static>, address: u64, in_blocks: &[sunrise_libuser::ahci::Block]) -> Result<(), Error> {
+        self.0.lock().write_dma(in_blocks.as_ptr() as *const u8, in_blocks.len() * core::mem::size_of::<Block>(), address, in_blocks.len() as u64)
     }
 }

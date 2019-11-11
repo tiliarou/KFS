@@ -2,9 +2,9 @@
 //!
 //! A minimal PCI implementation, that permits only discovering AHCI devices, and querying their BAR.
 
-use kfs_libutils::io::{Io, Pio};
+use sunrise_libutils::io::{Io, Pio};
 use spin::Mutex;
-use alloc::prelude::*;
+use alloc::vec::Vec;
 
 /// The CONFIG_ADDRESS I/O location.
 pub const CONFIG_ADDRESS: u16 = 0xCF8;

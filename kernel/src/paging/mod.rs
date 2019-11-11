@@ -25,9 +25,10 @@ mod hierarchical_table;
 mod arch;
 mod bookkeeping;
 
-pub use self::arch::{PAGE_SIZE, read_cr2};
+pub use self::arch::{PAGE_SIZE, read_cr2, read_cr3, InactiveHierarchy};
 pub use self::hierarchical_table::PageState;
-use kfs_libkern;
+pub use self::hierarchical_table::{InactiveHierarchyTrait};
+use sunrise_libkern;
 
 bitflags! {
     /// The flags of a mapping.
@@ -44,25 +45,25 @@ bitflags! {
     }
 }
 
-impl From<MappingAccessRights> for kfs_libkern::MemoryPermissions {
+impl From<MappingAccessRights> for sunrise_libkern::MemoryPermissions {
     fn from(perms: MappingAccessRights) -> Self {
-        let mut newperms = kfs_libkern::MemoryPermissions::empty();
+        let mut newperms = sunrise_libkern::MemoryPermissions::empty();
         if !perms.contains(MappingAccessRights::USER_ACCESSIBLE) {
             return newperms;
         }
-        newperms.set(kfs_libkern::MemoryPermissions::READABLE, perms.contains(MappingAccessRights::READABLE));
-        newperms.set(kfs_libkern::MemoryPermissions::WRITABLE, perms.contains(MappingAccessRights::WRITABLE));
-        newperms.set(kfs_libkern::MemoryPermissions::EXECUTABLE, perms.contains(MappingAccessRights::EXECUTABLE));
+        newperms.set(sunrise_libkern::MemoryPermissions::READABLE, perms.contains(MappingAccessRights::READABLE));
+        newperms.set(sunrise_libkern::MemoryPermissions::WRITABLE, perms.contains(MappingAccessRights::WRITABLE));
+        newperms.set(sunrise_libkern::MemoryPermissions::EXECUTABLE, perms.contains(MappingAccessRights::EXECUTABLE));
         newperms
     }
 }
 
-impl From<kfs_libkern::MemoryPermissions> for MappingAccessRights {
-    fn from(perms: kfs_libkern::MemoryPermissions) -> Self {
+impl From<sunrise_libkern::MemoryPermissions> for MappingAccessRights {
+    fn from(perms: sunrise_libkern::MemoryPermissions) -> Self {
         let mut newperms = MappingAccessRights::USER_ACCESSIBLE;
-        newperms.set(MappingAccessRights::READABLE, perms.contains(kfs_libkern::MemoryPermissions::READABLE));
-        newperms.set(MappingAccessRights::WRITABLE, perms.contains(kfs_libkern::MemoryPermissions::WRITABLE));
-        newperms.set(MappingAccessRights::EXECUTABLE, perms.contains(kfs_libkern::MemoryPermissions::EXECUTABLE));
+        newperms.set(MappingAccessRights::READABLE, perms.contains(sunrise_libkern::MemoryPermissions::READABLE));
+        newperms.set(MappingAccessRights::WRITABLE, perms.contains(sunrise_libkern::MemoryPermissions::WRITABLE));
+        newperms.set(MappingAccessRights::EXECUTABLE, perms.contains(sunrise_libkern::MemoryPermissions::EXECUTABLE));
         newperms
     }
 }

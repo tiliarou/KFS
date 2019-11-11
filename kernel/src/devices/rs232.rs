@@ -1,7 +1,7 @@
 //! RS-232 serial port driver
 
 use core::fmt::{Display, Write, Error, Formatter};
-use crate::sync::{Once, SpinLock};
+use crate::sync::{Once, SpinLockIRQ};
 use crate::io::Io;
 use crate::i386::pio::Pio;
 
@@ -10,16 +10,16 @@ use crate::i386::pio::Pio;
 pub struct ComPort(u16);
 
 /// COM1: I/O port 0x3F8, IRQ 4
-#[cfg(all(target_arch="x86", not(test)))]
+#[cfg(any(all(target_arch="x86", not(test)), rustdoc))]
 const COM1: ComPort = ComPort(0x3F8);
 /// COM2: I/O port 0x2F8, IRQ 3
-#[cfg(all(target_arch="x86", not(test)))]
+#[cfg(any(all(target_arch="x86", not(test)), rustdoc))]
 const COM2: ComPort = ComPort(0x2F8);
 /// COM3: I/O port 0x3E8, IRQ 4
-#[cfg(all(target_arch="x86", not(test)))]
+#[cfg(any(all(target_arch="x86", not(test)), rustdoc))]
 const COM3: ComPort = ComPort(0x3E8);
 /// COM4: I/O port 0x2E8, IRQ 3
-#[cfg(all(target_arch="x86", not(test)))]
+#[cfg(any(all(target_arch="x86", not(test)), rustdoc))]
 const COM4: ComPort = ComPort(0x2E8);
 
 // TODO: device drivers should be compiled only for i386
@@ -98,7 +98,7 @@ impl Display for SerialAttributes {
 /// Initialized on first use.
 ///
 /// Log functions will access the [SerialInternal] it wraps, and send text to it.
-static G_SERIAL: Once<SpinLock<SerialInternal<Pio<u8>>>> = Once::new();
+static G_SERIAL: Once<SpinLockIRQ<SerialInternal<Pio<u8>>>> = Once::new();
 
 /// A COM output. Wraps the IO ports of this COM, and provides function for writing to it.
 struct SerialInternal<T> {
@@ -110,7 +110,7 @@ struct SerialInternal<T> {
 
 impl SerialInternal<Pio<u8>> {
     /// Creates a COM port from it's base IO address.
-    #[cfg(all(target_arch="x86", not(test)))]
+    #[cfg(any(all(target_arch="x86", not(test)), rustdoc))]
     #[allow(unused)]
     pub fn new(com_port: ComPort) -> SerialInternal<Pio<u8>> {
         let mut data_port       = Pio::<u8>::new(com_port.0 + 0);
@@ -168,7 +168,7 @@ impl SerialLogger {
     ///
     /// This function should only be used when panicking.
     pub unsafe fn force_unlock(&mut self) {
-        G_SERIAL.call_once(|| SpinLock::new(SerialInternal::<Pio<u8>>::new(COM1))).force_unlock();
+        G_SERIAL.call_once(|| SpinLockIRQ::new(SerialInternal::<Pio<u8>>::new(COM1))).force_unlock();
     }
 }
 
@@ -176,7 +176,7 @@ impl Write for SerialLogger {
     /// Writes a string to COM1.
     #[cfg(not(test))]
     fn write_str(&mut self, s: &str) -> Result<(), ::core::fmt::Error> {
-        let mut internal = G_SERIAL.call_once(|| SpinLock::new(SerialInternal::<Pio<u8>>::new(COM1))).lock();
+        let mut internal = G_SERIAL.call_once(|| SpinLockIRQ::new(SerialInternal::<Pio<u8>>::new(COM1))).lock();
         internal.send_string(s);
         Ok(())
     }

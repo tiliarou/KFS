@@ -18,7 +18,7 @@ use failure::Backtrace;
 use bit_field::BitField;
 use bit_field::BitArray;
 use core::fmt;
-use byteorder::{LE, ByteOrder};
+use core::convert::TryInto;
 
 /// Capabilities of a process.
 ///
@@ -57,9 +57,9 @@ impl<'a, T: BitField> fmt::Debug for MaskPrinter<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list()
             .entries(self.0.iter().enumerate().flat_map(|(idx, v)| {
-                (0..T::bit_length())
+                (0..T::BIT_LENGTH)
                     .filter(move |x| v.get_bit(*x))
-                    .map(move |x| idx * T::bit_length() + x)
+                    .map(move |x| idx * T::BIT_LENGTH + x)
             }))
             .finish()
     }
@@ -94,12 +94,12 @@ const HANDLE_TABLE_SIZE: u32 = 15;
 /// Flags allowing app to debug or be debugged.
 const DEBUG_FLAGS: u32 = 16;
 
-// KFS EXTENSION
+// Sunrise extension
 /// IOPorts the process is allowed to talk to
 const IO_PORTS_ALLOWED: u32 = 10;
 
 /// The highest defined svc.
-const MAX_SVC: usize = ::kfs_libkern::nr::MaxSvc;
+const MAX_SVC: usize = ::sunrise_libkern::nr::MaxSvc;
 
 /// Mask of kernel capabilities that cannot appear twice in a KCAP array.
 const KACS_NO_DUPLICATES: u32 = 0
@@ -162,7 +162,7 @@ impl ProcessCapabilities {
         let mut duplicate_svc = 0;
 
         while let Some(kac) = kac_iter.next() {
-            let kac = LE::read_u32(kac);
+            let kac = u32::from_le_bytes(kac.try_into().expect("Unexpectted kac size"));
             let kac_type = (!kac).trailing_zeros();
             if duplicate_kacs.get_bit(kac_type as _) && KACS_NO_DUPLICATES.get_bit(kac_type as _) {
                 return Err(KernelError::InvalidCombination {
@@ -214,7 +214,7 @@ impl ProcessCapabilities {
                     let _start_page = kac.get_bits(7..31);
                     let _is_ro = kac.get_bit(31);
                     if let Some(kac) = kac_iter.next() {
-                        let kac = LE::read_u32(kac);
+                        let kac = u32::from_le_bytes(kac.try_into().expect("Unexpectted kac size"));
                         if (!kac).trailing_zeros() == MAP_IO_OR_NORMAL_RANGE {
                             let _num_pages = kac.get_bits(7..31);
                             let _is_io = kac.get_bit(31);

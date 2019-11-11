@@ -39,7 +39,7 @@
 //! simultaneously. Unfortunately we can't take advantage of that until we manage to
 //! make command-completion interrupts work.
 
-#![feature(alloc, maybe_uninit, box_syntax, untagged_unions, const_vec_new, underscore_const_names)]
+#![feature(box_syntax, untagged_unions, const_vec_new)]
 #![no_std]
 
 // rustc warnings
@@ -58,7 +58,7 @@
 #[macro_use]
 extern crate alloc;
 #[macro_use]
-extern crate kfs_libuser;
+extern crate sunrise_libuser;
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -71,14 +71,16 @@ mod disk;
 
 use crate::hba::HbaMemoryRegisters;
 use crate::disk::{Disk, IDisk};
-use alloc::prelude::*;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 use alloc::sync::Arc;
-use kfs_libuser::error::{Error, AhciError};
-use kfs_libuser::ipc::server::{WaitableManager, PortHandler, IWaitable};
+use sunrise_libuser::error::{Error, AhciError};
+use sunrise_libuser::futures::{WaitableManager, WorkQueue};
+use sunrise_libuser::ipc::server::{port_handler, new_session_wrapper};
 use spin::Mutex;
-use kfs_libuser::types::Handle;
-use kfs_libuser::syscalls;
-use kfs_libuser::ipc::server::SessionWrapper;
+use sunrise_libuser::syscalls;
+use sunrise_libuser::ahci::{AhciInterface as IAhciInterface, IDiskProxy, IDisk as _};
+use sunrise_libuser::futures_rs::future::FutureObj;
 
 /// Array of discovered disk.
 ///
@@ -111,9 +113,9 @@ fn main() {
     debug!("AHCI initialised disks : {:#x?}", DISKS);
 
     // event loop
-    let man = WaitableManager::new();
-    let handler = Box::new(PortHandler::<AhciInterface>::new("ahci:\0").unwrap());
-    man.add_waitable(handler as Box<dyn IWaitable>);
+    let mut man = WaitableManager::new();
+    let handler = port_handler(man.work_queue(), "ahci:\0", AhciInterface::dispatch).unwrap();
+    man.work_queue().spawn(FutureObj::new(Box::new(handler)));
     man.run();
 }
 
@@ -126,60 +128,67 @@ fn main() {
 ///
 /// As hotplug/remove of a disk is not supported, a disk id remains valid for the whole
 /// lifetime of the ahci driver.
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 struct AhciInterface;
 
-object! {
-    impl AhciInterface {
-        /// Returns the number of discovered disks.
-        ///
-        /// Any number in the range `0..disk_count()` is considered a valid disk id.
-        #[cmdid(0)]
-        fn disk_count(&mut self,) -> Result<(usize,), Error> {
-            Ok((DISKS.lock().len(),))
-        }
+impl IAhciInterface for AhciInterface {
+    /// Returns the number of discovered disks.
+    ///
+    /// Any number in the range `0..disk_count()` is considered a valid disk id.
+    fn discovered_disks_count(&mut self, _manager: WorkQueue<'static>) -> Result<u32, Error> {
+        Ok(DISKS.lock().len() as u32)
+    }
 
-        /// Gets the interface to a disk.
-        ///
-        /// This creates a session to an [IDisk].
-        ///
-        /// # Error
-        ///
-        /// - InvalidArg: `disk_id` is not a valid disk id.
-        #[cmdid(1)]
-        fn get_disk(&mut self, manager: &WaitableManager, disk_id: u32,) -> Result<(Handle,), Error> {
-            let idisk = IDisk::new(Arc::clone(
-                DISKS.lock().get(disk_id as usize)
-                .ok_or(AhciError::InvalidArg)?
-            ));
-            let (server, client) = syscalls::create_session(false, 0)?;
-            let wrapper = SessionWrapper::new(server, idisk);
-            manager.add_waitable(Box::new(wrapper) as Box<dyn IWaitable>);
-            Ok((client.into_handle(),))
-        }
+    /// Gets the interface to a disk.
+    ///
+    /// This creates a session to an [IDisk].
+    ///
+    /// # Error
+    ///
+    /// - InvalidArg: `disk_id` is not a valid disk id.
+    fn get_disk(&mut self, work_queue: WorkQueue<'static>, disk_id: u32,) -> Result<IDiskProxy, Error> {
+        let idisk = IDisk::new(Arc::clone(
+            DISKS.lock().get(disk_id as usize)
+            .ok_or(AhciError::InvalidArg)?
+        ));
+        let (server, client) = syscalls::create_session(false, 0)?;
+        let wrapper = new_session_wrapper(work_queue.clone(), server, idisk, IDisk::dispatch);
+        work_queue.spawn(FutureObj::new(Box::new(wrapper)));
+        Ok(IDiskProxy::from(client))
     }
 }
 
+kip_header!(HEADER = sunrise_libuser::caps::KipHeader {
+    magic: *b"KIP1",
+    name: *b"ahci\0\0\0\0\0\0\0\0",
+    title_id: 0x0200000000000100,
+    process_category: sunrise_libuser::caps::ProcessCategory::KernelBuiltin,
+    main_thread_priority: 0,
+    default_cpu_core: 0,
+    flags: 0,
+    reserved: 0,
+    stack_page_count: 16,
+});
+
 capabilities!(CAPABILITIES = Capabilities {
     svcs: [
-        kfs_libuser::syscalls::nr::SleepThread,
-        kfs_libuser::syscalls::nr::ExitProcess,
-        kfs_libuser::syscalls::nr::CloseHandle,
-        kfs_libuser::syscalls::nr::WaitSynchronization,
-        kfs_libuser::syscalls::nr::OutputDebugString,
+        sunrise_libuser::syscalls::nr::SleepThread,
+        sunrise_libuser::syscalls::nr::ExitProcess,
+        sunrise_libuser::syscalls::nr::CloseHandle,
+        sunrise_libuser::syscalls::nr::WaitSynchronization,
+        sunrise_libuser::syscalls::nr::OutputDebugString,
+        sunrise_libuser::syscalls::nr::SetThreadArea,
 
-        kfs_libuser::syscalls::nr::SetHeapSize,
-        kfs_libuser::syscalls::nr::QueryMemory,
-        kfs_libuser::syscalls::nr::MapSharedMemory,
-        kfs_libuser::syscalls::nr::UnmapSharedMemory,
-        kfs_libuser::syscalls::nr::ConnectToNamedPort,
-        kfs_libuser::syscalls::nr::CreateInterruptEvent,
-        kfs_libuser::syscalls::nr::QueryPhysicalAddress,
-        kfs_libuser::syscalls::nr::MapMmioRegion,
-        kfs_libuser::syscalls::nr::SendSyncRequestWithUserBuffer,
-        kfs_libuser::syscalls::nr::ReplyAndReceiveWithUserBuffer,
-        kfs_libuser::syscalls::nr::AcceptSession,
-        kfs_libuser::syscalls::nr::CreateSession,
+        sunrise_libuser::syscalls::nr::SetHeapSize,
+        sunrise_libuser::syscalls::nr::QueryMemory,
+        sunrise_libuser::syscalls::nr::ConnectToNamedPort,
+        sunrise_libuser::syscalls::nr::CreateInterruptEvent,
+        sunrise_libuser::syscalls::nr::QueryPhysicalAddress,
+        sunrise_libuser::syscalls::nr::MapMmioRegion,
+        sunrise_libuser::syscalls::nr::SendSyncRequestWithUserBuffer,
+        sunrise_libuser::syscalls::nr::ReplyAndReceiveWithUserBuffer,
+        sunrise_libuser::syscalls::nr::AcceptSession,
+        sunrise_libuser::syscalls::nr::CreateSession,
     ],
     raw_caps: [
         // todo: IRQ capabilities at runtime
@@ -194,7 +203,7 @@ capabilities!(CAPABILITIES = Capabilities {
         // body: - Declaring every IRQ line in our capabilities, but only effectively using one ?
         // body: - Deporting the PIC management to a userspace module, and allow it to accept
         // body:   dynamic irq capabilities in yet undefined way.
-        kfs_libuser::caps::ioport(pci::CONFIG_ADDRESS + 0), kfs_libuser::caps::ioport(pci::CONFIG_ADDRESS + 1), kfs_libuser::caps::ioport(pci::CONFIG_ADDRESS + 2), kfs_libuser::caps::ioport(pci::CONFIG_ADDRESS + 3),
-        kfs_libuser::caps::ioport(pci::CONFIG_DATA    + 0), kfs_libuser::caps::ioport(pci::CONFIG_DATA    + 1), kfs_libuser::caps::ioport(pci::CONFIG_DATA    + 2), kfs_libuser::caps::ioport(pci::CONFIG_DATA    + 3),
+        sunrise_libuser::caps::ioport(pci::CONFIG_ADDRESS + 0), sunrise_libuser::caps::ioport(pci::CONFIG_ADDRESS + 1), sunrise_libuser::caps::ioport(pci::CONFIG_ADDRESS + 2), sunrise_libuser::caps::ioport(pci::CONFIG_ADDRESS + 3),
+        sunrise_libuser::caps::ioport(pci::CONFIG_DATA    + 0), sunrise_libuser::caps::ioport(pci::CONFIG_DATA    + 1), sunrise_libuser::caps::ioport(pci::CONFIG_DATA    + 2), sunrise_libuser::caps::ioport(pci::CONFIG_DATA    + 3),
     ]
 });

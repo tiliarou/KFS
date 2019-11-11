@@ -3,12 +3,13 @@
 //! APIs allowing the creation of a window, and drawing inside of it.
 
 use crate::types::{SharedMemory, MappedSharedMemory};
-use crate::vi::{ViInterface, IBuffer};
+use crate::vi::{ViInterfaceProxy, IBufferProxy};
 use crate::syscalls::MemoryPermissions;
 use crate::mem::{find_free_address, PAGE_SIZE};
-use kfs_libutils::align_up;
+use sunrise_libutils::align_up;
 use crate::error::Error;
 use core::slice;
+use core::sync::atomic::{AtomicU32, Ordering};
 
 /// A rgb color
 #[derive(Copy, Clone, Debug)]
@@ -27,7 +28,7 @@ pub struct Color {
 /// Some colors for the vbe
 impl Color {
     /// Creates a color from the r/g/b components. Alpha will be set to 0xFF.
-    pub fn rgb(r: u8, g: u8, b: u8) -> Color {
+    pub const fn rgb(r: u8, g: u8, b: u8) -> Color {
         Color {r, g, b, a: 0xFF }
     }
 }
@@ -36,10 +37,10 @@ impl Color {
 #[derive(Debug)]
 pub struct Window {
     /// The framebuffer memory shared with Vi. Drawing to this buffer will take
-    /// effect on the next call to [IBuffer::draw].
+    /// effect on the next call to [IBufferProxy::draw].
     buf: MappedSharedMemory,
     /// Vi handle for this window.
-    handle: IBuffer,
+    handle: IBufferProxy,
     /// Width of the window.
     width: usize,
     /// Height of the window.
@@ -51,7 +52,7 @@ pub struct Window {
 impl Window {
     /// Creates a window in the vi compositor.
     pub fn new(top: i32, left: i32, width: u32, height: u32) -> Result<Window, Error> {
-        let mut vi = ViInterface::raw_new()?;
+        let vi = ViInterfaceProxy::raw_new()?;
         let bpp = 32;
         let size = height * width * bpp / 8;
 
@@ -73,6 +74,7 @@ impl Window {
 
     /// Ask the compositor to redraw the window.
     pub fn draw(&mut self) -> Result<(), Error> {
+        core::sync::atomic::fence(Ordering::Release);
         self.handle.draw()
     }
 
@@ -116,7 +118,8 @@ impl Window {
     #[inline]
     pub fn write_px(&mut self, offset: usize, color: Color) {
         unsafe {
-            self.get_buffer()[offset] = color;
+            // Safety: Color can safely be cast to an u32.
+            self.get_buffer()[offset].store(core::mem::transmute(color), Ordering::Relaxed);
         }
     }
 
@@ -133,15 +136,19 @@ impl Window {
     }
 
     /// Gets the underlying framebuffer
-    pub fn get_buffer(&mut self) -> &mut [Color] {
+    #[allow(clippy::cast_ptr_alignment)] // See safety note.
+    pub fn get_buffer(&mut self) -> &[AtomicU32] {
         unsafe {
-            slice::from_raw_parts_mut(self.buf.get_mut().as_ptr() as *mut Color, self.buf.len() / 4)
+            // Safety: buf is guaranteed to be valid for len bytes (so len / 4
+            // u32s). The lifetime is tied to the MappedSharedMemory. Buf is
+            // guaranteed to be page-aligned.
+            slice::from_raw_parts(self.buf.as_ptr() as *const AtomicU32, self.buf.len() / 4)
         }
     }
 
     /// Clears the whole window, making it black.
     pub fn clear(&mut self) {
         let fb = self.get_buffer();
-        for i in fb.iter_mut() { *i = Color::rgb(0, 0, 0); }
+        for i in fb.iter() { i.store(0, Ordering::Relaxed); }
     }
 }

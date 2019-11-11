@@ -299,6 +299,11 @@ impl InactiveHierarchyTrait for InactiveHierarchy {
         // Copy the kernel space tables
         self.copy_active_kernel_space();
         super::swap_cr3(self.directory_physical_address);
+        // Update the cr3 DOUBLE_FAULT_TSS will switch to when we double fault
+        // DOUBLE_FAULT_TASK should only be locked during init and update, and switch_to is not re-entrant.
+        crate::i386::gdt::DOUBLE_FAULT_TASK
+            .try_lock().expect("Cannot update DOUBLE_FAULT_TASK's cr3")
+            .cr3 = self.directory_physical_address.addr() as u32;
     }
 
     fn copy_active_kernel_space(&mut self) {
@@ -320,6 +325,35 @@ impl InactiveHierarchyTrait for InactiveHierarchy {
     }
 }
 
+impl Drop for InactiveHierarchy {
+    /// When a process dies, its InactiveHierarchy is dropped.
+    /// The pages themselves have already been freed by the bookkeeping,
+    /// we just have to free the tables and the directory of this hierarchy.
+    ///
+    /// However we must free only the tables that map UserLand memory, as the ones mapping
+    /// KernelLand are shared with other processes and are still in use.
+    fn drop(&mut self) {
+        debug_assert!(!self.is_currently_active(), "Dropped the currently active paging hierarchy");
+
+        // free the userland tables
+        {
+            for table_entry in &self.get_top_level_table().entries()[USERLAND_START_TABLE..=USERLAND_END_TABLE] {
+                match table_entry.pointed_frame() {
+                    PageState::Available | PageState::Guarded => (),
+                    PageState::Present(paddr) => unsafe {
+                        // safe because they were existing frames, and not tracked by any one except the page tables.
+                        PhysicalMemRegion::reconstruct(paddr, PAGE_SIZE);
+                        // dropping the region deallocates it
+                    }
+                }
+            }
+        }
+        // and finally the directory
+        unsafe {
+            PhysicalMemRegion::reconstruct(self.directory_physical_address, PAGE_SIZE);
+        }
+    }
+}
 /* ********************************************************************************************** */
 
 /// When passing this struct the TLB will be flushed. Used by [ActivePageTable].

@@ -27,6 +27,7 @@ use core::fmt::Write;
 pub mod io;
 mod cursor;
 pub use crate::cursor::*;
+pub mod loop_future;
 
 /// Align the address to the next alignment.
 ///
@@ -66,7 +67,7 @@ pub fn align_up_checked(addr: usize, align: usize) -> Option<usize> {
 ///
 /// Ex:
 /// ```
-///   # use kfs_libutils::div_ceil;
+///   # use sunrise_libutils::div_ceil;
 ///   # let PAGE_SIZE: usize = 0x1000;
 ///     let pages_count = div_ceil(0x3002, PAGE_SIZE);
 /// ```
@@ -87,12 +88,12 @@ pub fn div_ceil<T: Num + Copy>(a: T, b: T) -> T {
 /// to avoid this, we define our enum as a struct with associated variants.
 #[macro_export]
 macro_rules! enum_with_val {
-    ($(#[$meta:meta])* $vis:vis struct $ident:ident($ty:ty) {
+    ($(#[$meta:meta])* $vis:vis struct $ident:ident($innervis:vis $ty:ty) {
         $($(#[$varmeta:meta])* $variant:ident = $num:expr),* $(,)*
     }) => {
         $(#[$meta])*
         #[repr(transparent)]
-        $vis struct $ident($ty);
+        $vis struct $ident($innervis $ty);
         impl $ident {
             $($(#[$varmeta])* $vis const $variant: $ident = $ident($num);)*
         }
@@ -109,6 +110,9 @@ macro_rules! enum_with_val {
 }
 
 /// Displays memory as hexdump
+///
+/// This function follows the output format of the `xxd` command so you can easily diff
+/// between two hexdumps on the host machine, to help debugging sessions.
 pub fn print_hexdump<T: Write>(f: &mut T, mem: &[u8]) {
     // just print as if at its own address ... which it is
     print_hexdump_as_if_at_addr(f, mem, mem.as_ptr() as usize)
@@ -116,6 +120,9 @@ pub fn print_hexdump<T: Write>(f: &mut T, mem: &[u8]) {
 
 /// Makes a hexdump of a slice, but display different addresses.
 /// Used for displaying memory areas which are not identity mapped in the current pages
+///
+/// This function follows the output format of the `xxd` command so you can easily diff
+/// between two hexdumps on the host machine, to help debugging sessions.
 pub fn print_hexdump_as_if_at_addr<T: Write>(f: &mut T, mem: &[u8], display_addr: usize) {
     for chunk in mem.chunks(16) {
         let mut arr = [None; 16];
@@ -124,7 +131,7 @@ pub fn print_hexdump_as_if_at_addr<T: Write>(f: &mut T, mem: &[u8], display_addr
         }
 
         let offset_in_mem = chunk.as_ptr() as usize - mem.as_ptr() as usize;
-        let _ = write!(f, "{:#0x}:", display_addr + offset_in_mem);
+        let _ = write!(f, "{:08x}:", display_addr + offset_in_mem);
 
         for pair in arr.chunks(2) {
             let _ = write!(f, " ");
@@ -138,7 +145,7 @@ pub fn print_hexdump_as_if_at_addr<T: Write>(f: &mut T, mem: &[u8], display_addr
         }
         let _ = write!(f, "  ");
         for i in chunk {
-            if i.is_ascii_graphic() {
+            if i.is_ascii_graphic() || *i == 0x20 {
                 let _ = write!(f, "{}", *i as char);
             } else {
                 let _ = write!(f, ".");
@@ -226,3 +233,92 @@ pub fn bit_array_first_count_one(bitarray: &[u8], count: usize) -> Option<usize>
     None
 }
 
+/// Returns the floored base 2 logarithm of the number.
+///
+/// # Panics
+///
+/// Panics if val is 0.
+pub const fn log2_floor(val: usize) -> usize {
+    core::mem::size_of::<usize>() * 8 - val.leading_zeros() as usize - 1
+}
+
+/// Returns the ceiled base 2 logarithm of the number.
+///
+/// # Panics
+///
+/// Panics if val is 0.
+pub const fn log2_ceil(val: usize) -> usize {
+    core::mem::size_of::<usize>() * 8 - val.leading_zeros() as usize - (val & (val - 1) == 0) as usize
+}
+
+/// Cast a slice while keeping the lifetimes.
+///
+/// Thanks I hate it.
+///
+/// # Safety
+///
+/// `data` must be aligned for R, even for zero-length slices.
+///
+/// `T` must be safely castable as `R`. This generally means that T and R must both be POD types without padding.
+#[allow(clippy::cast_ptr_alignment)]
+pub unsafe fn cast_mut<T, R>(data: &mut [T]) -> &mut [R] {
+    let elem_of_r = core::mem::size_of::<T>() * data.len() / core::mem::size_of::<R>();
+    core::slice::from_raw_parts_mut(data.as_mut_ptr() as *mut R, elem_of_r)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_log2_floor() {
+        for i in 1..512 {
+            assert_eq!((i as f32).log2().floor() as usize, log2_floor(i));
+        }
+    }
+
+    #[test]
+    fn test_log2_ceil() {
+        for i in 1..512 {
+            assert_eq!((i as f32).log2().ceil() as usize, log2_ceil(i));
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_log2_floor_panic() {
+        log2_floor(0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_log2_ceil_panic() {
+        log2_ceil(0);
+    }
+}
+
+#[macro_export]
+/// A macro to initialize a struct directly in global.
+///
+/// # Note
+///
+/// - This construct the struct on the stack. For the same behaviours on the heap, please refer to ZeroBox.
+/// - The type should not contain anything that is not allowed to be initialized to Zero (references, certain enums, and complex types).
+///
+/// # Usage
+///
+/// ```rust
+/// use sunrise_libutils::initialize_to_zero;
+/// let zero_initialized = unsafe { initialize_to_zero!(u32) };
+/// ```
+macro_rules! initialize_to_zero {
+    ($ty:ty) => {{
+        #[doc(hidden)]
+        union ZeroedTypeUnion {
+            data: $ty,
+            arr: [u8; core::mem::size_of::<$ty>()]
+        }
+
+        ZeroedTypeUnion { arr: [0; core::mem::size_of::<$ty>()] }.data
+    }}
+}
